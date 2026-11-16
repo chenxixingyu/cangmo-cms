@@ -1124,10 +1124,14 @@ func parseDateTimeInput(text: String): Int64 {
     if (value.size == 0) {
         return 0
     }
-    let patterns = ["yyyy-MM-dd'T'HH:mm", "yyyy-MM-dd HH:mm", "yyyy-MM-dd'T'HH:mm:ss"]
+    // <input type="datetime-local"> submits "yyyy-MM-ddTHH:mm"; Cangjie's
+    // DateTime.parse pattern treats a bare T as a format error, so normalize
+    // it to a space and use the space-separated pattern.
+    let normalized = value.replace("T", " ")
+    let patterns = ["yyyy-MM-dd HH:mm", "yyyy-MM-dd HH:mm:ss"]
     for (pattern in patterns) {
         try {
-            let dt = DateTime.parse(value, pattern)
+            let dt = DateTime.parse(normalized, pattern)
             return dt.toUnixTimeStamp().toSeconds()
         } catch (e: Exception) {}
     }

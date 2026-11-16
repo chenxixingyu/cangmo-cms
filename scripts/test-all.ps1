@@ -18,6 +18,9 @@ Write-Host "== smoke =="
 Write-Host "== e2e =="
 & $node "$root\tests\e2e.mjs"
 
+Write-Host "== extended =="
+& $node "$root\tests\extended.mjs"
+
 Write-Host "== security =="
 & $node "$root\tests\security.mjs"
 

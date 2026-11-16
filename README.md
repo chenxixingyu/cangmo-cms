@@ -124,9 +124,10 @@ cangmo/
 ## 测试
 
 ```powershell
-cjpm test                                  # 17 个单元测试
+cjpm test                                  # 21 个单元测试
 node tests\smoke.mjs                       # 初始化 + 公共页面 + 安全头
 node tests\e2e.mjs                         # 登录、CRUD、上传、评论、备份、API
+node tests\extended.mjs                    # 预览、页面、定时发布、API 更新/删除
 node tests\security.mjs                    # CSRF、XSS、路径穿越、请求走私
 node tests\load.mjs                        # 并发冒烟
 ```
