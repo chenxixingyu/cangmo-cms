@@ -1,0 +1,38 @@
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/" aria-label="{{ site.title }} 首页">
+      <svg class="brand-mark" width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M6 4h20a2 2 0 0 1 2 2v20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M10 10h12M10 16h12M10 22h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span class="brand-text">{{ site.title }}</span>
+    </a>
+    <button class="nav-toggle" id="nav-toggle" type="button" aria-label="打开菜单" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="site-nav" id="site-nav" aria-label="主导航">
+      {% for item in site.nav %}
+        <a href="{{ item.url }}"{% if item.url == current_path %} class="active" aria-current="page"{% endif %}>{{ item.label }}</a>
+      {% endfor %}
+      <a href="/search" class="nav-search" aria-label="搜索">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="theme-toggle" type="button" aria-label="切换深色模式" title="切换深色模式">
+        <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      </button>
+      {% if user %}
+        <a class="user-chip" href="/admin" title="进入后台"><span class="avatar">{{ user.initial }}</span><span class="user-name">{{ user.display_name|default(user.username) }}</span></a>
+      {% else %}
+        <a class="login-link" href="/admin/login">登录</a>
+      {% endif %}
+    </div>
+  </div>
+</header>
+{% if flash.length > 0 %}
+<div class="flash-wrap" role="status" aria-live="polite">
+  {% for message in flash %}<div class="flash flash-{{ message.kind }}">{{ message.text }}</div>{% endfor %}
+</div>
+{% endif %}

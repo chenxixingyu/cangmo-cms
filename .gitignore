@@ -1,0 +1,24 @@
+# Cangmo runtime / build artifacts
+/target/
+/data/*
+!/data/.gitkeep
+/config.json
+*.log
+*.tmp
+*.bak
+
+# Local test data
+/data/test*/
+/data/_*/
+
+# IDE
+/.idea/
+/.vscode/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Reports generated locally (keep the published ones under docs/reports)

@@ -1,0 +1,22 @@
+{% include "partials/head.html" %}
+{% include "partials/header.html" %}
+<main id="main" class="wrap layout">
+  <div class="content">
+    <header class="list-header">
+      <p class="hero-kicker">{{ list_kind|upper }}</p>
+      <h1 class="list-title">{{ list_title }}</h1>
+      {% if list_description %}<p class="list-description">{{ list_description }}</p>{% endif %}
+    </header>
+    <div class="post-grid">
+      {% for post in posts %}
+        {% include "partials/post-card.html" %}
+      {% endfor %}
+    </div>
+    {% if posts.length == 0 %}
+      <div class="empty-state"><p>这里还没有内容。</p><a class="btn" href="/">返回首页</a></div>
+    {% endif %}
+    {% include "partials/pagination.html" %}
+  </div>
+  {% include "partials/sidebar.html" %}
+</main>
+{% include "partials/footer.html" %}

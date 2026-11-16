@@ -1,0 +1,82 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <div class="toolbar-row">
+    <div class="tabs">
+      <a href="/admin/posts?type={{ post_type }}&status=all" class="{% if status == "all" %}active{% endif %}">全部 <span>{{ counts.all }}</span></a>
+      <a href="/admin/posts?type={{ post_type }}&status=published" class="{% if status == "published" %}active{% endif %}">已发布 <span>{{ counts.published }}</span></a>
+      <a href="/admin/posts?type={{ post_type }}&status=draft" class="{% if status == "draft" %}active{% endif %}">草稿 <span>{{ counts.draft }}</span></a>
+      <a href="/admin/posts?type={{ post_type }}&status=scheduled" class="{% if status == "scheduled" %}active{% endif %}">定时 <span>{{ counts.scheduled }}</span></a>
+      <a href="/admin/posts?type={{ post_type }}&status=trash" class="{% if status == "trash" %}active{% endif %}">回收站 <span>{{ counts.trash }}</span></a>
+    </div>
+    <div class="toolbar-actions">
+      <form method="get" action="/admin/posts" class="inline-search">
+        <input type="hidden" name="type" value="{{ post_type }}">
+        <input type="hidden" name="status" value="{{ status }}">
+        <input type="search" name="search" value="{{ search }}" placeholder="搜索标题或正文…">
+        <button type="submit">搜索</button>
+      </form>
+      <a class="btn" href="/admin/posts/new?type={{ post_type }}">+ 新建{% if post_type == "page" %}页面{% else %}文章{% endif %}</a>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th>标题</th><th>状态</th><th>作者</th><th>发布</th><th>浏览</th><th class="table-actions-head">操作</th></tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td>
+              <a class="table-title" href="{{ row.edit_url }}">{{ row.title }}</a>
+              <div class="table-sub">/{{ row.slug }}{% if row.pinned %} · 置顶{% endif %}</div>
+            </td>
+            <td><span class="status status-{{ row.status }}">{{ row.status }}</span></td>
+            <td>{{ row.author.name }}</td>
+            <td class="muted">{{ row.date }}</td>
+            <td class="muted">{{ row.views }}</td>
+            <td class="table-actions">
+              <a href="{{ row.edit_url }}">编辑</a>
+              {% if row.status != "trash" %}
+              <form method="post" action="/admin/posts/{{ row.id }}/action" class="inline-form">
+                <input type="hidden" name="_csrf" value="{{ csrf }}">
+                <input type="hidden" name="return_to" value="/admin/posts?type={{ post_type }}&status={{ status }}">
+                <input type="hidden" name="action" value="{% if row.status == "published" %}trash{% else %}publish{% endif %}">
+                <button type="submit" class="link-btn">{% if row.status == "published" %}下线{% else %}发布{% endif %}</button>
+              </form>
+              {% else %}
+              <form method="post" action="/admin/posts/{{ row.id }}/action" class="inline-form">
+                <input type="hidden" name="_csrf" value="{{ csrf }}">
+                <input type="hidden" name="return_to" value="/admin/posts?type={{ post_type }}&status=trash">
+                <input type="hidden" name="action" value="restore">
+                <button type="submit" class="link-btn">恢复</button>
+              </form>
+              {% endif %}
+              {% if is_admin %}
+              <form method="post" action="/admin/posts/{{ row.id }}/action" class="inline-form" data-confirm="确定永久删除《{{ row.title }}》？此操作不可恢复。">
+                <input type="hidden" name="_csrf" value="{{ csrf }}">
+                <input type="hidden" name="return_to" value="/admin/posts?type={{ post_type }}&status={{ status }}">
+                <input type="hidden" name="action" value="delete">
+                <button type="submit" class="link-btn danger">删除</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+          {% if rows.length == 0 %}
+          <tr><td colspan="6" class="empty-row">没有内容。 <a href="/admin/posts/new?type={{ post_type }}">立即创建</a></td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+    {% include "partials/pagination.html" %}
+  </div>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

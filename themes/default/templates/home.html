@@ -1,0 +1,47 @@
+{% include "partials/head.html" %}
+{% include "partials/header.html" %}
+<main id="main" class="wrap layout">
+  <div class="content">
+    <section class="hero">
+      <p class="hero-kicker">Writing · 记录</p>
+      <h1 class="hero-title">{{ site.title }}</h1>
+      {% if site.subtitle %}<p class="hero-subtitle">{{ site.subtitle }}</p>{% endif %}
+    </section>
+
+    {% if featured.length > 0 %}
+    <section class="featured" aria-label="精选文章">
+      <h2 class="section-title">精选</h2>
+      <div class="featured-grid">
+        {% for post in featured %}
+        <article class="featured-card">
+          <div class="featured-body">
+            <div class="card-meta"><time datetime="{{ post.date_iso }}">{{ post.date }}</time>{% if post.category.name %}<span class="dot">·</span><a href="{{ post.category.url }}">{{ post.category.name }}</a>{% endif %}</div>
+            <h3><a href="{{ post.url }}">{{ post.title }}</a></h3>
+            <p>{{ post.summary }}</p>
+            <a class="read-more" href="{{ post.url }}">阅读全文 <span aria-hidden="true">→</span></a>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    <section class="post-list" aria-label="文章列表">
+      <h2 class="section-title">最新文章</h2>
+      <div class="post-grid">
+        {% for post in posts %}
+          {% include "partials/post-card.html" %}
+        {% endfor %}
+      </div>
+      {% if posts.length == 0 %}
+        <div class="empty-state">
+          <p>还没有文章。去后台写下第一篇吧。</p>
+          <a class="btn" href="/admin">进入后台</a>
+        </div>
+      {% endif %}
+      {% include "partials/pagination.html" %}
+    </section>
+  </div>
+  {% include "partials/sidebar.html" %}
+</main>
+{% include "partials/footer.html" %}

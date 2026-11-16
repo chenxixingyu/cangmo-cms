@@ -1,0 +1,12 @@
+{% include "partials/head.html" %}
+{% include "partials/header.html" %}
+<main id="main" class="wrap error-page">
+  <div class="error-code">{{ status }}</div>
+  <h1>{{ page_title }}</h1>
+  <p>{{ message }}</p>
+  <div class="error-actions">
+    <a class="btn" href="/">返回首页</a>
+    <a class="btn btn-ghost" href="/search">搜索文章</a>
+  </div>
+</main>
+{% include "partials/footer.html" %}

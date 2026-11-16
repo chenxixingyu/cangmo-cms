@@ -1,0 +1,19 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <section class="panel error-panel">
+    <div class="error-code">{{ status }}</div>
+    <h2>{{ page_title }}</h2>
+    <p>{{ message }}</p>
+    <div class="error-actions">
+      <a class="btn" href="/admin">返回仪表盘</a>
+      <a class="btn btn-ghost" href="/">返回站点</a>
+    </div>
+  </section>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

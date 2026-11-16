@@ -1,0 +1,36 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <div class="theme-grid">
+    {% for theme in themes %}
+    <article class="theme-card {% if theme.active %}active{% endif %}">
+      <div class="theme-preview">
+        <div class="theme-preview-bar"></div>
+        <div class="theme-preview-lines"><span></span><span></span><span></span></div>
+      </div>
+      <div class="theme-body">
+        <div class="theme-head"><h2>{{ theme.title }}</h2>{% if theme.active %}<span class="badge">当前主题</span>{% endif %}</div>
+        <p class="muted">{{ theme.description }}</p>
+        <small>{{ theme.name }} · v{{ theme.version }} · {{ theme.author }}</small>
+        {% if not theme.active %}
+        <form method="post" action="/admin/themes/activate" class="inline-form">
+          <input type="hidden" name="_csrf" value="{{ csrf }}">
+          <input type="hidden" name="name" value="{{ theme.name }}">
+          <button class="btn" type="submit">启用主题</button>
+        </form>
+        {% endif %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  <section class="panel">
+    <header class="panel-head"><h2>主题开发</h2></header>
+    <p class="muted">主题位于 <code>themes/&lt;name&gt;</code>，包含 <code>theme.json</code>、<code>templates/</code> 与 <code>static/</code>。模板语法见项目文档。切换主题会立即生效。</p>
+  </section>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

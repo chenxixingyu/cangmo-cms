@@ -1,0 +1,25 @@
+{% include "partials/head.html" %}
+<main class="auth-wrap">
+  <section class="auth-card">
+    <div class="auth-brand">
+      <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#2f6f4e"/><path d="M17 14h30a4 4 0 0 1 4 4v28a4 4 0 0 1-4 4H17a4 4 0 0 1-4-4V18a4 4 0 0 1 4-4Z" fill="#f7f5ef"/><path d="M23 23h18M23 31h18M23 39h11" stroke="#2f6f4e" stroke-width="3" stroke-linecap="round"/></svg>
+      <div><strong>仓墨</strong><span>{{ site.title }} 管理后台</span></div>
+    </div>
+    <h1>欢迎回来</h1>
+    <p class="auth-sub">登录后管理文章、评论与站点设置。</p>
+    {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+    <form method="post" action="/admin/login" class="auth-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <input type="hidden" name="next" value="{{ next }}">
+      <label>用户名或邮箱
+        <input type="text" name="username" value="{{ username }}" required autofocus autocomplete="username" spellcheck="false">
+      </label>
+      <label>密码
+        <input type="password" name="password" required autocomplete="current-password">
+      </label>
+      <button class="btn btn-block" type="submit">登录</button>
+    </form>
+    <p class="auth-foot"><a href="/">← 返回站点</a></p>
+  </section>
+</main>
+{% include "partials/foot.html" %}

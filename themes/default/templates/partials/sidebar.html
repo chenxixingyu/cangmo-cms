@@ -1,0 +1,39 @@
+<aside class="sidebar">
+  <section class="widget">
+    <h2 class="widget-title">关于</h2>
+    <p class="widget-text">{{ site.description }}</p>
+  </section>
+  <section class="widget">
+    <h2 class="widget-title">搜索</h2>
+    <form class="search-form" action="/search" method="get" role="search">
+      <input type="search" name="q" placeholder="搜索文章…" aria-label="搜索文章" value="{{ search_query }}">
+      <button type="submit" aria-label="搜索">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </form>
+  </section>
+  {% if categories.length > 0 %}
+  <section class="widget">
+    <h2 class="widget-title">分类</h2>
+    <ul class="widget-list">
+      {% for category in categories %}<li><a href="{{ category.url }}"><span>{{ category.name }}</span><span class="count">{{ category.count }}</span></a></li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+  {% if tags.length > 0 %}
+  <section class="widget">
+    <h2 class="widget-title">标签</h2>
+    <div class="tag-cloud">
+      {% for tag in tags %}<a href="{{ tag.url }}">#{{ tag.name }}</a>{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+  {% if archives.length > 0 %}
+  <section class="widget">
+    <h2 class="widget-title">归档</h2>
+    <ul class="widget-list">
+      {% for archive in archives %}<li><a href="{{ archive.url }}"><span>{{ archive.label }}</span><span class="count">{{ archive.count }}</span></a></li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</aside>

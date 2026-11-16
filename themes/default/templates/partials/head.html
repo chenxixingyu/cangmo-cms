@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="{{ site.mode }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{% if page_title %}{{ page_title }} · {% endif %}{{ site.title }}</title>
+<meta name="description" content="{{ meta_description|default(site.description) }}">
+<meta name="keywords" content="{{ site.keywords }}">
+<meta name="color-scheme" content="light dark">
+<meta property="og:site_name" content="{{ site.title }}">
+<meta property="og:title" content="{% if page_title %}{{ page_title }}{% else %}{{ site.title }}{% endif %}">
+<meta property="og:description" content="{{ meta_description|default(site.description) }}">
+<meta property="og:type" content="{{ og_type|default("website") }}">
+<meta property="og:url" content="{% if canonical %}{{ canonical }}{% else %}{{ site.url }}{{ current_path }}{% endif %}">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="{% if canonical %}{{ canonical }}{% else %}{{ site.url }}{{ current_path }}{% endif %}">
+<link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+<link rel="alternate" type="application/rss+xml" title="{{ site.title }}" href="/feed.xml">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="stylesheet" href="/static/style.css?v={{ version }}">
+<style>:root { --accent: {{ site.accent }}; }</style>
+</head>
+<body>
+<a class="skip-link" href="#main">跳到正文</a>
+<div class="reading-progress" id="reading-progress" aria-hidden="true"></div>

@@ -1,0 +1,27 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <section class="panel">
+    <header class="panel-head"><h2>全部标签</h2><span class="muted">标签在编辑文章时自动创建</span></header>
+    <div class="tag-admin-list">
+      {% for tag in tags %}
+      <div class="tag-admin-item">
+        <span class="tag-name">#{{ tag.name }}</span>
+        <span class="muted">{{ tag.post_count }} 篇文章</span>
+        <form method="post" action="/admin/tags/delete" class="inline-form" data-confirm="确定删除标签「{{ tag.name }}」？文章本身不会被删除。">
+          <input type="hidden" name="_csrf" value="{{ csrf }}">
+          <input type="hidden" name="id" value="{{ tag.id }}">
+          <button type="submit" class="link-btn danger">删除</button>
+        </form>
+      </div>
+      {% endfor %}
+      {% if tags.length == 0 %}<p class="muted">还没有标签。</p>{% endif %}
+    </div>
+  </section>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

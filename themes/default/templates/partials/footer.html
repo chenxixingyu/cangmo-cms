@@ -1,0 +1,19 @@
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <strong>{{ site.title }}</strong>
+      <p>{{ site.footer_text }}</p>
+    </div>
+    <div class="footer-links">
+      <a href="/feed.xml">RSS</a>
+      <a href="/sitemap.xml">站点地图</a>
+      <a href="/archive">归档</a>
+      {% for link in site.social %}<a href="{{ link.url }}" rel="noopener nofollow" target="_blank">{{ link.label }}</a>{% endfor %}
+      <a href="/admin/login">管理</a>
+    </div>
+    <p class="copyright">© {{ site.year }} {{ site.title }} · 由仓墨构建</p>
+  </div>
+</footer>
+<script src="/static/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <section class="stat-grid">
+    <div class="stat-card"><span class="stat-label">文章</span><strong>{{ counts.posts }}</strong><small>{{ counts.drafts }} 草稿 · {{ counts.scheduled }} 定时</small></div>
+    <div class="stat-card"><span class="stat-label">页面</span><strong>{{ counts.pages }}</strong><small>独立页面</small></div>
+    <div class="stat-card"><span class="stat-label">评论</span><strong>{{ counts.comments }}</strong><small>{{ counts.comments_pending }} 待审核</small></div>
+    <div class="stat-card"><span class="stat-label">浏览</span><strong>{{ counts.views }}</strong><small>累计阅读</small></div>
+    <div class="stat-card"><span class="stat-label">媒体</span><strong>{{ counts.media }}</strong><small>文件</small></div>
+    <div class="stat-card"><span class="stat-label">用户</span><strong>{{ counts.users }}</strong><small>注册账户</small></div>
+  </section>
+
+  <div class="dashboard-grid">
+    <section class="panel">
+      <header class="panel-head"><h2>最近文章</h2><a href="/admin/posts">全部文章 →</a></header>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>标题</th><th>状态</th><th>发布日期</th><th></th></tr></thead>
+          <tbody>
+            {% for row in recent_posts %}
+            <tr>
+              <td><a href="{{ row.edit_url }}">{{ row.title }}</a></td>
+              <td><span class="status status-{{ row.status }}">{{ row.status }}</span></td>
+              <td class="muted">{{ row.date }}</td>
+              <td class="table-actions"><a href="{{ row.edit_url }}">编辑</a></td>
+            </tr>
+            {% endfor %}
+            {% if recent_posts.length == 0 %}<tr><td colspan="4" class="muted">还没有文章。<a href="/admin/posts/new">写第一篇</a></td></tr>{% endif %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <header class="panel-head"><h2>最新评论</h2><a href="/admin/comments">审核 →</a></header>
+      <div class="comment-mini-list">
+        {% for comment in recent_comments %}
+        <div class="comment-mini">
+          <div class="comment-mini-head"><strong>{{ comment.author_name }}</strong><span class="status status-{{ comment.status }}">{{ comment.status }}</span></div>
+          <p>{{ comment.content }}</p>
+          <small>{{ comment.date }}{% if comment.post_title %} · {{ comment.post_title }}{% endif %}</small>
+        </div>
+        {% endfor %}
+        {% if recent_comments.length == 0 %}<p class="muted">还没有评论。</p>{% endif %}
+      </div>
+    </section>
+
+    <section class="panel">
+      <header class="panel-head"><h2>快捷操作</h2></header>
+      <div class="quick-actions">
+        <a class="quick-action" href="/admin/posts/new"><strong>写文章</strong><span>使用 Markdown 编辑</span></a>
+        <a class="quick-action" href="/admin/media"><strong>上传媒体</strong><span>图片、PDF、音视频</span></a>
+        <a class="quick-action" href="/admin/comments?status=pending"><strong>审核评论</strong><span>{{ counts.comments_pending }} 条待处理</span></a>
+        <a class="quick-action" href="/admin/tools"><strong>备份数据</strong><span>导出并下载 JSON</span></a>
+      </div>
+    </section>
+
+    <section class="panel">
+      <header class="panel-head"><h2>最近操作</h2><a href="/admin/audit">审计日志 →</a></header>
+      <ul class="audit-mini">
+        {% for entry in recent_audit %}
+        <li><span class="audit-action">{{ entry.action }}</span><span class="muted">{{ entry.actor_name|default("系统") }}</span><span class="muted">{{ entry.created_at }}</span></li>
+        {% endfor %}
+        {% if recent_audit.length == 0 %}<li class="muted">暂无记录。</li>{% endif %}
+      </ul>
+    </section>
+  </div>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

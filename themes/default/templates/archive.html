@@ -1,0 +1,28 @@
+{% include "partials/head.html" %}
+{% include "partials/header.html" %}
+<main id="main" class="wrap layout">
+  <div class="content">
+    <header class="list-header">
+      <p class="hero-kicker">ARCHIVE</p>
+      <h1 class="list-title">{{ list_title }}</h1>
+      <div class="archive-chips">
+        <a href="/archive" class="chip">全部</a>
+        {% for group in archive_groups %}<a class="chip" href="{{ group.url }}">{{ group.label }} <span>{{ group.count }}</span></a>{% endfor %}
+      </div>
+    </header>
+    <div class="archive-list">
+      {% for post in posts %}
+      <article class="archive-item">
+        <time datetime="{{ post.date_iso }}">{{ post.date }}</time>
+        <div>
+          <h2><a href="{{ post.url }}">{{ post.title }}</a></h2>
+          {% if post.summary %}<p>{{ post.summary }}</p>{% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% if posts.length == 0 %}<div class="empty-state"><p>这个时间段还没有文章。</p></div>{% endif %}
+  </div>
+  {% include "partials/sidebar.html" %}
+</main>
+{% include "partials/footer.html" %}

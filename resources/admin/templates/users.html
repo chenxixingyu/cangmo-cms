@@ -1,0 +1,79 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <section class="panel">
+    <header class="panel-head"><h2>新建用户</h2></header>
+    <form method="post" action="/admin/users/action" class="grid-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <input type="hidden" name="action" value="create">
+      <label>用户名<input type="text" name="username" required minlength="3" maxlength="32" pattern="[A-Za-z][A-Za-z0-9_-]{2,31}"></label>
+      <label>邮箱<input type="email" name="email" required maxlength="254"></label>
+      <label>显示名<input type="text" name="display_name" maxlength="60"></label>
+      <label>密码<input type="password" name="password" required minlength="10" autocomplete="new-password"></label>
+      <label>角色
+        <select name="role">
+          <option value="editor">编辑（管理所有内容）</option>
+          <option value="author">作者（发布自己的文章）</option>
+          <option value="contributor">投稿者（只能提交草稿）</option>
+          <option value="subscriber">订阅者</option>
+          <option value="admin">管理员</option>
+        </select>
+      </label>
+      <div class="form-submit"><button class="btn" type="submit">创建用户</button></div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <header class="panel-head"><h2>用户列表</h2></header>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>用户</th><th>角色与状态</th><th>最近登录</th><th>操作</th></tr></thead>
+        <tbody>
+          {% for item in users %}
+          <tr>
+            <td>
+              <strong>{{ item.display_name|default(item.username) }}</strong>
+              <div class="table-sub">{{ item.username }} · {{ item.email }}</div>
+            </td>
+            <td>
+              <form method="post" action="/admin/users/action" class="row-form">
+                <input type="hidden" name="_csrf" value="{{ csrf }}">
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="id" value="{{ item.id }}">
+                <select name="role">
+                  <option value="admin"{% if item.role == "admin" %} selected{% endif %}>管理员</option>
+                  <option value="editor"{% if item.role == "editor" %} selected{% endif %}>编辑</option>
+                  <option value="author"{% if item.role == "author" %} selected{% endif %}>作者</option>
+                  <option value="contributor"{% if item.role == "contributor" %} selected{% endif %}>投稿者</option>
+                  <option value="subscriber"{% if item.role == "subscriber" %} selected{% endif %}>订阅者</option>
+                </select>
+                <select name="status">
+                  <option value="active"{% if item.status == "active" %} selected{% endif %}>正常</option>
+                  <option value="suspended"{% if item.status == "suspended" %} selected{% endif %}>停用</option>
+                </select>
+                <input type="text" name="display_name" value="{{ item.display_name }}" maxlength="60" placeholder="显示名">
+                <button type="submit" class="link-btn">保存</button>
+              </form>
+            </td>
+            <td class="muted">{{ item.last_login }}</td>
+            <td class="table-actions">
+              <form method="post" action="/admin/users/action" class="inline-form" data-confirm="确定重置「{{ item.username }}」的密码？新密码会显示在提示中。">
+                <input type="hidden" name="_csrf" value="{{ csrf }}">
+                <input type="hidden" name="action" value="reset">
+                <input type="hidden" name="id" value="{{ item.id }}">
+                <button type="submit" class="link-btn">重置密码</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

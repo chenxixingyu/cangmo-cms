@@ -1,0 +1,59 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <form method="post" action="/admin/settings/save" class="settings-form">
+    <input type="hidden" name="_csrf" value="{{ csrf }}">
+
+    <section class="panel">
+      <header class="panel-head"><h2>站点信息</h2></header>
+      <div class="grid-form">
+        <label>站点标题<input type="text" name="site_title" value="{{ settings.site_title }}" required maxlength="100"></label>
+        <label>副标题<input type="text" name="site_subtitle" value="{{ settings.site_subtitle }}" maxlength="150"></label>
+        <label class="span-2">站点描述<textarea name="site_description" rows="2" maxlength="300">{{ settings.site_description }}</textarea></label>
+        <label>关键词<input type="text" name="site_keywords" value="{{ settings.site_keywords }}" maxlength="200"></label>
+        <label>站点地址<input type="url" name="site_url" value="{{ settings.site_url }}" maxlength="300"></label>
+        <label class="span-2">页脚文字<input type="text" name="footer_text" value="{{ settings.footer_text }}" maxlength="300"></label>
+        <label>每页文章数<input type="number" name="posts_per_page" value="{{ settings.posts_per_page }}" min="1" max="50"></label>
+      </div>
+    </section>
+
+    <section class="panel">
+      <header class="panel-head"><h2>外观</h2></header>
+      <div class="grid-form">
+        <label>主题色<input type="color" name="theme_accent" value="{{ settings.theme_accent }}"></label>
+        <label>颜色模式
+          <select name="theme_mode">
+            <option value="auto"{% if settings.theme_mode == "auto" %} selected{% endif %}>跟随系统</option>
+            <option value="light"{% if settings.theme_mode == "light" %} selected{% endif %}>浅色</option>
+            <option value="dark"{% if settings.theme_mode == "dark" %} selected{% endif %}>深色</option>
+          </select>
+        </label>
+        <label class="check-row"><input type="checkbox" name="show_toc" value="on"{% if settings.show_toc %} checked{% endif %}> 显示文章目录</label>
+        <label class="check-row"><input type="checkbox" name="show_reading_time" value="on"{% if settings.show_reading_time %} checked{% endif %}> 显示阅读时间</label>
+        <label class="span-2">导航菜单（每行：名称|链接）
+          <textarea name="nav_text" rows="5" placeholder="首页|/&#10;归档|/archive">{{ nav_text }}</textarea>
+        </label>
+        <label class="span-2">社交链接（每行：名称|链接）
+          <textarea name="social_text" rows="4" placeholder="GitHub|https://github.com/you">{{ social_text }}</textarea>
+        </label>
+      </div>
+    </section>
+
+    <section class="panel">
+      <header class="panel-head"><h2>评论</h2></header>
+      <div class="grid-form">
+        <label class="check-row"><input type="checkbox" name="comment_enabled" value="on"{% if settings.comment_enabled %} checked{% endif %}> 开启评论</label>
+        <label class="check-row"><input type="checkbox" name="comment_moderation" value="on"{% if settings.comment_moderation %} checked{% endif %}> 评论需要审核</label>
+        <label>每条评论最多链接数<input type="number" name="comment_max_links" value="{{ settings.comment_max_links }}" min="0" max="20"></label>
+      </div>
+    </section>
+
+    <div class="sticky-save"><button class="btn" type="submit">保存设置</button></div>
+  </form>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

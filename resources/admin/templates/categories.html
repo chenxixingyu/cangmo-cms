@@ -1,0 +1,53 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <div class="two-col">
+    <section class="panel">
+      <header class="panel-head"><h2>新建分类</h2></header>
+      <form method="post" action="/admin/categories/save" class="stack-form">
+        <input type="hidden" name="_csrf" value="{{ csrf }}">
+        <input type="hidden" name="action" value="create">
+        <label>名称<input type="text" name="name" required maxlength="60"></label>
+        <label>别名（可选）<input type="text" name="slug" maxlength="96" placeholder="自动生成"></label>
+        <label>描述<textarea name="description" rows="2" maxlength="300"></textarea></label>
+        <button class="btn" type="submit">创建分类</button>
+      </form>
+    </section>
+    <section class="panel">
+      <header class="panel-head"><h2>说明</h2></header>
+      <p class="muted">分类用于组织文章。删除分类时，其文章会自动移动到其他分类。别名用于 URL，只能包含小写字母、数字和连字符。</p>
+    </section>
+  </div>
+
+  <section class="panel">
+    <header class="panel-head"><h2>全部分类</h2></header>
+    <div class="category-list">
+      {% for category in categories %}
+      <div class="category-row">
+        <form method="post" action="/admin/categories/save" class="category-edit-form">
+          <input type="hidden" name="_csrf" value="{{ csrf }}">
+          <input type="hidden" name="action" value="update">
+          <input type="hidden" name="id" value="{{ category.id }}">
+          <label>名称<input type="text" name="name" value="{{ category.name }}" required maxlength="60"></label>
+          <label>别名<input type="text" name="slug" value="{{ category.slug }}" maxlength="96"></label>
+          <label>描述<input type="text" name="description" value="{{ category.description }}" maxlength="300"></label>
+          <span class="muted category-count">{{ category.post_count }} 篇文章</span>
+          <button type="submit" class="btn btn-ghost">保存</button>
+        </form>
+        <form method="post" action="/admin/categories/save" class="inline-form" data-confirm="确定删除分类「{{ category.name }}」？">
+          <input type="hidden" name="_csrf" value="{{ csrf }}">
+          <input type="hidden" name="action" value="delete">
+          <input type="hidden" name="id" value="{{ category.id }}">
+          <button type="submit" class="link-btn danger">删除</button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

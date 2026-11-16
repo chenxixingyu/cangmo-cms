@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="仓墨">
+  <rect width="64" height="64" rx="14" fill="#2f6f4e"/>
+  <path d="M17 14h30a4 4 0 0 1 4 4v28a4 4 0 0 1-4 4H17a4 4 0 0 1-4-4V18a4 4 0 0 1 4-4Z" fill="#f7f5ef"/>
+  <path d="M23 23h18M23 31h18M23 39h11" stroke="#2f6f4e" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="45" cy="44" r="7" fill="#2f6f4e" stroke="#f7f5ef" stroke-width="3"/>
+</svg>

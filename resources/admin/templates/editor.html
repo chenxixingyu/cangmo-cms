@@ -1,0 +1,118 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content editor-page">
+  {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+  <form method="post" action="/admin/posts/save" id="editor-form" class="editor-form"
+        data-preview-url="/admin/preview" data-csrf="{{ csrf }}" data-post-id="{{ post.id }}">
+    <input type="hidden" name="_csrf" value="{{ csrf }}">
+    <input type="hidden" name="id" value="{{ post.id }}">
+    <input type="hidden" name="type" value="{{ post.type }}">
+    <div class="editor-head">
+      <div class="editor-head-left">
+        <a class="back-link" href="/admin/posts?type={{ post.type }}">← 返回列表</a>
+        <span class="editor-state">{% if is_new %}新建{% else %}编辑{% endif %}{% if post.type == "page" %}页面{% else %}文章{% endif %}</span>
+      </div>
+      <div class="editor-head-actions">
+        {% if not is_new %}<a class="btn btn-ghost" href="/{% if post.type == 'page' %}pages{% else %}posts{% endif %}/{{ post.slug }}" target="_blank" rel="noopener">预览</a>{% endif %}
+        <button class="btn" type="submit">保存</button>
+      </div>
+    </div>
+
+    <div class="editor-grid">
+      <div class="editor-main">
+        <input class="title-input" type="text" name="title" value="{{ post.title }}" placeholder="标题" required maxlength="200" autocomplete="off" id="post-title">
+        <div class="editor-toolbar-row">
+          <div class="editor-toolbar" role="toolbar" aria-label="Markdown 工具栏">
+            <button type="button" data-insert="**" data-wrap="1" title="加粗">B</button>
+            <button type="button" data-insert="*" data-wrap="1" title="斜体"><em>I</em></button>
+            <button type="button" data-insert="`" data-wrap="1" title="行内代码">&lt;/&gt;</button>
+            <button type="button" data-insert="## " data-line="1" title="二级标题">H2</button>
+            <button type="button" data-insert="- " data-line="1" title="列表">≡</button>
+            <button type="button" data-insert="> " data-line="1" title="引用">”</button>
+            <button type="button" data-insert="[链接文字](https://)" title="链接">🔗</button>
+            <button type="button" data-insert="```cangjie&#10;代码&#10;```" title="代码块">⌘</button>
+          </div>
+          <div class="editor-tabs" role="tablist">
+            <button type="button" class="active" data-editor-tab="write">编写</button>
+            <button type="button" data-editor-tab="preview">预览</button>
+          </div>
+        </div>
+        <textarea class="content-editor" name="content" id="post-content" rows="24" spellcheck="false" placeholder="开始写点什么…（支持 Markdown）">{{ post.content }}</textarea>
+        <div class="preview-pane prose" id="preview-pane" hidden></div>
+        <div class="editor-foot">
+          <span id="word-count">0 字</span>
+          <span class="muted">支持 Markdown · 自动保存到本地草稿</span>
+          <button type="button" class="link-btn" id="restore-draft" hidden>恢复本地草稿</button>
+        </div>
+      </div>
+
+      <aside class="editor-side">
+        <section class="side-panel">
+          <h2>发布</h2>
+          <label>状态
+            <select name="status" id="post-status">
+              <option value="draft"{% if post.status == "draft" %} selected{% endif %}>草稿</option>
+              <option value="published"{% if post.status == "published" %} selected{% endif %}>已发布</option>
+              <option value="scheduled"{% if post.status == "scheduled" %} selected{% endif %}>定时发布</option>
+            </select>
+          </label>
+          <label id="schedule-field">定时时间
+            <input type="datetime-local" name="scheduled_at" value="{{ post.scheduled_at }}">
+          </label>
+          {% if post.published_at %}<p class="muted small">首次发布：{{ post.published_at }}</p>{% endif %}
+          <label>摘要
+            <textarea name="summary" rows="3" maxlength="500" placeholder="留空则自动截取正文">{{ post.summary }}</textarea>
+          </label>
+        </section>
+
+        <section class="side-panel">
+          <h2>组织</h2>
+          <label>分类
+            <select name="category_id">
+              <option value="">未分类</option>
+              {% for category in categories %}<option value="{{ category.id }}"{% if category.id == post.category_id %} selected{% endif %}>{{ category.name }}</option>{% endfor %}
+            </select>
+          </label>
+          <label>标签（逗号分隔）
+            <input type="text" name="tags" value="{{ post.tags }}" placeholder="仓颉, 教程, 随笔">
+          </label>
+          {% if all_tags.length > 0 %}<div class="tag-suggest">{% for tag in all_tags %}<button type="button" class="tag-pill" data-tag="{{ tag.name }}">#{{ tag.name }}</button>{% endfor %}</div>{% endif %}
+          <label>封面图 URL
+            <input type="url" name="cover" value="{{ post.cover }}" placeholder="/media/2026/01/cover.jpg">
+          </label>
+          <label class="check-row"><input type="checkbox" name="pinned" value="on"{% if post.pinned %} checked{% endif %}> 置顶</label>
+          <label class="check-row"><input type="checkbox" name="featured" value="on"{% if post.featured %} checked{% endif %}> 精选</label>
+          <label class="check-row"><input type="checkbox" name="allow_comments" value="on"{% if post.allow_comments %} checked{% endif %}> 允许评论</label>
+        </section>
+
+        <section class="side-panel">
+          <h2>SEO</h2>
+          <label>SEO 标题
+            <input type="text" name="seo_title" value="{{ post.seo_title }}" maxlength="200" placeholder="留空则使用文章标题">
+          </label>
+          <label>SEO 描述
+            <textarea name="seo_description" rows="3" maxlength="300" placeholder="留空则使用摘要">{{ post.seo_description }}</textarea>
+          </label>
+          <label>URL 别名
+            <input type="text" name="slug" value="{{ post.slug }}" id="post-slug" maxlength="96" placeholder="自动生成" pattern="[a-z0-9-]*">
+          </label>
+        </section>
+
+        {% if revisions.length > 0 %}
+        <section class="side-panel">
+          <h2>历史版本</h2>
+          <ul class="revision-list">
+            {% for revision in revisions %}<li><span>{{ revision.date }}</span><small>{{ revision.title }}</small></li>{% endfor %}
+          </ul>
+        </section>
+        {% endif %}
+      </aside>
+    </div>
+  </form>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

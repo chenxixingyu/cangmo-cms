@@ -1,0 +1,48 @@
+<section class="comments" id="comments">
+  <h2 class="section-title">评论 <span class="comment-count">{{ comment_count }}</span></h2>
+  {% if comments.length == 0 %}
+    <p class="muted">还没有评论，来说点什么吧。</p>
+  {% endif %}
+  <div class="comment-list">
+    {% for comment in comments %}
+    <article class="comment depth-{{ comment.depth }}" id="comment-{{ comment.id }}">
+      <div class="comment-avatar" aria-hidden="true">{{ comment.initial }}</div>
+      <div class="comment-main">
+        <div class="comment-head">
+          <strong>
+            {% if comment.author_url %}<a href="{{ comment.author_url }}" rel="nofollow noopener" target="_blank">{{ comment.author_name }}</a>{% else %}{{ comment.author_name }}{% endif %}
+          </strong>
+          <time datetime="">{{ comment.relative }}</time>
+        </div>
+        <p class="comment-body">{{ comment.content }}</p>
+        {% if comments_enabled %}<button class="reply-btn" type="button" data-parent="{{ comment.id }}" data-name="{{ comment.author_name }}">回复</button>{% endif %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+
+  <div class="comment-form-wrap" id="comment-form">
+    <h2 class="section-title">发表评论</h2>
+    {% if comments_enabled %}
+    <form method="post" action="/comments" class="comment-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <input type="hidden" name="post_id" value="{{ post.id }}">
+      <input type="hidden" name="parent_id" id="parent-id" value="">
+      <div class="reply-hint" id="reply-hint" hidden>正在回复 <strong id="reply-name"></strong> <button type="button" id="cancel-reply">取消</button></div>
+      <div class="form-row">
+        <label>昵称<input type="text" name="name" required maxlength="50" autocomplete="nickname" placeholder="你的昵称"></label>
+        <label>邮箱（不公开）<input type="email" name="email" required maxlength="254" autocomplete="email" placeholder="you@example.com"></label>
+      </div>
+      <label>网址（可选）<input type="url" name="url" maxlength="300" placeholder="https://"></label>
+      <label>评论内容<textarea name="content" required minlength="2" maxlength="5000" rows="5" placeholder="友善地表达你的想法…"></textarea></label>
+      <div class="hp" aria-hidden="true"><label>网站<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+      <div class="comment-form-foot">
+        <button class="btn" type="submit">提交评论</button>
+        <p class="form-note">评论可能需要审核后显示；邮箱不会公开。</p>
+      </div>
+    </form>
+    {% else %}
+    <p class="muted">本文评论已关闭。</p>
+    {% endif %}
+  </div>
+</section>

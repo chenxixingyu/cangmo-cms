@@ -1,0 +1,31 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <div class="panel">
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>时间</th><th>操作</th><th>操作者</th><th>对象</th><th>IP</th><th>详情</th></tr></thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td class="muted">{{ row.date }}</td>
+            <td><code>{{ row.action }}</code></td>
+            <td>{{ row.actor_name|default("系统") }}</td>
+            <td class="muted">{{ row.target_type }}{% if row.target_id %} · {{ row.target_id }}{% endif %}</td>
+            <td class="muted">{{ row.ip }}</td>
+            <td class="muted">{{ row.detail }}</td>
+          </tr>
+          {% endfor %}
+          {% if rows.length == 0 %}<tr><td colspan="6" class="empty-row">暂无日志。</td></tr>{% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% include "partials/pagination.html" %}
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

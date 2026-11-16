@@ -1,0 +1,25 @@
+{% include "partials/head.html" %}
+{% include "partials/header.html" %}
+<main id="main" class="wrap layout">
+  <div class="content">
+    <header class="list-header">
+      <p class="hero-kicker">SEARCH</p>
+      <h1 class="list-title">{% if query %}搜索「{{ query }}」{% else %}搜索{% endif %}</h1>
+      <form class="search-form search-form-large" action="/search" method="get" role="search">
+        <input type="search" name="q" value="{{ query }}" placeholder="输入关键词…" aria-label="搜索关键词" autofocus>
+        <button type="submit">搜索</button>
+      </form>
+      {% if query %}<p class="list-description">找到 {{ result_count }} 篇相关文章</p>{% endif %}
+    </header>
+    <div class="post-grid">
+      {% for post in results %}
+        {% include "partials/post-card.html" %}
+      {% endfor %}
+    </div>
+    {% if query and results.length == 0 %}
+      <div class="empty-state"><p>没有找到相关文章，换个关键词试试。</p></div>
+    {% endif %}
+  </div>
+  {% include "partials/sidebar.html" %}
+</main>
+{% include "partials/footer.html" %}
