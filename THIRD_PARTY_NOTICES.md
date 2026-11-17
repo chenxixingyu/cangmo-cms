@@ -9,7 +9,7 @@ platform APIs, or standards:
 | Item | Role | License / terms | Notes |
 | --- | --- | --- | --- |
 | Cangjie compiler, runtime, standard library (`cjc`, `cjpm`) | Build toolchain and runtime platform | Apache License 2.0 with Runtime Library Exception (Huawei) | Used as installed toolchain, not copied into source. |
-| Windows CNG `SystemFunction036` (`advapi32.dll`) | OS CSPRNG | Operating system API | Called via a declared FFI binding; no code copied. |
+| Windows CNG `bcrypt.dll` (`BCryptGenRandom`, `BCryptDeriveKeyPBKDF2`) | OS CSPRNG and PBKDF2 acceleration | Operating system API | Called via declared FFI bindings; no code copied. |
 | `actions/checkout` (GitHub Actions) | CI checkout | MIT License | Used only in GitHub Actions workflow, not vendored. |
 | `Zxilly/setup-cangjie` (GitHub Actions) | CI Cangjie toolchain setup | MIT License | Used only in GitHub Actions workflow, not vendored. |
 | HTTP/1.1, JSON (RFC 8259), RSS 2.0, Atom, Sitemap 0.9, Markdown, HTML, CSS, ECMAScript | Open standards | Public specifications | Implemented independently from the specifications. |
