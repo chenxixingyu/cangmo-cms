@@ -3,7 +3,7 @@
 ## 当前状态（2026-11-18）
 
 - ✅ 仓库已创建：<https://github.com/chenxixingyu/cangmo-blog>
-- ✅ `main` 已推送，HEAD `a10bc2a`
+- ✅ `main` 已推送（HEAD `2b45afc`），标签 `v1.0.0` 指向 `a10bc2a`
 - ✅ 标签 `v1.0.0` 已推送
 - ✅ CI 成功（Windows + Cangjie 1.2.1）
 - ✅ Release `v1.0.0` 已发布，附 `cangmo-v1.0.0-source.zip` 与 `cangmo-v1.0.0.bundle`
