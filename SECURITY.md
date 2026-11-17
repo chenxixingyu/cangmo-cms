@@ -15,7 +15,7 @@ v1.0 面向 Windows x64。Linux 移植、进程内 TLS、插件运行时等尚�
 
 优先使用 GitHub 的私密漏洞报告：
 
-<https://github.com/chenxixingyu/cangmo-blog/security/advisories/new>
+<https://github.com/chenxixingyu/cangmo-cms/security/advisories/new>
 
 如果无法使用该功能，请通过 GitHub 私信联系
 [@chenxixingyu](https://github.com/chenxixingyu)。

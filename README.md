@@ -3,11 +3,11 @@
 > 用**仓颉语言**从零构建的现代、安全的博客 / CMS 系统。  
 > A modern, secure blog engine written natively in Cangjie.
 
-[![CI](https://github.com/chenxixingyu/cangmo-blog/actions/workflows/ci.yml/badge.svg)](https://github.com/chenxixingyu/cangmo-blog/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/chenxixingyu/cangmo-blog)](https://github.com/chenxixingyu/cangmo-blog/releases)
+[![CI](https://github.com/chenxixingyu/cangmo-cms/actions/workflows/ci.yml/badge.svg)](https://github.com/chenxixingyu/cangmo-cms/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/chenxixingyu/cangmo-cms)](https://github.com/chenxixingyu/cangmo-cms/releases)
 [![License](https://img.shields.io/badge/license-Cangmo%201.0-2f6f4e)](LICENSE)
 
-**仓库**：<https://github.com/chenxixingyu/cangmo-blog>  
+**仓库**：<https://github.com/chenxixingyu/cangmo-cms>  
 **作者**：宸熙星语 (chenxixingyu)
 
 ![首页](docs/screenshots/home.png)

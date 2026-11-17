@@ -1,11 +1,11 @@
 blank_issues_enabled: false
 contact_links:
   - name: 文档 / Documentation
-    url: https://github.com/chenxixingyu/cangmo-blog/tree/main/docs
+    url: https://github.com/chenxixingyu/cangmo-cms/tree/main/docs
     about: 功能、架构、安全、API、部署与测试文档
   - name: 私密安全报告 / Security advisory
-    url: https://github.com/chenxixingyu/cangmo-blog/security/advisories/new
+    url: https://github.com/chenxixingyu/cangmo-cms/security/advisories/new
     about: 请勿在公开 Issue 中披露安全漏洞
   - name: 讨论 / Discussions
-    url: https://github.com/chenxixingyu/cangmo-blog/discussions
+    url: https://github.com/chenxixingyu/cangmo-cms/discussions
     about: 使用问题、想法与展示

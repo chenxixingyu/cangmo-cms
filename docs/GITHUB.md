@@ -2,7 +2,7 @@
 
 ## 当前状态（2026-11-18）
 
-- ✅ 仓库已创建：<https://github.com/chenxixingyu/cangmo-blog>
+- ✅ 仓库：<https://github.com/chenxixingyu/cangmo-cms>（2026-11-18 由 `cangmo-blog` 更名为 `cangmo-cms`，旧地址 301 重定向）
 - ✅ `main` 已推送（最新提交以仓库为准），标签 `v1.0.0` 指向发布提交
 - ✅ 标签 `v1.0.0` 已推送
 - ✅ CI 成功（Windows + Cangjie 1.2.1）
@@ -14,8 +14,8 @@
 ## 仓库信息
 
 - Owner：`chenxixingyu`
-- 仓库名：`cangmo-blog`
-- URL：<https://github.com/chenxixingyu/cangmo-blog>
+- 仓库名：`cangmo-cms`
+- URL：<https://github.com/chenxixingyu/cangmo-cms>
 - 可见性：Public
 - 默认分支：`main`
 - 描述：
@@ -30,7 +30,7 @@
 
 ```powershell
 cd E:\mianban\cangmo
-git remote add origin https://github.com/chenxixingyu/cangmo-blog.git
+git remote add origin https://github.com/chenxixingyu/cangmo-cms.git
 git push -u origin main
 git push origin v1.0.0
 ```
