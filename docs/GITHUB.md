@@ -3,11 +3,11 @@
 ## 当前状态（2026-11-18）
 
 - ✅ 仓库已创建：<https://github.com/chenxixingyu/cangmo-blog>
-- ✅ `main` 已推送（HEAD `2b45afc`），标签 `v1.0.0` 指向 `a10bc2a`
+- ✅ `main` 已推送（HEAD `031590c`），标签 `v1.0.0` 指向 `a10bc2a`
 - ✅ 标签 `v1.0.0` 已推送
-- ✅ CI 成功（Windows + Cangjie 1.2.1）
+- ✅ CI 成功（Windows + Cangjie 1.2.1，run `031590c`）
 - ✅ Release `v1.0.0` 已发布，附 `cangmo-v1.0.0-source.zip` 与 `cangmo-v1.0.0.bundle`
-- ✅ 私密漏洞报告已启用
+- ✅ 私密漏洞报告、Secret scanning、Push protection、Dependabot alerts 已启用
 - ✅ Topics、描述、Discussions 已配置
 - ⚠️ 许可证为自定义许可证，GitHub 识别为 “Other”（非 OSI 认证）
 
