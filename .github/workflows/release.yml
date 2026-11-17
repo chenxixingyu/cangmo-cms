@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish source archives
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build source archives
+        run: |
+          set -euo pipefail
+          NAME="${GITHUB_REF_NAME}"
+          git archive --format=zip --output="cangmo-${NAME}-source.zip" HEAD
+          git bundle create "cangmo-${NAME}.bundle" --all
+          ls -lh "cangmo-${NAME}-source.zip" "cangmo-${NAME}.bundle"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          NAME="${GITHUB_REF_NAME}"
+          if [ -f "docs/releases/${NAME}.md" ]; then
+            gh release create "${NAME}" \
+              "cangmo-${NAME}-source.zip" \
+              "cangmo-${NAME}.bundle" \
+              --title "仓墨 ${NAME}" \
+              --notes-file "docs/releases/${NAME}.md"
+          else
+            gh release create "${NAME}" \
+              "cangmo-${NAME}-source.zip" \
+              "cangmo-${NAME}.bundle" \
+              --title "仓墨 ${NAME}" \
+              --generate-notes
+          fi

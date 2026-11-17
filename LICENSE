@@ -1,10 +1,10 @@
-Cangmo Proprietary License 1.0
-Copyright (c) 2026 Cangmo Project. All rights reserved.
+Cangmo Source-Available License 1.0
+Copyright (c) 2026 宸熙星语 (chenxixingyu). All rights reserved.
 
 This software, including all source code, templates, stylesheets, scripts,
 documentation and other original works contained in this distribution
 (collectively "the Software"), is an original work created for the Cangmo
-project. The copyright in the Software is owned by the Cangmo Project.
+project. The copyright in the Software is owned by 宸熙星语 (chenxixingyu).
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of the Software, to use, copy, modify, merge, publish and deploy the Software,
@@ -22,8 +22,10 @@ subject to the following conditions:
    from, out of or in connection with the Software or the use or other
    dealings in the Software.
 4. This license does not grant permission to use the trade names, trademarks,
-   service marks or product names of the Cangmo Project, except as required
+   service marks or product names of the copyright holder, except as required
    for reasonable and customary use in describing the origin of the Software.
+5. Commercial redistribution of the Software as a competing hosted service
+   requires prior written permission from the copyright holder.
 
 The Software is implemented from scratch in the Cangjie programming language.
 It does not contain, copy, port or otherwise derive from the source code of

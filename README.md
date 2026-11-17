@@ -3,6 +3,13 @@
 > 用**仓颉语言**从零构建的现代、安全的博客 / CMS 系统。  
 > A modern, secure blog engine written natively in Cangjie.
 
+[![CI](https://github.com/chenxixingyu/cangmo-blog/actions/workflows/ci.yml/badge.svg)](https://github.com/chenxixingyu/cangmo-blog/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/chenxixingyu/cangmo-blog)](https://github.com/chenxixingyu/cangmo-blog/releases)
+[![License](https://img.shields.io/badge/license-Cangmo%201.0-2f6f4e)](LICENSE)
+
+**仓库**：<https://github.com/chenxixingyu/cangmo-blog>  
+**作者**：宸熙星语 (chenxixingyu)
+
 ![首页](docs/screenshots/home.png)
 
 ## 为什么是仓墨
@@ -146,9 +153,10 @@ node tests\load.mjs                        # 并发冒烟
 
 ## 许可证
 
-Cangmo 原创代码与资源采用 **Cangmo Proprietary License 1.0**，版权归 Cangmo Project 所有。  
-第三方工具链（仓颉编译器/运行时）依据其 Apache-2.0 + Runtime Library Exception 使用，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+Cangmo 原创代码与资源采用 **Cangmo Source-Available License 1.0**，版权归 **宸熙星语 (chenxixingyu)** 所有。  
+第三方工具链（仓颉编译器/运行时）依据其 Apache-2.0 + Runtime Library Exception 使用，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 与 [COPYRIGHT](COPYRIGHT)。
 
 ---
 
-**仓墨** · 用仓颉写下的文字。
+**仓墨** · 用仓颉写下的文字。  
+© 2026 宸熙星语 (chenxixingyu)

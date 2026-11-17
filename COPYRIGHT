@@ -1,0 +1,30 @@
+# Copyright
+
+Copyright (c) 2026 宸熙星语 (chenxixingyu). All rights reserved.
+
+## Original works
+
+The following are original works of the Cangmo project, created for
+宸熙星语 (chenxixingyu):
+
+- All Cangjie source code under `src/`
+- The default theme under `themes/default/`
+- The admin interface under `resources/admin/`
+- All documentation under `docs/` and the repository root
+- The original logo and icon under `themes/default/static/icon.svg`
+- Test suites under `tests/` and `scripts/`
+
+## Third-party tools
+
+Cangmo is built with the Cangjie compiler, runtime and standard library,
+which are used as an installed toolchain under the Apache License 2.0 with
+Runtime Library Exception. The operating system CNG API (`bcrypt.dll`) is
+called for PBKDF2 and CSPRNG. No third-party source code is vendored into
+this repository.
+
+See [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## Contact
+
+- GitHub: <https://github.com/chenxixingyu>
+- Project: <https://github.com/chenxixingyu/cangmo-blog>

@@ -1,5 +1,7 @@
 # Third-Party Notices / 第三方组件说明
 
+Copyright (c) 2026 宸熙星语 (chenxixingyu). All rights reserved.
+
 Cangmo (仓墨) is an original implementation. No third-party source code is
 vendored into this repository. The following external items are used as tools,
 platform APIs, or standards:
@@ -8,6 +10,8 @@ platform APIs, or standards:
 | --- | --- | --- | --- |
 | Cangjie compiler, runtime, standard library (`cjc`, `cjpm`) | Build toolchain and runtime platform | Apache License 2.0 with Runtime Library Exception (Huawei) | Used as installed toolchain, not copied into source. |
 | Windows CNG `SystemFunction036` (`advapi32.dll`) | OS CSPRNG | Operating system API | Called via a declared FFI binding; no code copied. |
+| `actions/checkout` (GitHub Actions) | CI checkout | MIT License | Used only in GitHub Actions workflow, not vendored. |
+| `Zxilly/setup-cangjie` (GitHub Actions) | CI Cangjie toolchain setup | MIT License | Used only in GitHub Actions workflow, not vendored. |
 | HTTP/1.1, JSON (RFC 8259), RSS 2.0, Atom, Sitemap 0.9, Markdown, HTML, CSS, ECMAScript | Open standards | Public specifications | Implemented independently from the specifications. |
 | Inter font / Material icons / Bootstrap / jQuery / highlight.js / KaTeX | — | — | **Not used.** All CSS, JavaScript, SVG icons and fonts are original or system fonts. |
 

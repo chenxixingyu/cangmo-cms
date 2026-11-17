@@ -1,0 +1,71 @@
+name: Bug report / 缺陷报告
+description: 报告可复现的缺陷或异常行为
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。请先搜索已有 Issue 和文档。**安全漏洞请勿公开提交**，使用私密漏洞报告。
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+      description: 发生了什么？期望是什么？
+      placeholder: 简要描述缺陷与影响
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 请给出最小、可重复的步骤
+      placeholder: |
+        1. 启动 cangmo serve
+        2. 打开 /admin
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / 截图
+      description: 请删除令牌、密码、邮箱等敏感信息
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: 仓墨版本
+      placeholder: v1.0.0 / commit
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 环境
+      placeholder: Windows 11 x64 / Cangjie 1.2.1 / Node.js 22
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: 影响范围
+      options:
+        - 前台展示
+        - 后台管理
+        - API
+        - 登录/权限
+        - 媒体上传
+        - 存储/备份
+        - 构建/部署
+        - 文档
+        - 其他
+    validations:
+      required: true
