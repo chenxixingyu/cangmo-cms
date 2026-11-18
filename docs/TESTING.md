@@ -2,7 +2,7 @@
 
 > 本地环境：Windows 11 x64 · 仓颉 1.2.1 (cjnative) · Node.js 22.2.0 · Microsoft Edge  
 > 测试对象：v1.0.1。所有集成测试均在**全新数据目录**上执行，原始输出保存在 `docs/reports/`。  
-> Linux：由 GitHub Actions `ubuntu-latest` 执行 `cjpm build` + `cjpm test`（见 `.github/workflows/ci.yml`）。
+> Linux：GitHub Actions `ubuntu-latest` 已通过 `cjpm build` + `cjpm test`（run 44401589115）。
 
 ## 1. 一键运行
 
@@ -118,4 +118,4 @@ cjlint -f .\src -o .\docs\reports\cjlint -r json
 - [x] CSRF/XSS/路径穿越/请求走私/上传伪装/限流
 - [x] `doctor` 17/17 模板
 - [x] Windows 构建与测试
-- [ ] Linux CI（推送后由 GitHub Actions 验证）
+- [x] Linux CI（GitHub Actions Ubuntu 构建 + 单测通过）
