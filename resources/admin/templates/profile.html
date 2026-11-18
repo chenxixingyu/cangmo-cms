@@ -3,16 +3,36 @@
 {% include "partials/sidebar.html" %}
 <div class="admin-main">
 {% include "partials/topbar.html" %}
-<main class="admin-content">
+<main class="admin-content profile-page">
+  <div class="page-intro">
+    <div>
+      <p class="eyebrow">PROFILE</p>
+      <h2>个人资料</h2>
+      <p class="muted">维护你的公开信息、头像与登录凭据。</p>
+    </div>
+    {% if is_admin %}<a class="btn btn-ghost" href="/admin/users">返回用户管理</a>{% endif %}
+  </div>
+
   <div class="two-col">
     <section class="panel">
-      <header class="panel-head"><h2>个人资料</h2></header>
+      <header class="panel-head"><h2>基本信息</h2><span class="muted">{{ profile.username }} · {{ profile.role }}</span></header>
       <form method="post" action="/admin/profile/save" class="stack-form">
         <input type="hidden" name="_csrf" value="{{ csrf }}">
+        <div class="profile-avatar-row">
+          <div class="profile-avatar" id="profile-avatar-preview">
+            {% if profile.avatar %}<img src="{{ profile.avatar }}" alt="头像">{% else %}<span>{{ user.initial }}</span>{% endif %}
+          </div>
+          <div class="profile-avatar-actions">
+            <label>头像 URL
+              <input type="text" name="avatar" id="profile-avatar-input" value="{{ profile.avatar }}" placeholder="/media/… 或 https://…">
+            </label>
+            <button type="button" class="btn btn-ghost" id="profile-avatar-picker">从附件库选择</button>
+            <p class="form-hint">建议使用正方形图片，至少 200×200。</p>
+          </div>
+        </div>
         <label>显示名<input type="text" name="display_name" value="{{ profile.display_name }}" maxlength="60"></label>
         <label>邮箱<input type="email" name="email" value="{{ profile.email }}" maxlength="254"></label>
-        <label>简介<textarea name="bio" rows="4" maxlength="500">{{ profile.bio }}</textarea></label>
-        <p class="muted small">用户名：{{ profile.username }} · 角色：{{ profile.role }}</p>
+        <label>简介<textarea name="bio" rows="4" maxlength="500" placeholder="介绍一下自己…">{{ profile.bio }}</textarea></label>
         <button class="btn" type="submit">保存资料</button>
       </form>
     </section>
@@ -62,6 +82,14 @@
       </table>
     </div>
   </section>
+
+  <dialog class="attachment-dialog" id="profile-avatar-dialog">
+    <div class="dialog-head">
+      <h2>选择头像</h2>
+      <button type="button" class="link-btn" data-close-dialog>关闭</button>
+    </div>
+    <div class="attachment-grid attachment-grid-picker" id="profile-avatar-grid"></div>
+  </dialog>
 </main>
 </div>
 </div>

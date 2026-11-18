@@ -414,7 +414,7 @@ public class AuthService {
         id
     }
 
-    public func updateProfile(userId: String, displayName: String, email: String, bio: String): Unit {
+    public func updateProfile(userId: String, displayName: String, email: String, bio: String, avatar!: String = ""): Unit {
         let user = match (userById(userId)) {
             case Some(value) => value
             case None => throw AppError("not_found", "用户不存在")
@@ -432,6 +432,7 @@ public class AuthService {
         setField(updated, "display_name", JStr(truncateUtf8(displayName.trimAscii(), 60)))
         setField(updated, "email", JStr(mail))
         setField(updated, "bio", JStr(truncateUtf8(bio.trimAscii(), 500)))
+        setField(updated, "avatar", JStr(truncateUtf8(avatar.trimAscii(), 500)))
         setField(updated, "updated_at", JInt(nowSeconds()))
         store.put(COL_USERS, userId, updated)
     }

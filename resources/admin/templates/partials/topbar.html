@@ -5,8 +5,20 @@
   <h1>{{ page_title }}</h1>
   <div class="topbar-actions">
     <a class="topbar-link" href="/admin/posts/new">写文章</a>
-    <span class="avatar">{{ user.initial }}</span>
-    <span class="topbar-user">{{ user.display_name|default(user.username) }}</span>
+    <details class="user-menu">
+      <summary class="user-chip">
+        {% if user.avatar %}<img class="avatar avatar-img" src="{{ user.avatar }}" alt="">{% else %}<span class="avatar">{{ user.initial }}</span>{% endif %}
+        <span class="topbar-user">{{ user.display_name|default(user.username) }}</span>
+      </summary>
+      <div class="user-menu-pop">
+        <a href="/admin/profile">个人资料</a>
+        <a href="/admin">仪表盘</a>
+        <form method="post" action="/admin/logout">
+          <input type="hidden" name="_csrf" value="{{ csrf }}">
+          <button type="submit" class="link-btn">退出登录</button>
+        </form>
+      </div>
+    </details>
   </div>
 </header>
 {% if flash.length > 0 %}

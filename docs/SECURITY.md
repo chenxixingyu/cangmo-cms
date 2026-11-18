@@ -10,7 +10,7 @@
 - 管理员/作者账户与会话
 - 文章草稿、页面、私密设置
 - 用户邮箱、IP 哈希、审计日志
-- 媒体文件与备份
+- 附件文件与备份
 - 站点可用性
 
 主要威胁：
@@ -31,10 +31,11 @@
 
 ## 2. 密码与随机数
 
-- **CSPRNG**：Windows CNG `BCryptGenRandom(BCRYPT_USE_SYSTEM_PREFERRED_RNG)`，失败即抛错，不降级到时间种子。
-- **PBKDF2-HMAC-SHA256**：默认 120,000 次迭代，16 字节盐，32 字节输出；通过 CNG `BCryptDeriveKeyPBKDF2` 加速（约 40–80ms/次）。
-- **端口回退**：CNG 不可用时使用纯仓颉 PBKDF2（正确但慢），不降低迭代次数。
+- **CSPRNG**：Windows CNG `BCryptGenRandom(BCRYPT_USE_SYSTEM_PREFERRED_RNG)`；Linux `getrandom(2)`。失败即抛错，不降级到时间种子。
+- **PBKDF2-HMAC-SHA256**：默认 120,000 次迭代，16 字节盐，32 字节输出。Windows 通过 CNG `BCryptDeriveKeyPBKDF2`，Linux 通过 OpenSSL `PKCS5_PBKDF2_HMAC` + `EVP_sha256` 加速。
+- **端口回退**：系统加密不可用时使用纯仓颉 PBKDF2（正确但慢），不降低迭代次数。
 - **存储格式**：`pbkdf2_sha256$<iterations>$<salt_b64>$<hash_b64>`，便于未来升级迭代次数。
+- **Linux 依赖**：需要 OpenSSL 开发库（`libssl-dev` / `openssl-devel`），CI 在 Ubuntu 上验证构建与测试。
 - **比较**：常量时间比较，避免计时侧信道。
 - **重哈希**：登录时若迭代次数低于当前配置，自动重哈希。
 - **密码策略**：≥10 字符，至少两类字符，禁止包含用户名/邮箱，拒绝常见弱口令。
@@ -78,7 +79,7 @@
 - 文件名随机化（`media_<time><random>.<ext>`），保留原始名仅用于展示。
 - 单文件 ≤ `maxBodyBytes`（默认 25MB）；表单最多 200 个分片；字段 ≤1MB。
 - 禁止 SVG（可执行脚本）。
-- 响应 `X-Content-Type-Options: nosniff`；媒体不设置 `Content-Disposition: inline` 之外的脚本能力。
+- 响应 `X-Content-Type-Options: nosniff`；附件不设置可执行脚本能力。
 - 上传目录不在静态根目录下，只能通过 `/media/...` 只读访问。
 
 ## 7. 路径与请求

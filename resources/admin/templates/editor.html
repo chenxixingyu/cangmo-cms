@@ -6,7 +6,9 @@
 <main class="admin-content editor-page">
   {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
   <form method="post" action="/admin/posts/save" id="editor-form" class="editor-form"
-        data-preview-url="/admin/preview" data-csrf="{{ csrf }}" data-post-id="{{ post.id }}">
+        data-preview-url="/admin/preview" data-csrf="{{ csrf }}" data-post-id="{{ post.id }}"
+        data-category-url="/admin/categories/quick" data-attachments-url="/admin/attachments/data"
+        data-upload-url="/admin/attachments/upload?format=json">
     <input type="hidden" name="_csrf" value="{{ csrf }}">
     <input type="hidden" name="id" value="{{ post.id }}">
     <input type="hidden" name="type" value="{{ post.type }}">
@@ -14,10 +16,11 @@
       <div class="editor-head-left">
         <a class="back-link" href="/admin/posts?type={{ post.type }}">← 返回列表</a>
         <span class="editor-state">{% if is_new %}新建{% else %}编辑{% endif %}{% if post.type == "page" %}页面{% else %}文章{% endif %}</span>
+        {% if not is_new %}<span class="status status-{{ post.status }}">{% if post.status == "published" %}已发布{% elif post.status == "scheduled" %}定时{% elif post.status == "trash" %}回收站{% else %}草稿{% endif %}</span>{% endif %}
       </div>
       <div class="editor-head-actions">
-        {% if not is_new %}<a class="btn btn-ghost" href="/{% if post.type == 'page' %}pages{% else %}posts{% endif %}/{{ post.slug }}" target="_blank" rel="noopener">预览</a>{% endif %}
-        <button class="btn" type="submit">保存</button>
+        {% if not is_new %}<a class="btn btn-ghost" href="/{% if post.type == 'page' %}pages{% else %}posts{% endif %}/{{ post.slug }}" target="_blank" rel="noopener">查看</a>{% endif %}
+        <button class="btn" type="submit" id="save-button">保存</button>
       </div>
     </div>
 
@@ -44,7 +47,8 @@
         <div class="preview-pane prose" id="preview-pane" hidden></div>
         <div class="editor-foot">
           <span id="word-count">0 字</span>
-          <span class="muted">支持 Markdown · 自动保存到本地草稿</span>
+          <span id="reading-time" class="muted">约 1 分钟</span>
+          <span class="muted">支持 Markdown · 自动保存到本地草稿 · Ctrl/⌘ + S 保存</span>
           <button type="button" class="link-btn" id="restore-draft" hidden>恢复本地草稿</button>
         </div>
       </div>
@@ -64,25 +68,57 @@
           </label>
           {% if post.published_at %}<p class="muted small">首次发布：{{ post.published_at }}</p>{% endif %}
           <label>摘要
-            <textarea name="summary" rows="3" maxlength="500" placeholder="留空则自动截取正文">{{ post.summary }}</textarea>
+            <textarea name="summary" id="post-summary" rows="3" maxlength="500" placeholder="留空则自动截取正文">{{ post.summary }}</textarea>
           </label>
+          <p class="muted small"><span id="summary-count">0</span> / 500</p>
+        </section>
+
+        <section class="side-panel">
+          <h2>封面</h2>
+          <div class="cover-picker" id="cover-picker">
+            <input type="hidden" name="cover" id="cover-input" value="{{ post.cover }}">
+            <div class="cover-preview" id="cover-preview">
+              {% if post.cover %}<img src="{{ post.cover }}" alt="封面预览">{% else %}<span>未设置封面</span>{% endif %}
+            </div>
+            <div class="cover-actions">
+              <button type="button" class="btn btn-ghost" id="cover-upload-button">上传</button>
+              <button type="button" class="btn btn-ghost" id="cover-library-button">附件库</button>
+              <button type="button" class="btn btn-ghost" id="cover-url-button">链接</button>
+              <button type="button" class="link-btn danger" id="cover-remove-button">移除</button>
+            </div>
+            <input type="file" id="cover-file" accept="image/jpeg,image/png,image/gif,image/webp,image/avif" hidden>
+            <div class="cover-url-row" id="cover-url-row" hidden>
+              <input type="text" id="cover-url-input" placeholder="https://… 或 /media/…">
+              <button type="button" class="btn btn-ghost" id="cover-url-apply">应用</button>
+            </div>
+            <p class="muted small" id="cover-hint">建议 1200×630，支持图片附件。</p>
+          </div>
         </section>
 
         <section class="side-panel">
           <h2>组织</h2>
           <label>分类
-            <select name="category_id">
-              <option value="">未分类</option>
-              {% for category in categories %}<option value="{{ category.id }}"{% if category.id == post.category_id %} selected{% endif %}>{{ category.name }}</option>{% endfor %}
-            </select>
+            <div class="inline-select">
+              <select name="category_id" id="category-select">
+                <option value="">未分类</option>
+                {% for category in categories %}<option value="{{ category.id }}"{% if category.id == post.category_id %} selected{% endif %}>{{ category.name }}</option>{% endfor %}
+              </select>
+              <button type="button" class="icon-btn" id="category-create-toggle" title="新建分类" aria-label="新建分类">＋</button>
+            </div>
           </label>
-          <label>标签（逗号分隔）
-            <input type="text" name="tags" value="{{ post.tags }}" placeholder="仓颉, 教程, 随笔">
+          <div class="inline-create" id="category-create" hidden>
+            <input type="text" id="category-name" maxlength="60" placeholder="新分类名称">
+            <button type="button" class="btn btn-ghost" id="category-create-submit">创建</button>
+            <p class="form-hint" id="category-error"></p>
+          </div>
+          <label>标签
+            <div class="tag-editor" id="tag-editor">
+              <div class="tag-chips" id="tag-chips"></div>
+              <input type="text" id="tag-input" placeholder="输入标签后按回车" maxlength="40" autocomplete="off">
+            </div>
+            <input type="hidden" name="tags" id="tags-input" value="{{ post.tags }}">
           </label>
-          {% if all_tags.length > 0 %}<div class="tag-suggest">{% for tag in all_tags %}<button type="button" class="tag-pill" data-tag="{{ tag.name }}">#{{ tag.name }}</button>{% endfor %}</div>{% endif %}
-          <label>封面图 URL
-            <input type="url" name="cover" value="{{ post.cover }}" placeholder="/media/2026/01/cover.jpg">
-          </label>
+          {% if all_tags.length > 0 %}<div class="tag-suggest"><span class="muted small">常用：</span>{% for tag in all_tags %}<button type="button" class="tag-pill" data-tag="{{ tag.name }}">#{{ tag.name }}</button>{% endfor %}</div>{% endif %}
           <label class="check-row"><input type="checkbox" name="pinned" value="on"{% if post.pinned %} checked{% endif %}> 置顶</label>
           <label class="check-row"><input type="checkbox" name="featured" value="on"{% if post.featured %} checked{% endif %}> 精选</label>
           <label class="check-row"><input type="checkbox" name="allow_comments" value="on"{% if post.allow_comments %} checked{% endif %}> 允许评论</label>
@@ -112,6 +148,28 @@
       </aside>
     </div>
   </form>
+
+  {% if not is_new %}
+  <form method="post" action="/admin/posts/{{ post.id }}/action" class="editor-danger-zone" data-confirm="确定把「{{ post.title }}」移入回收站？">
+    <input type="hidden" name="_csrf" value="{{ csrf }}">
+    <input type="hidden" name="action" value="trash">
+    <input type="hidden" name="return_to" value="/admin/posts?type={{ post.type }}">
+    <button type="submit" class="link-btn danger">移入回收站</button>
+  </form>
+  {% endif %}
+
+  <dialog class="attachment-dialog" id="cover-dialog">
+    <div class="dialog-head">
+      <h2>从附件库选择封面</h2>
+      <button type="button" class="link-btn" data-close-dialog>关闭</button>
+    </div>
+    <form class="dialog-search" id="cover-search-form">
+      <input type="search" id="cover-search-input" placeholder="搜索图片…" aria-label="搜索附件">
+      <button type="submit" class="btn btn-ghost">搜索</button>
+    </form>
+    <div class="attachment-grid attachment-grid-picker" id="cover-grid"></div>
+    <p class="muted small" id="cover-empty" hidden>没有图片附件，请先上传。</p>
+  </dialog>
 </main>
 </div>
 </div>

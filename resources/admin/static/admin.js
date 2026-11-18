@@ -19,9 +19,7 @@
   document.querySelectorAll("form[data-confirm]").forEach(function (form) {
     form.addEventListener("submit", function (event) {
       var message = form.getAttribute("data-confirm") || "确定执行此操作？";
-      if (!window.confirm(message)) {
-        event.preventDefault();
-      }
+      if (!window.confirm(message)) event.preventDefault();
     });
   });
 
@@ -50,6 +48,7 @@
   document.querySelectorAll(".copy-url").forEach(function (button) {
     button.addEventListener("click", function () {
       var url = button.getAttribute("data-url") || "";
+      try { url = new URL(url, window.location.origin).href; } catch (e) {}
       copyText(url).then(function () {
         var original = button.textContent;
         button.textContent = "已复制";
@@ -57,6 +56,65 @@
       });
     });
   });
+
+  document.querySelectorAll("[data-close-dialog]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var dialog = button.closest("dialog");
+      if (dialog) dialog.close();
+    });
+  });
+
+  document.querySelectorAll("dialog").forEach(function (dialog) {
+    dialog.addEventListener("click", function (event) {
+      if (event.target === dialog) dialog.close();
+    });
+  });
+
+  // Attachment lightbox on the attachment library page.
+  var attachmentDialog = document.getElementById("attachment-dialog");
+  var attachmentDialogBody = document.getElementById("attachment-dialog-body");
+  var attachmentDialogTitle = document.getElementById("attachment-dialog-title");
+  if (attachmentDialog && attachmentDialogBody) {
+    document.querySelectorAll("[data-preview-url]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var url = button.getAttribute("data-preview-url") || "";
+        var kind = button.getAttribute("data-preview-kind") || "image";
+        var name = button.getAttribute("data-preview-name") || "附件预览";
+        attachmentDialogTitle.textContent = name;
+        attachmentDialogBody.innerHTML = "";
+        var node;
+        if (kind === "video") {
+          node = document.createElement("video");
+          node.controls = true;
+          node.src = url;
+        } else if (kind === "audio") {
+          node = document.createElement("audio");
+          node.controls = true;
+          node.src = url;
+        } else if (kind === "document") {
+          node = document.createElement("iframe");
+          node.src = url;
+          node.title = name;
+        } else {
+          node = document.createElement("img");
+          node.src = url;
+          node.alt = name;
+        }
+        attachmentDialogBody.appendChild(node);
+        attachmentDialog.showModal();
+      });
+    });
+  }
+
+  // Bulk selection on the comments page.
+  var selectAll = document.getElementById("comments-select-all");
+  if (selectAll) {
+    selectAll.addEventListener("change", function () {
+      document.querySelectorAll('input[name="ids"][form="comments-bulk-form"]').forEach(function (box) {
+        box.checked = selectAll.checked;
+      });
+    });
+  }
 
   var dropZone = document.getElementById("drop-zone");
   if (dropZone) {
@@ -89,6 +147,62 @@
   }
 
   // ---------------------------------------------------------------------
+  // Attachment picker helpers (editor cover + profile avatar)
+  // ---------------------------------------------------------------------
+  function loadAttachmentGrid(container, url, onPick) {
+    if (!container) return;
+    container.innerHTML = "<p class=\"muted small\">正在加载…</p>";
+    fetch(url, { credentials: "same-origin", headers: { "Accept": "application/json" } })
+      .then(function (response) {
+        if (!response.ok) throw new Error("load failed");
+        return response.json();
+      })
+      .then(function (data) {
+        container.innerHTML = "";
+        var items = data.items || [];
+        if (!items.length) {
+          container.innerHTML = "<p class=\"muted small\">没有可用附件，请先上传。</p>";
+          return;
+        }
+        items.forEach(function (item) {
+          var button = document.createElement("button");
+          button.type = "button";
+          button.className = "attachment-pick";
+          button.title = item.original_name || "";
+          var img = document.createElement("img");
+          img.src = item.url;
+          img.alt = item.original_name || "";
+          img.loading = "lazy";
+          button.appendChild(img);
+          var label = document.createElement("span");
+          label.textContent = item.original_name || "";
+          button.appendChild(label);
+          button.addEventListener("click", function () { onPick(item); });
+          container.appendChild(button);
+        });
+      })
+      .catch(function () {
+        container.innerHTML = "<p class=\"muted small\">加载附件失败，请刷新重试。</p>";
+      });
+  }
+
+  var profilePickerButton = document.getElementById("profile-avatar-picker");
+  var profileDialog = document.getElementById("profile-avatar-dialog");
+  var profileGrid = document.getElementById("profile-avatar-grid");
+  var profileInput = document.getElementById("profile-avatar-input");
+  var profilePreview = document.getElementById("profile-avatar-preview");
+  if (profilePickerButton && profileDialog && profileGrid && profileInput) {
+    profilePickerButton.addEventListener("click", function () {
+      loadAttachmentGrid(profileGrid, "/admin/attachments/data?kind=image&page=1", function (item) {
+        profileInput.value = item.url;
+        if (profilePreview) profilePreview.innerHTML = "<img src=\"" + item.url + "\" alt=\"头像\">";
+        profileDialog.close();
+      });
+      profileDialog.showModal();
+    });
+  }
+
+  // ---------------------------------------------------------------------
   // Editor
   // ---------------------------------------------------------------------
   var form = document.getElementById("editor-form");
@@ -106,6 +220,9 @@
   var titleInput = document.getElementById("post-title");
   var slugInput = document.getElementById("post-slug");
   var wordCount = document.getElementById("word-count");
+  var readingTime = document.getElementById("reading-time");
+  var summaryInput = document.getElementById("post-summary");
+  var summaryCount = document.getElementById("summary-count");
   var restoreButton = document.getElementById("restore-draft");
   var saveTimer = null;
 
@@ -120,13 +237,22 @@
   }
 
   function updateWordCount() {
-    if (!wordCount) return;
     var text = textarea.value || "";
     var cjk = (text.match(/[\u3400-\u9fff]/g) || []).length;
     var words = (text.match(/[A-Za-z0-9_]+/g) || []).length;
-    wordCount.textContent = (cjk + words) + " 字";
+    var total = cjk + words;
+    if (wordCount) wordCount.textContent = total + " 字";
+    if (readingTime) readingTime.textContent = "约 " + Math.max(1, Math.ceil(total / 300)) + " 分钟";
   }
   updateWordCount();
+
+  function updateSummaryCount() {
+    if (summaryInput && summaryCount) summaryCount.textContent = String(summaryInput.value.length);
+  }
+  if (summaryInput) {
+    summaryInput.addEventListener("input", updateSummaryCount);
+    updateSummaryCount();
+  }
 
   function showWrite() {
     textarea.hidden = false;
@@ -146,10 +272,7 @@
     fetch(previewUrl, {
       method: "POST",
       credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-Token": csrf
-      },
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf },
       body: JSON.stringify({ markdown: textarea.value })
     }).then(function (response) {
       if (!response.ok) throw new Error("preview failed");
@@ -183,9 +306,8 @@
       } else if (line) {
         var before = textarea.value.lastIndexOf("\n", start - 1) + 1;
         textarea.value = textarea.value.slice(0, before) + insert + textarea.value.slice(before);
-        cursor = start + insert.length;
         textarea.focus();
-        textarea.setSelectionRange(cursor, cursor);
+        textarea.setSelectionRange(start + insert.length, start + insert.length);
         updateWordCount();
         textarea.dispatchEvent(new Event("input"));
         return;
@@ -213,15 +335,216 @@
     });
   }
 
+  // ---------------------------------------------------------------
+  // Cover picker: upload / attachment library / URL
+  // ---------------------------------------------------------------
+  var coverInput = document.getElementById("cover-input");
+  var coverPreview = document.getElementById("cover-preview");
+  var coverFile = document.getElementById("cover-file");
+  var coverDialog = document.getElementById("cover-dialog");
+  var coverGrid = document.getElementById("cover-grid");
+  var coverSearchForm = document.getElementById("cover-search-form");
+  var coverSearchInput = document.getElementById("cover-search-input");
+  var coverUrlRow = document.getElementById("cover-url-row");
+  var coverUrlInput = document.getElementById("cover-url-input");
+  var uploadUrl = form.getAttribute("data-upload-url") || "/admin/attachments/upload?format=json";
+
+  function setCover(url) {
+    if (!coverInput) return;
+    coverInput.value = url || "";
+    if (coverPreview) {
+      coverPreview.innerHTML = url ? "<img src=\"" + url + "\" alt=\"封面预览\">" : "<span>未设置封面</span>";
+    }
+  }
+
+  function fetchCoverGrid(query) {
+    var q = query ? "&q=" + encodeURIComponent(query) : "";
+    loadAttachmentGrid(coverGrid, "/admin/attachments/data?kind=image&page=1" + q, function (item) {
+      setCover(item.url);
+      if (coverDialog) coverDialog.close();
+    });
+  }
+
+  var coverLibraryButton = document.getElementById("cover-library-button");
+  if (coverLibraryButton && coverDialog) {
+    coverLibraryButton.addEventListener("click", function () {
+      fetchCoverGrid("");
+      coverDialog.showModal();
+    });
+  }
+  if (coverSearchForm) {
+    coverSearchForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      fetchCoverGrid(coverSearchInput ? coverSearchInput.value.trim() : "");
+    });
+  }
+
+  var coverUploadButton = document.getElementById("cover-upload-button");
+  if (coverUploadButton && coverFile) {
+    coverUploadButton.addEventListener("click", function () { coverFile.click(); });
+    coverFile.addEventListener("change", function () {
+      if (!coverFile.files || !coverFile.files.length) return;
+      var data = new FormData();
+      data.append("_csrf", csrf);
+      data.append("files", coverFile.files[0]);
+      coverUploadButton.disabled = true;
+      coverUploadButton.textContent = "上传中…";
+      fetch(uploadUrl, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Accept": "application/json", "X-CSRF-Token": csrf },
+        body: data
+      }).then(function (response) {
+        return response.json().then(function (body) { return { ok: response.ok, body: body }; });
+      }).then(function (result) {
+        if (!result.ok || !result.body.ok) throw new Error(result.body.error || "上传失败");
+        var item = result.body.items && result.body.items[0];
+        if (item) setCover(item.url);
+      }).catch(function (error) {
+        window.alert(error.message || "上传失败");
+      }).then(function () {
+        coverUploadButton.disabled = false;
+        coverUploadButton.textContent = "上传";
+        coverFile.value = "";
+      });
+    });
+  }
+
+  var coverUrlButton = document.getElementById("cover-url-button");
+  if (coverUrlButton && coverUrlRow) {
+    coverUrlButton.addEventListener("click", function () { coverUrlRow.hidden = !coverUrlRow.hidden; });
+  }
+  var coverUrlApply = document.getElementById("cover-url-apply");
+  if (coverUrlApply && coverUrlInput) {
+    coverUrlApply.addEventListener("click", function () {
+      var value = coverUrlInput.value.trim();
+      if (!value) return;
+      setCover(value);
+      coverUrlRow.hidden = true;
+    });
+  }
+  var coverRemoveButton = document.getElementById("cover-remove-button");
+  if (coverRemoveButton) {
+    coverRemoveButton.addEventListener("click", function () { setCover(""); });
+  }
+
+  // ---------------------------------------------------------------
+  // Inline category creation
+  // ---------------------------------------------------------------
+  var categoryToggle = document.getElementById("category-create-toggle");
+  var categoryPanel = document.getElementById("category-create");
+  var categoryName = document.getElementById("category-name");
+  var categorySubmit = document.getElementById("category-create-submit");
+  var categoryError = document.getElementById("category-error");
+  var categorySelect = document.getElementById("category-select");
+  var categoryUrl = form.getAttribute("data-category-url") || "/admin/categories/quick";
+
+  if (categoryToggle && categoryPanel) {
+    categoryToggle.addEventListener("click", function () {
+      categoryPanel.hidden = !categoryPanel.hidden;
+      if (!categoryPanel.hidden && categoryName) categoryName.focus();
+    });
+  }
+
+  function createCategory() {
+    if (!categoryName || !categorySubmit) return;
+    var name = categoryName.value.trim();
+    if (!name) { if (categoryError) categoryError.textContent = "请输入分类名称"; return; }
+    categorySubmit.disabled = true;
+    if (categoryError) categoryError.textContent = "";
+    fetch(categoryUrl, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf },
+      body: JSON.stringify({ name: name })
+    }).then(function (response) {
+      return response.json().then(function (body) { return { ok: response.ok, body: body }; });
+    }).then(function (result) {
+      if (!result.ok || !result.body.ok) throw new Error(result.body.error || "创建失败");
+      if (categorySelect) {
+        var option = document.createElement("option");
+        option.value = result.body.id;
+        option.textContent = result.body.name;
+        categorySelect.appendChild(option);
+        categorySelect.value = result.body.id;
+      }
+      categoryName.value = "";
+      categoryPanel.hidden = true;
+    }).catch(function (error) {
+      if (categoryError) categoryError.textContent = error.message || "创建失败";
+    }).then(function () {
+      categorySubmit.disabled = false;
+    });
+  }
+  if (categorySubmit) categorySubmit.addEventListener("click", createCategory);
+  if (categoryName) {
+    categoryName.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") { event.preventDefault(); createCategory(); }
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // Tag chips
+  // ---------------------------------------------------------------
+  var tagsInput = document.getElementById("tags-input");
+  var tagChips = document.getElementById("tag-chips");
+  var tagInput = document.getElementById("tag-input");
+  var tagList = [];
+
+  function parseTags(value) {
+    return (value || "").split(",").map(function (item) { return item.trim(); }).filter(Boolean);
+  }
+  function syncTags() {
+    if (tagsInput) tagsInput.value = tagList.join(", ");
+    if (!tagChips) return;
+    tagChips.innerHTML = "";
+    tagList.forEach(function (tag) {
+      var chip = document.createElement("span");
+      chip.className = "tag-chip";
+      chip.textContent = tag;
+      var remove = document.createElement("button");
+      remove.type = "button";
+      remove.setAttribute("aria-label", "移除标签 " + tag);
+      remove.textContent = "×";
+      remove.addEventListener("click", function () {
+        tagList = tagList.filter(function (item) { return item !== tag; });
+        syncTags();
+      });
+      chip.appendChild(remove);
+      tagChips.appendChild(chip);
+    });
+  }
+  function addTag(tag) {
+    var value = (tag || "").trim().replace(/^#/, "");
+    if (!value || value.length > 40) return;
+    if (tagList.indexOf(value) < 0) tagList.push(value);
+    syncTags();
+  }
+  if (tagsInput) tagList = parseTags(tagsInput.value);
+  syncTags();
+  if (tagInput) {
+    tagInput.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" || event.key === ",") {
+        event.preventDefault();
+        addTag(tagInput.value);
+        tagInput.value = "";
+      }
+    });
+  }
   form.querySelectorAll(".tag-pill").forEach(function (button) {
     button.addEventListener("click", function () {
-      var tag = button.getAttribute("data-tag") || "";
-      var input = form.querySelector("input[name=tags]");
-      if (!input) return;
-      var current = input.value.split(",").map(function (item) { return item.trim(); }).filter(Boolean);
-      if (current.indexOf(tag) < 0) current.push(tag);
-      input.value = current.join(", ");
+      addTag(button.getAttribute("data-tag") || "");
     });
+  });
+
+  // ---------------------------------------------------------------
+  // Keyboard save + local draft
+  // ---------------------------------------------------------------
+  document.addEventListener("keydown", function (event) {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+      event.preventDefault();
+      form.submit();
+    }
   });
 
   function saveDraft() {

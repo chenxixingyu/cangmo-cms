@@ -105,11 +105,23 @@ public class CommentService {
         items.toArray()
     }
 
-    public func adminList(status: String, page: Int64, pageSize: Int64): PageResult {
+    public func adminList(status: String, page: Int64, pageSize: Int64,
+                          query!: String = "", postId!: String = ""): PageResult {
+        let needle = query.trimAscii().toAsciiLower()
         let items = ArrayList<JsonValue>()
         for (comment in store.list(COL_COMMENTS)) {
             if (status != "all" && docStr(comment, "status") != status) {
                 continue
+            }
+            if (postId.size > 0 && docStr(comment, "post_id") != postId) {
+                continue
+            }
+            if (needle.size > 0) {
+                let haystack = (docStr(comment, "author_name") + " " + docStr(comment, "author_email") + " " +
+                                docStr(comment, "content") + " " + docStr(comment, "post_id")).toAsciiLower()
+                if (!haystack.contains(needle)) {
+                    continue
+                }
             }
             items.add(comment)
         }
@@ -125,6 +137,34 @@ public class CommentService {
             }
         }
         pageResult(out, total, page, pageSize)
+    }
+
+    public func statusCounts(): JsonValue {
+        let data = JsonObject()
+        var pending: Int64 = 0
+        var approved: Int64 = 0
+        var spam: Int64 = 0
+        var trash: Int64 = 0
+        var all: Int64 = 0
+        for (comment in store.list(COL_COMMENTS)) {
+            all += 1
+            let status = docStr(comment, "status")
+            if (status == "pending") {
+                pending += 1
+            } else if (status == "approved") {
+                approved += 1
+            } else if (status == "spam") {
+                spam += 1
+            } else if (status == "trash") {
+                trash += 1
+            }
+        }
+        data.set("all", JInt(all))
+        data.set("pending", JInt(pending))
+        data.set("approved", JInt(approved))
+        data.set("spam", JInt(spam))
+        data.set("trash", JInt(trash))
+        JObj(data)
     }
 
     public func get(id: String): ?JsonValue {
@@ -282,9 +322,10 @@ public class MediaService {
             throw AppError("storage", "文件保存失败：${e.message}")
         }
         let size = imageSize(file.data, ext)
+        let kind = if (ext == "pdf") { "document" } else if (ext == "mp4" || ext == "webm") { "video" } else if (ext == "mp3") { "audio" } else { "image" }
         let doc = JsonObject()
         doc.set("id", JStr(id))
-        doc.set("kind", JStr(if (ext == "pdf") { "document" } else if (ext == "mp4" || ext == "webm" || ext == "mp3") { "video" } else { "image" }))
+        doc.set("kind", JStr(kind))
         doc.set("path", JStr(relativeDir + "/" + storedName))
         doc.set("url", JStr("/media/" + relativeDir + "/" + storedName))
         doc.set("filename", JStr(storedName))
@@ -301,9 +342,20 @@ public class MediaService {
         JObj(doc)
     }
 
-    public func list(page: Int64, pageSize: Int64): PageResult {
+    public func list(page: Int64, pageSize: Int64, kind!: String = "all", query!: String = ""): PageResult {
+        let needle = query.trimAscii().toAsciiLower()
         let items = ArrayList<JsonValue>()
         for (item in store.list(COL_MEDIA)) {
+            if (kind != "all" && mediaKindOf(item) != kind) {
+                continue
+            }
+            if (needle.size > 0) {
+                let haystack = (docStr(item, "original_name") + " " + docStr(item, "filename") + " " +
+                                docStr(item, "mime")).toAsciiLower()
+                if (!haystack.contains(needle)) {
+                    continue
+                }
+            }
             items.add(item)
         }
         sortDocsDesc(items, "created_at")
@@ -320,6 +372,37 @@ public class MediaService {
         pageResult(out, total, page, pageSize)
     }
 
+    public func counts(): JsonValue {
+        let data = JsonObject()
+        var all: Int64 = 0
+        var images: Int64 = 0
+        var videos: Int64 = 0
+        var audio: Int64 = 0
+        var documents: Int64 = 0
+        var bytes: Int64 = 0
+        for (item in store.list(COL_MEDIA)) {
+            all += 1
+            bytes += docInt(item, "size")
+            let kind = mediaKindOf(item)
+            if (kind == "image") {
+                images += 1
+            } else if (kind == "video") {
+                videos += 1
+            } else if (kind == "audio") {
+                audio += 1
+            } else if (kind == "document") {
+                documents += 1
+            }
+        }
+        data.set("all", JInt(all))
+        data.set("image", JInt(images))
+        data.set("video", JInt(videos))
+        data.set("audio", JInt(audio))
+        data.set("document", JInt(documents))
+        data.set("bytes", JInt(bytes))
+        JObj(data)
+    }
+
     public func get(id: String): ?JsonValue {
         store.get(COL_MEDIA, id)
     }
@@ -327,7 +410,7 @@ public class MediaService {
     public func delete(id: String, actor: JsonValue, ip: String): Unit {
         let media = match (get(id)) {
             case Some(value) => value
-            case None => throw AppError("not_found", "媒体不存在")
+            case None => throw AppError("not_found", "附件不存在")
         }
         let path = config.uploadsDir() + "/" + docStr(media, "path")
         if (exists(path)) {
@@ -361,6 +444,24 @@ public class MediaService {
         }
         Some(full)
     }
+}
+
+func mediaKindOf(item: JsonValue): String {
+    let mime = docStr(item, "mime").toAsciiLower()
+    if (mime.startsWith("audio/")) {
+        return "audio"
+    }
+    if (mime.startsWith("video/")) {
+        return "video"
+    }
+    if (mime == "application/pdf") {
+        return "document"
+    }
+    let kind = docStr(item, "kind")
+    if (kind == "audio" || kind == "video" || kind == "document") {
+        return kind
+    }
+    "image"
 }
 
 func magicMatches(data: Array<UInt8>, ext: String): Bool {
@@ -644,9 +745,14 @@ public class BackupService {
             let item = JsonObject()
             item.set("name", JStr(name))
             item.set("size", JInt(fileSize(path)))
-            item.set("created_at", JInt(0))
+            var modified: Int64 = 0
+            try {
+                modified = FileInfo(path).lastModificationTime.toUnixTimeStamp().toSeconds()
+            } catch (e: Exception) {}
+            item.set("created_at", JInt(modified))
             items.add(JObj(item))
         }
+        sortDocsDesc(items, "created_at")
         items.toArray()
     }
 
@@ -678,7 +784,12 @@ public class BackupService {
         if (getObject(parsed, "collections").isNone()) {
             throw AppError("validation", "备份缺少 collections 字段")
         }
-        store.replaceAll(parsed)
+        let count = store.replaceAll(parsed)
+        // Restored sessions must not resurrect old browser sessions.
+        for (id in store.listIds(COL_SESSIONS)) {
+            store.delete(COL_SESSIONS, id)
+        }
+        count
     }
 
     public func deleteBackup(name: String): Unit {

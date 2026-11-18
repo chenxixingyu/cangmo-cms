@@ -3,8 +3,9 @@
  *
  * SHA-256 / HMAC-SHA256 / PBKDF2-HMAC-SHA256 implemented from the public
  * FIPS 180-4 and RFC 8018 specifications. No third-party code is copied.
- * The operating system CSPRNG is used through the documented Windows CNG
- * SystemFunction036 interface (advapi32).
+ * Windows uses CNG (bcrypt.dll); Linux uses OpenSSL libcrypto for PBKDF2 and
+ * the kernel getrandom(2) interface for CSPRNG bytes. A portable pure-Cangjie
+ * PBKDF2 fallback remains for diagnostics and unsupported platforms.
  */
 package cangmo.core
 
@@ -12,14 +13,30 @@ import std.collection.*
 import std.overflow.*
 
 // Windows CNG (bcrypt.dll) - modern, FIPS-validated OS cryptography.
+@When[os == "Windows"]
 foreign func BCryptGenRandom(hAlgorithm: CPointer<Byte>, pbBuffer: CPointer<Byte>, cbBuffer: UInt32, dwFlags: UInt32): Int32
+@When[os == "Windows"]
 foreign func BCryptOpenAlgorithmProvider(phAlgorithm: CPointer<CPointer<Unit>>, pszAlgId: CPointer<UInt16>, pszImplementation: CPointer<UInt16>, dwFlags: UInt32): Int32
+@When[os == "Windows"]
 foreign func BCryptDeriveKeyPBKDF2(hPrf: CPointer<Unit>, pbPassword: CPointer<Byte>, cbPassword: UInt32, pbSalt: CPointer<Byte>, cbSalt: UInt32, cIterations: UInt64, pbDerivedKey: CPointer<Byte>, cbDerivedKey: UInt32, dwFlags: UInt32): Int32
+@When[os == "Windows"]
 foreign func BCryptCloseAlgorithmProvider(hAlgorithm: CPointer<Unit>, dwFlags: UInt32): Int32
 
+// Linux: getrandom(2) and OpenSSL's PBKDF2 implementation.
+@When[os == "Linux"]
+foreign func getrandom(buf: CPointer<Byte>, buflen: UInt64, flags: UInt32): Int64
+@When[os == "Linux"]
+foreign func EVP_sha256(): CPointer<Unit>
+@When[os == "Linux"]
+foreign func PKCS5_PBKDF2_HMAC(pass: CPointer<Byte>, passlen: Int32, salt: CPointer<Byte>, saltlen: Int32,
+                               iter: Int32, digest: CPointer<Unit>, keylen: Int32, out: CPointer<Byte>): Int32
+
+@When[os == "Windows"]
 let BCRYPT_USE_SYSTEM_PREFERRED_RNG: UInt32 = 0x00000002
+@When[os == "Windows"]
 let BCRYPT_ALG_HANDLE_HMAC_FLAG: UInt32 = 0x00000008
 
+@When[os == "Windows"]
 func utf16z(text: String): Array<UInt16> {
     let chars = text.toArray()
     let out = Array<UInt16>(chars.size + 1, repeat: 0)
@@ -37,16 +54,32 @@ public func secureRandomBytes(count: Int64): Array<UInt8> {
         return Array<UInt8>(0, repeat: 0)
     }
     let out = Array<UInt8>(count, repeat: 0)
-    let status = unsafe {
-        let handle = acquireArrayRawData(out)
-        let r = BCryptGenRandom(CPointer<Byte>(), handle.pointer, UInt32(count), BCRYPT_USE_SYSTEM_PREFERRED_RNG)
-        releaseArrayRawData(handle)
-        r
-    }
-    if (status != 0) {
+    if (!platformRandom(out)) {
         throw AppError("internal", "operating system secure random source is unavailable")
     }
     return out
+}
+
+@When[os == "Windows"]
+func platformRandom(out: Array<UInt8>): Bool {
+    let status = unsafe {
+        let handle = acquireArrayRawData(out)
+        let r = BCryptGenRandom(CPointer<Byte>(), handle.pointer, UInt32(out.size), BCRYPT_USE_SYSTEM_PREFERRED_RNG)
+        releaseArrayRawData(handle)
+        r
+    }
+    status == 0
+}
+
+@When[os == "Linux"]
+func platformRandom(out: Array<UInt8>): Bool {
+    let received = unsafe {
+        let handle = acquireArrayRawData(out)
+        let r = getrandom(handle.pointer, UInt64(out.size), 0)
+        releaseArrayRawData(handle)
+        r
+    }
+    received == out.size
 }
 
 public func secureEqualsBytes(a: Array<UInt8>, b: Array<UInt8>): Bool {
@@ -281,10 +314,11 @@ public func hmacSha256Hex(key: String, message: String): String {
 // ---------------------------------------------------------------------------
 
 /**
- * PBKDF2 using the operating system CNG implementation (fast, FIPS validated).
+ * PBKDF2 using the Windows CNG implementation (fast, FIPS validated).
  * Returns None when CNG is unavailable so the caller can fall back to the
  * portable pure-Cangjie implementation.
  */
+@When[os == "Windows"]
 func cngPbkdf2(password: String, salt: Array<UInt8>, iterations: Int64, keyLength: Int64): ?Array<UInt8> {
     if (keyLength < 1 || keyLength > 0xFFFFFFFF || iterations < 1) {
         return None
@@ -325,11 +359,54 @@ func cngPbkdf2(password: String, salt: Array<UInt8>, iterations: Int64, keyLengt
     return Some(out)
 }
 
+/**
+ * PBKDF2 using OpenSSL on Linux. Requires libcrypto (libssl-dev / openssl-devel).
+ */
+@When[os == "Linux"]
+func linuxPbkdf2(password: String, salt: Array<UInt8>, iterations: Int64, keyLength: Int64): ?Array<UInt8> {
+    if (keyLength < 1 || keyLength > 0x7FFFFFFF || iterations < 1 || iterations > 0x7FFFFFFF) {
+        return None
+    }
+    let digest = unsafe {
+        EVP_sha256()
+    }
+    if (digest.isNull()) {
+        return None
+    }
+    let pw = password.toArray()
+    let out = Array<UInt8>(keyLength, repeat: 0)
+    let status = unsafe {
+        let hp = acquireArrayRawData(pw)
+        let hs = acquireArrayRawData(salt)
+        let ho = acquireArrayRawData(out)
+        let st = PKCS5_PBKDF2_HMAC(hp.pointer, Int32(pw.size), hs.pointer, Int32(salt.size),
+                                   Int32(iterations), digest, Int32(keyLength), ho.pointer)
+        releaseArrayRawData(hp)
+        releaseArrayRawData(hs)
+        releaseArrayRawData(ho)
+        st
+    }
+    if (status != 1) {
+        return None
+    }
+    return Some(out)
+}
+
+@When[os == "Windows"]
+func platformPbkdf2(password: String, salt: Array<UInt8>, iterations: Int64, keyLength: Int64): ?Array<UInt8> {
+    cngPbkdf2(password, salt, iterations, keyLength)
+}
+
+@When[os == "Linux"]
+func platformPbkdf2(password: String, salt: Array<UInt8>, iterations: Int64, keyLength: Int64): ?Array<UInt8> {
+    linuxPbkdf2(password, salt, iterations, keyLength)
+}
+
 public func pbkdf2Sha256(password: String, salt: Array<UInt8>, iterations: Int64, keyLength: Int64): Array<UInt8> {
     if (iterations < 1 || keyLength < 1) {
         throw AppError("internal", "invalid pbkdf2 parameters")
     }
-    match (cngPbkdf2(password, salt, iterations, keyLength)) {
+    match (platformPbkdf2(password, salt, iterations, keyLength)) {
         case Some(value) => return value
         case None => ()
     }

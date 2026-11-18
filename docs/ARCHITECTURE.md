@@ -19,7 +19,7 @@
 │  web/       WebApp · Ctx · WebRouter · PublicSite · AdminSite│
 │             · ApiSite · 静态文件 · 会话/CSRF/安全头            │
 ├──────────────────────────────────────────────────────────────┤
-│  service/   Auth · Post · Taxonomy · Comment · Media · Stats  │
+│  service/   Auth · Post · Taxonomy · Comment · Attachment · Stats│
 │             · Search · Audit · Backup · Scheduler            │
 ├──────────────────────────────────────────────────────────────┤
 │  store/     Store: 内存 Map + WAL + 原子快照 + 压缩            │
@@ -76,7 +76,7 @@ HashMap<collection, HashMap<id, JsonValue>>
   settings   → site_title → { value: "仓墨", updated_at: ... }
 ```
 
-集合：`users`、`posts`、`categories`、`tags`、`comments`、`media`、`sessions`、`settings`、`audit`、`revisions`、`api_tokens`。
+集合：`users`、`posts`、`categories`、`tags`、`comments`、`media`（附件）、`sessions`、`settings`、`audit`、`revisions`、`api_tokens`。
 
 ### 4.2 持久化
 
@@ -84,7 +84,7 @@ HashMap<collection, HashMap<id, JsonValue>>
 data/
 ├─ db.json        原子快照（temp + rename，保留 db.json.bak）
 ├─ wal.log        追加日志，一行一个 JSON 记录
-├─ uploads/       媒体文件（按年/月）
+├─ uploads/       附件文件（按年/月）
 ├─ logs/          每日日志
 └─ backups/       备份 JSON
 ```
@@ -115,7 +115,7 @@ data/
 - 请求头按 RFC 7230 严格校验：拒绝折行、重复 `Content-Length`、`CL+TE` 同时出现。
 - 目标路径逐段百分号解码，拒绝 `..`、编码斜杠/反斜杠、NUL。
 - 响应统一加 `Date`、`Server`、`Content-Length`、`Connection`；HEAD 保留 Content-Length 不发 body。
-- 静态资源支持 `ETag`、`If-None-Match`、单段 `Range`（206）；媒体缓存 30 天，主题资源 1 小时。
+- 静态资源支持 `ETag`、`If-None-Match`、单段 `Range`（206）；附件缓存 30 天，主题资源 1 小时。
 - 错误页分为主题化 HTML 与 JSON（API）；生产环境 5xx 不泄漏内部信息。
 
 ## 6. 模板引擎
@@ -157,6 +157,8 @@ DB: sessions[sha256(token)] = { user_id, csrf, expires_at, last_seen_at, flash[]
 - 空闲 48h / 绝对 7 天过期；每 5 分钟最多回写一次 `last_seen_at`。
 - CSRF 令牌随会话生成，写请求比较 `_csrf` 表单字段或 `X-CSRF-Token` 头。
 - API Bearer 令牌独立于会话：`api_tokens[sha256(token)]`，支持撤销与最近使用时间。
+- 密码哈希：Windows 调用 CNG `BCryptDeriveKeyPBKDF2`；Linux 调用 OpenSSL `PKCS5_PBKDF2_HMAC` + `EVP_sha256`；CSPRNG 在 Windows 用 `BCryptGenRandom`，Linux 用 `getrandom(2)`。
+- 备份恢复后删除 `sessions` 集合，旧会话无法复活。
 
 ## 9. 数据模型（主要字段）
 
@@ -171,7 +173,7 @@ Post:    id, type(post|page), title, slug, summary, content, content_html,
 Comment: id, post_id, parent_id, author_name, author_email, author_url,
          content, status(pending|approved|spam|trash), ip_hash, user_agent,
          created_at, updated_at
-Media:   id, kind, path, url, filename, original_name, mime, size, width,
+Attachment: id, kind, path, url, filename, original_name, mime, size, width,
          height, sha256, created_at, uploaded_by
 Session: user_id, csrf, created_at, expires_at, last_seen_at, ip_hash,
          user_agent, flash[]
@@ -187,7 +189,7 @@ Session: user_id, csrf, created_at, expires_at, last_seen_at, ip_hash,
 | 编辑他人文章 | ✅ | ✅ | ❌ | ❌ | ❌ |
 | 页面管理 | ✅ | ✅ | ❌ | ❌ | ❌ |
 | 评论审核 | ✅ | ✅ | ❌ | ❌ | ❌ |
-| 媒体上传 | ✅ | ✅ | ✅ | ❌ | ❌ |
+| 附件上传 | ✅ | ✅ | ✅ | ❌ | ❌ |
 | 用户/设置/主题/备份 | ✅ | ❌ | ❌ | ❌ | ❌ |
 
 投稿者只能编辑自己的草稿；管理员不能被降级/停用为最后一个管理员。
@@ -202,7 +204,7 @@ Session: user_id, csrf, created_at, expires_at, last_seen_at, ip_hash,
 
 ## 12. 已知限制
 
-1. 仅 Windows x64（CNG 依赖）；Linux 需替换 `crypto.cj` 中 FFI。
+1. Windows x64（CNG）与 Linux x64（OpenSSL + getrandom）已验证构建；macOS 及其他架构未验证。
 2. 无进程内 TLS/HTTP2；用 Caddy/Nginx。
 3. 单进程、单写锁；写吞吐受限于磁盘追加。
 4. 搜索为线性扫描；大数据量需外部索引。

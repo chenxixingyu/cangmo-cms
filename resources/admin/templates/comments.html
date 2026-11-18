@@ -3,56 +3,109 @@
 {% include "partials/sidebar.html" %}
 <div class="admin-main">
 {% include "partials/topbar.html" %}
-<main class="admin-content">
-  <div class="tabs">
-    <a href="/admin/comments?status=pending" class="{% if status == "pending" %}active{% endif %}">待审核</a>
-    <a href="/admin/comments?status=approved" class="{% if status == "approved" %}active{% endif %}">已通过</a>
-    <a href="/admin/comments?status=spam" class="{% if status == "spam" %}active{% endif %}">垃圾</a>
-    <a href="/admin/comments?status=trash" class="{% if status == "trash" %}active{% endif %}">回收站</a>
-    <a href="/admin/comments?status=all" class="{% if status == "all" %}active{% endif %}">全部</a>
+<main class="admin-content comments-page">
+  <div class="page-intro">
+    <div>
+      <p class="eyebrow">COMMENTS</p>
+      <h2>评论审核</h2>
+      <p class="muted">审核、标记垃圾或回复读者。所有操作都会记录到审计日志。</p>
+    </div>
+    <div class="page-intro-stats">
+      <span><strong>{{ counts.pending }}</strong> 待审核</span>
+      <span><strong>{{ counts.approved }}</strong> 已通过</span>
+      <span><strong>{{ counts.all }}</strong> 全部</span>
+    </div>
   </div>
+
+  <div class="tabs tabs-large">
+    <a href="/admin/comments?status=pending" class="{% if status == "pending" %}active{% endif %}">待审核 <span>{{ counts.pending }}</span></a>
+    <a href="/admin/comments?status=approved" class="{% if status == "approved" %}active{% endif %}">已通过 <span>{{ counts.approved }}</span></a>
+    <a href="/admin/comments?status=spam" class="{% if status == "spam" %}active{% endif %}">垃圾 <span>{{ counts.spam }}</span></a>
+    <a href="/admin/comments?status=trash" class="{% if status == "trash" %}active{% endif %}">回收站 <span>{{ counts.trash }}</span></a>
+    <a href="/admin/comments?status=all" class="{% if status == "all" %}active{% endif %}">全部 <span>{{ counts.all }}</span></a>
+  </div>
+
+  <form class="list-toolbar" method="get" action="/admin/comments">
+    <input type="hidden" name="status" value="{{ status }}">
+    <div class="filter-row">
+      <input type="search" name="q" value="{{ search }}" placeholder="搜索昵称、邮箱或内容…" aria-label="搜索评论">
+      <select name="post" aria-label="按文章筛选">
+        <option value="">全部文章</option>
+        {% for post in post_options %}<option value="{{ post.id }}"{% if post.selected %} selected{% endif %}>{{ post.title }}</option>{% endfor %}
+      </select>
+      <button type="submit" class="btn btn-ghost">筛选</button>
+      {% if search or post_filter %}<a class="link-btn" href="/admin/comments?status={{ status }}">重置</a>{% endif %}
+    </div>
+  </form>
+
+  <form method="post" action="/admin/comments/bulk" id="comments-bulk-form" class="bulk-bar">
+    <input type="hidden" name="_csrf" value="{{ csrf }}">
+    <input type="hidden" name="return_status" value="{{ status }}">
+    <input type="hidden" name="return_q" value="{{ search }}">
+    <input type="hidden" name="return_post" value="{{ post_filter }}">
+    <label class="check-row"><input type="checkbox" id="comments-select-all"> 全选</label>
+    <select name="action" aria-label="批量操作">
+      <option value="approved">通过</option>
+      <option value="pending">转为待审核</option>
+      <option value="spam">标记垃圾</option>
+      <option value="trash">移入回收站</option>
+      <option value="delete">永久删除</option>
+    </select>
+    <button type="submit" class="btn btn-ghost" data-confirm="确定对选中的评论执行此操作？">应用到选中</button>
+  </form>
 
   <div class="comment-admin-list">
     {% for comment in rows %}
     <article class="comment-admin">
-      <div class="comment-admin-head">
-        <div>
-          <strong>{{ comment.author_name }}</strong>
-          <span class="status status-{{ comment.status }}">{{ comment.status }}</span>
-          <span class="muted"> · {{ comment.date }}</span>
+      <label class="comment-select" aria-label="选择评论"><input type="checkbox" name="ids" value="{{ comment.id }}" form="comments-bulk-form"></label>
+      <div class="comment-admin-main">
+        <div class="comment-admin-head">
+          <div class="comment-author">
+            <span class="avatar">{{ comment.initial }}</span>
+            <div>
+              <strong>{{ comment.author_name }}</strong>
+              <div class="table-sub">{{ comment.author_email }}{% if comment.author_url %} · <a href="{{ comment.author_url }}" target="_blank" rel="noopener nofollow">网站</a>{% endif %}</div>
+            </div>
+          </div>
+          <div class="comment-admin-meta">
+            <span class="status status-{{ comment.status }}">{{ comment.status_text }}</span>
+            <span class="muted">{{ comment.date }}</span>
+          </div>
         </div>
-        <div class="comment-admin-post">
-          {% if comment.post_url %}<a href="{{ comment.post_url }}" target="_blank" rel="noopener">{{ comment.post_title }}</a>{% endif %}
+        <p class="comment-admin-body">{{ comment.content }}</p>
+        <div class="comment-admin-foot">
+          <div class="comment-admin-post">
+            评论于 {% if comment.post_url %}<a href="{{ comment.post_url }}" target="_blank" rel="noopener">{{ comment.post_title }}</a>{% else %}已删除文章{% endif %}
+          </div>
+          <div class="comment-admin-actions">
+            {% if comment.status != "approved" %}
+            <form method="post" action="/admin/comments/{{ comment.id }}/approved" class="inline-form">
+              <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="status" value="{{ status }}">
+              <button type="submit" class="link-btn success">通过</button>
+            </form>
+            {% endif %}
+            {% if comment.status != "pending" %}
+            <form method="post" action="/admin/comments/{{ comment.id }}/pending" class="inline-form">
+              <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="status" value="{{ status }}">
+              <button type="submit" class="link-btn">待审核</button>
+            </form>
+            {% endif %}
+            {% if comment.status != "spam" %}
+            <form method="post" action="/admin/comments/{{ comment.id }}/spam" class="inline-form">
+              <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="status" value="{{ status }}">
+              <button type="submit" class="link-btn">垃圾</button>
+            </form>
+            {% endif %}
+            <form method="post" action="/admin/comments/{{ comment.id }}/delete" class="inline-form" data-confirm="确定永久删除这条评论及其回复？">
+              <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="status" value="{{ status }}">
+              <button type="submit" class="link-btn danger">删除</button>
+            </form>
+          </div>
         </div>
-      </div>
-      <p class="comment-admin-body">{{ comment.content }}</p>
-      <div class="comment-admin-actions">
-        {% if comment.status != "approved" %}
-        <form method="post" action="/admin/comments/{{ comment.id }}/approved" class="inline-form">
-          <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="status" value="{{ status }}">
-          <button type="submit" class="link-btn success">通过</button>
-        </form>
-        {% endif %}
-        {% if comment.status != "spam" %}
-        <form method="post" action="/admin/comments/{{ comment.id }}/spam" class="inline-form">
-          <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="status" value="{{ status }}">
-          <button type="submit" class="link-btn">标记垃圾</button>
-        </form>
-        {% endif %}
-        {% if comment.status != "trash" %}
-        <form method="post" action="/admin/comments/{{ comment.id }}/trash" class="inline-form">
-          <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="status" value="{{ status }}">
-          <button type="submit" class="link-btn">移入回收站</button>
-        </form>
-        {% endif %}
-        <form method="post" action="/admin/comments/{{ comment.id }}/delete" class="inline-form" data-confirm="确定永久删除这条评论及其回复？">
-          <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="status" value="{{ status }}">
-          <button type="submit" class="link-btn danger">永久删除</button>
-        </form>
       </div>
     </article>
     {% endfor %}
-    {% if rows.length == 0 %}<div class="empty-row panel">没有评论。</div>{% endif %}
+    {% if rows.length == 0 %}<div class="empty-state panel"><strong>没有符合条件的评论</strong><p>换个状态或筛选条件试试。</p></div>{% endif %}
   </div>
   {% include "partials/pagination.html" %}
 </main>

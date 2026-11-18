@@ -3,13 +3,19 @@
   name = "cangmo"
   organization = ""
   description = "Cangmo - a modern, secure blog/CMS engine written natively in Cangjie"
-  version = "1.0.0"
+  version = "1.0.1"
   target-dir = ""
   script-dir = ""
   output-type = "executable"
   compile-option = ""
   override-compile-option = ""
-  link-option = "-L C:/Windows/System32 -l bcrypt"
+  link-option = ""
   package-configuration = {}
+
+[target.x86_64-w64-mingw32]
+  link-option = "-L C:/Windows/System32 -l bcrypt"
+
+[target.x86_64-unknown-linux-gnu]
+  link-option = "-lcrypto"
 
 [dependencies]

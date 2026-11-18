@@ -36,7 +36,7 @@
               <a class="table-title" href="{{ row.edit_url }}">{{ row.title }}</a>
               <div class="table-sub">/{{ row.slug }}{% if row.pinned %} · 置顶{% endif %}</div>
             </td>
-            <td><span class="status status-{{ row.status }}">{{ row.status }}</span></td>
+            <td><span class="status status-{{ row.status }}">{{ row.status_text }}</span></td>
             <td>{{ row.author.name }}</td>
             <td class="muted">{{ row.date }}</td>
             <td class="muted">{{ row.views }}</td>

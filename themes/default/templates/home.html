@@ -33,12 +33,6 @@
           {% include "partials/post-card.html" %}
         {% endfor %}
       </div>
-      {% if posts.length == 0 %}
-        <div class="empty-state">
-          <p>还没有文章。去后台写下第一篇吧。</p>
-          <a class="btn" href="/admin">进入后台</a>
-        </div>
-      {% endif %}
       {% include "partials/pagination.html" %}
     </section>
   </div>

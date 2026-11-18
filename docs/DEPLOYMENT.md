@@ -4,13 +4,13 @@
 
 | 项 | 要求 |
 | --- | --- |
-| 操作系统 | Windows 10/11 / Windows Server 2019+ x64 |
-| 运行时 | 仓颉 1.2.1 运行时（随工具链安装） |
+| 操作系统 | Windows 10/11 / Server 2019+ x64；Linux x64（glibc 2.25+） |
+| 运行时 | 仓颉 1.2.1 运行时（随工具链安装）；Linux 需 OpenSSL 开发库 |
 | 端口 | 默认 8080，可配置 |
-| 磁盘 | 程序 + 数据；媒体和备份按量预留 |
-| 内存 | 建议 ≥512MB；文章/媒体量大时增加 |
+| 磁盘 | 程序 + 数据；附件和备份按量预留 |
+| 内存 | 建议 ≥512MB；文章/附件量大时增加 |
 
-v1.0 使用 Windows CNG（`bcrypt.dll`）做 PBKDF2 与 CSPRNG；Linux 部署需替换 `src/core/crypto.cj` 的系统加密适配层。
+Windows 使用 CNG（`bcrypt.dll`）做 PBKDF2 与 CSPRNG；Linux x64 使用 OpenSSL（`libcrypto`）与 `getrandom(2)`。`cjpm.toml` 已按 target 配置链接选项。
 
 ## 2. 构建与启动
 
@@ -26,6 +26,21 @@ cjpm build
 ```
 
 构建产物：`target\release\bin\main.exe`。运行时需要仓颉运行时 DLL（工具链的 `runtime\lib\windows_x86_64_cjnative` 已在 PATH）。
+
+### Linux
+
+```bash
+# Debian / Ubuntu
+sudo apt-get update && sudo apt-get install -y libssl-dev
+# Fedora / RHEL: sudo dnf install -y openssl-devel
+
+source /path/to/cangjie/envsetup.sh
+cd /opt/cangmo
+cjpm build
+./target/release/bin/main serve --host 127.0.0.1 --port 8080 --data /var/lib/cangmo
+```
+
+也可使用 `./scripts/start.sh`（自动构建并启动）。Linux 产物为 `target/release/bin/main`，无 `.exe` 后缀。部署前请确认 `ldd target/release/bin/main` 能找到 `libcrypto.so` 与仓颉运行时。
 
 ## 3. 目录与权限
 
@@ -146,7 +161,7 @@ nssm start CangmoBlog
 .\main.exe export E:\backup\cangmo-export.json --config E:\apps\cangmo-data\config.json
 ```
 
-### 媒体
+### 附件
 
 备份 `data/uploads/` 目录；建议与 JSON 备份一起打包到异地存储。
 

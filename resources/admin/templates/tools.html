@@ -3,66 +3,72 @@
 {% include "partials/sidebar.html" %}
 <div class="admin-main">
 {% include "partials/topbar.html" %}
-<main class="admin-content">
+<main class="admin-content tools-page">
+  <div class="page-intro">
+    <div>
+      <p class="eyebrow">SYSTEM</p>
+      <h2>工具</h2>
+      <p class="muted">查看运行状态、数据统计与导出入口。备份与恢复已移至独立的「备份」页面。</p>
+    </div>
+    <div class="page-intro-actions">
+      <a class="btn btn-ghost" href="/admin/backups">前往备份中心</a>
+    </div>
+  </div>
+
+  <section class="stat-grid stat-grid-compact">
+    <div class="stat-card"><span class="stat-label">文章</span><strong>{{ counts.posts }}</strong><small>{{ counts.drafts }} 草稿 · {{ counts.scheduled }} 定时</small></div>
+    <div class="stat-card"><span class="stat-label">页面</span><strong>{{ counts.pages }}</strong><small>独立页面</small></div>
+    <div class="stat-card"><span class="stat-label">评论</span><strong>{{ counts.comments }}</strong><small>{{ counts.comments_pending }} 待审核</small></div>
+    <div class="stat-card"><span class="stat-label">附件</span><strong>{{ counts.media }}</strong><small>文件</small></div>
+    <div class="stat-card"><span class="stat-label">用户</span><strong>{{ counts.users }}</strong><small>账户</small></div>
+  </section>
+
   <div class="two-col">
     <section class="panel">
-      <header class="panel-head"><h2>创建备份</h2></header>
-      <form method="post" action="/admin/tools/action" class="stack-form">
-        <input type="hidden" name="_csrf" value="{{ csrf }}">
-        <input type="hidden" name="action" value="create">
-        <label>备注（可选）<input type="text" name="label" maxlength="40" placeholder="例如：发布前"></label>
-        <button class="btn" type="submit">立即备份</button>
-      </form>
-      <p class="muted small">备份包含全部文章、页面、评论、用户、设置与审计日志（JSON）。媒体文件位于 <code>data/uploads</code>，请一并备份。</p>
+      <header class="panel-head"><h2>运行信息</h2><span class="muted">只读</span></header>
+      <dl class="info-list">
+        <div><dt>版本</dt><dd>{{ config.version }}</dd></div>
+        <div><dt>数据目录</dt><dd><code>{{ config.data_dir }}</code></dd></div>
+        <div><dt>上传目录</dt><dd><code>{{ config.uploads_dir }}</code></dd></div>
+        <div><dt>备份目录</dt><dd><code>{{ config.backup_dir }}</code></dd></div>
+        <div><dt>当前主题</dt><dd>{{ config.theme }}</dd></div>
+        <div><dt>PBKDF2 迭代</dt><dd>{{ config.pbkdf2_iterations }}</dd></div>
+        <div><dt>WAL 待压缩</dt><dd>{{ config.wal_pending }}</dd></div>
+        <div><dt>现有备份</dt><dd>{{ backup_count }} 个</dd></div>
+      </dl>
     </section>
+
     <section class="panel">
-      <header class="panel-head"><h2>导出</h2></header>
-      <p class="muted">导出当前数据库为 JSON 文件，可用于迁移或离线分析。</p>
-      <a class="btn btn-ghost" href="/admin/tools/export">下载导出 JSON</a>
-      <div class="stat-inline">
-        <span>文章 {{ counts.posts }}</span><span>页面 {{ counts.pages }}</span><span>评论 {{ counts.comments }}</span><span>媒体 {{ counts.media }}</span><span>用户 {{ counts.users }}</span>
-      </div>
+      <header class="panel-head"><h2>自检</h2></header>
+      <ul class="check-list">
+        {% for check in checks %}
+        <li class="{% if check.ok %}ok{% else %}bad{% endif %}"><span class="check-dot"></span>{{ check.label }}<span class="muted">{% if check.ok %}正常{% else %}缺失{% endif %}</span></li>
+        {% endfor %}
+      </ul>
+      <p class="muted small">部署前请运行 <code>cangmo doctor</code> 获取完整检查。</p>
     </section>
   </div>
 
-  <section class="panel">
-    <header class="panel-head"><h2>备份文件</h2></header>
-    <div class="table-wrap">
-      <table class="table">
-        <thead><tr><th>文件</th><th>大小</th><th>操作</th></tr></thead>
-        <tbody>
-          {% for backup in backups %}
-          <tr>
-            <td><code>{{ backup.name }}</code></td>
-            <td class="muted">{{ backup.size_text }}</td>
-            <td class="table-actions">
-              <a href="/admin/tools/backup?name={{ backup.name }}">下载</a>
-              <form method="post" action="/admin/tools/action" class="inline-form" data-confirm="确定删除备份 {{ backup.name }}？">
-                <input type="hidden" name="_csrf" value="{{ csrf }}">
-                <input type="hidden" name="action" value="delete">
-                <input type="hidden" name="name" value="{{ backup.name }}">
-                <button type="submit" class="link-btn danger">删除</button>
-              </form>
-            </td>
-          </tr>
-          {% endfor %}
-          {% if backups.length == 0 %}<tr><td colspan="3" class="empty-row">还没有备份。</td></tr>{% endif %}
-        </tbody>
-      </table>
-    </div>
-  </section>
+  <div class="two-col">
+    <section class="panel">
+      <header class="panel-head"><h2>导出数据</h2></header>
+      <p class="muted">导出当前数据库为 JSON，可用于迁移、离线分析或第三方备份。</p>
+      <a class="btn btn-ghost" href="/admin/tools/export">下载导出 JSON</a>
+      <div class="stat-inline">
+        <span>文章 {{ counts.posts }}</span><span>页面 {{ counts.pages }}</span><span>评论 {{ counts.comments }}</span><span>附件 {{ counts.media }}</span><span>用户 {{ counts.users }}</span>
+      </div>
+    </section>
 
-  <section class="panel danger-panel">
-    <header class="panel-head"><h2>恢复数据</h2></header>
-    <p class="muted">恢复会<strong>覆盖当前全部数据</strong>。请先创建一份新备份，并在下方输入 <code>RESTORE</code> 确认。</p>
-    <form method="post" action="/admin/tools/action" enctype="multipart/form-data" class="stack-form">
-      <input type="hidden" name="_csrf" value="{{ csrf }}">
-      <input type="hidden" name="action" value="restore">
-      <label>备份 JSON 文件<input type="file" name="file" accept="application/json,.json" required></label>
-      <label>确认文字<input type="text" name="confirm" required placeholder="RESTORE" autocomplete="off"></label>
-      <button class="btn btn-danger" type="submit">覆盖并恢复</button>
-    </form>
-  </section>
+    <section class="panel">
+      <header class="panel-head"><h2>快捷入口</h2></header>
+      <div class="quick-actions">
+        <a class="quick-action" href="/admin/backups"><strong>备份中心</strong><span>创建、下载、恢复、删除</span></a>
+        <a class="quick-action" href="/admin/attachments"><strong>附件库</strong><span>上传与复用图片、文档</span></a>
+        <a class="quick-action" href="/admin/audit"><strong>审计日志</strong><span>查看后台操作记录</span></a>
+        <a class="quick-action" href="/admin/settings"><strong>站点设置</strong><span>标题、导航、评论策略</span></a>
+      </div>
+    </section>
+  </div>
 </main>
 </div>
 </div>

@@ -1,0 +1,95 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content attachments-page">
+  <section class="stat-grid stat-grid-compact">
+    <div class="stat-card"><span class="stat-label">全部附件</span><strong>{{ counts.all }}</strong><small>{{ total_size }}</small></div>
+    <div class="stat-card"><span class="stat-label">图片</span><strong>{{ counts.image }}</strong><small>封面与插图</small></div>
+    <div class="stat-card"><span class="stat-label">视频</span><strong>{{ counts.video }}</strong><small>MP4 / WebM</small></div>
+    <div class="stat-card"><span class="stat-label">音频</span><strong>{{ counts.audio }}</strong><small>MP3</small></div>
+    <div class="stat-card"><span class="stat-label">文档</span><strong>{{ counts.document }}</strong><small>PDF</small></div>
+  </section>
+
+  <section class="panel upload-panel">
+    <form method="post" action="/admin/attachments/upload" enctype="multipart/form-data" class="upload-form" id="attachment-upload-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <label class="drop-zone" id="drop-zone">
+        <input type="file" name="files" multiple accept="image/jpeg,image/png,image/gif,image/webp,image/avif,application/pdf,video/mp4,video/webm,audio/mpeg">
+        <strong>点击或拖拽文件到此处上传</strong>
+        <span>支持 JPG / PNG / GIF / WebP / AVIF / PDF / MP4 / WebM / MP3，单文件最大 25MB，单次最多 10 个</span>
+      </label>
+      <div class="upload-side">
+        <button class="btn" type="submit">开始上传</button>
+        <p class="muted small">上传后可直接复制链接，或在文章封面中选择。</p>
+      </div>
+    </form>
+  </section>
+
+  <div class="list-toolbar">
+    <div class="tabs">
+      <a href="/admin/attachments?kind=all" class="{% if kind == "all" %}active{% endif %}">全部 <span>{{ counts.all }}</span></a>
+      <a href="/admin/attachments?kind=image" class="{% if kind == "image" %}active{% endif %}">图片 <span>{{ counts.image }}</span></a>
+      <a href="/admin/attachments?kind=video" class="{% if kind == "video" %}active{% endif %}">视频 <span>{{ counts.video }}</span></a>
+      <a href="/admin/attachments?kind=audio" class="{% if kind == "audio" %}active{% endif %}">音频 <span>{{ counts.audio }}</span></a>
+      <a href="/admin/attachments?kind=document" class="{% if kind == "document" %}active{% endif %}">文档 <span>{{ counts.document }}</span></a>
+    </div>
+    <form class="list-search" method="get" action="/admin/attachments" role="search">
+      <input type="hidden" name="kind" value="{{ kind }}">
+      <input type="search" name="q" value="{{ search }}" placeholder="搜索文件名或类型…" aria-label="搜索附件">
+      <button type="submit" class="btn btn-ghost">搜索</button>
+      {% if search %}<a class="link-btn" href="/admin/attachments?kind={{ kind }}">清除</a>{% endif %}
+    </form>
+  </div>
+
+  <section class="attachment-grid">
+    {% for item in items %}
+    <article class="attachment-card" data-kind="{{ item.kind }}">
+      <button type="button" class="attachment-thumb" data-preview-url="{{ item.url }}" data-preview-kind="{{ item.kind }}" data-preview-name="{{ item.original_name }}" aria-label="预览 {{ item.original_name }}">
+        {% if item.kind == "image" %}
+        <img src="{{ item.url }}" alt="{{ item.original_name }}" loading="lazy">
+        {% elif item.kind == "video" %}
+        <span class="attachment-icon">▶</span>
+        {% elif item.kind == "audio" %}
+        <span class="attachment-icon">♫</span>
+        {% else %}
+        <span class="attachment-icon">PDF</span>
+        {% endif %}
+        <span class="attachment-kind">{{ item.kind_label }}</span>
+      </button>
+      <div class="attachment-info">
+        <strong title="{{ item.original_name }}">{{ item.original_name }}</strong>
+        <small>{{ item.size_text }}{% if item.dimensions %} · {{ item.dimensions }}{% endif %} · {{ item.date }}</small>
+        <div class="attachment-actions">
+          <button type="button" class="link-btn copy-url" data-url="{{ item.url }}">复制链接</button>
+          <button type="button" class="link-btn" data-preview-url="{{ item.url }}" data-preview-kind="{{ item.kind }}" data-preview-name="{{ item.original_name }}">预览</button>
+          <form method="post" action="/admin/attachments/{{ item.id }}/delete" class="inline-form" data-confirm="确定删除附件「{{ item.original_name }}」？">
+            <input type="hidden" name="_csrf" value="{{ csrf }}">
+            <input type="hidden" name="return_to" value="/admin/attachments?kind={{ kind }}{% if search %}&q={{ search|urlencode }}{% endif %}">
+            <button type="submit" class="link-btn danger">删除</button>
+          </form>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </section>
+  {% if items.length == 0 %}
+  <div class="empty-state panel">
+    <strong>附件库为空</strong>
+    <p>上传图片、PDF 或音视频后，会显示在这里，并可用于文章封面与头像。</p>
+  </div>
+  {% endif %}
+  {% include "partials/pagination.html" %}
+
+  <dialog class="attachment-dialog" id="attachment-dialog">
+    <div class="dialog-head">
+      <h2 id="attachment-dialog-title">附件预览</h2>
+      <button type="button" class="link-btn" data-close-dialog>关闭</button>
+    </div>
+    <div class="attachment-dialog-body" id="attachment-dialog-body"></div>
+  </dialog>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

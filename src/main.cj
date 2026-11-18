@@ -164,12 +164,14 @@ func doctorCommand(args: Array<String>): Int64 {
     println("用户数：${services.store.count(COL_USERS)}")
     println("文章数：${services.store.count(COL_POSTS)}")
     println("评论数：${services.store.count(COL_COMMENTS)}")
-    println("媒体数：${services.store.count(COL_MEDIA)}")
+    println("附件数：${services.store.count(COL_MEDIA)}")
+    println("附件库：${if (services.adminTemplates.hasTemplate("attachments.html")) { "✓" } else { "✗" }}")
+    println("备份中心：${if (services.adminTemplates.hasTemplate("backups.html")) { "✓" } else { "✗" }}")
     println("WAL 待压缩记录：${services.store.pendingWalEntries()}")
     println("PBKDF2 迭代：${config.pbkdf2Iterations}")
     let templateNames = ["login.html", "setup.html", "dashboard.html", "posts.html", "editor.html",
-                         "categories.html", "tags.html", "comments.html", "media.html", "users.html",
-                         "settings.html", "themes.html", "audit.html", "tools.html", "profile.html", "error.html"]
+                         "categories.html", "tags.html", "comments.html", "attachments.html", "users.html",
+                         "settings.html", "themes.html", "audit.html", "tools.html", "backups.html", "profile.html", "error.html"]
     var templateCount: Int64 = 0
     for (name in templateNames) {
         if (services.adminTemplates.hasTemplate(name)) {

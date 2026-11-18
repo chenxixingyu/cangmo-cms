@@ -431,7 +431,41 @@ public class AdminSite {
         } catch (e: AppError) {
             ctx.setFlash("error", e.message)
         }
-        ctx.redirect("/admin/categories", status: 303)
+        let returnTo = safeNext(ctx.form("return_to"))
+        ctx.redirect(if (returnTo.size > 0) { returnTo } else { "/admin/categories" }, status: 303)
+    }
+
+    /** Inline category creation from the post editor (JSON, CSRF header). */
+    public func categoryQuick(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        try {
+            let body = try {
+                String.fromUtf8(ctx.req.body)
+            } catch (e: Exception) {
+                ""
+            }
+            let parsed = tryParseJson(body) ?? jobj()
+            let name = getString(parsed, "name")
+            let slug = getString(parsed, "slug")
+            let id = services.taxonomy.createCategory(name, slug, "", ctx.clientIp())
+            let category = match (services.taxonomy.getCategory(id)) {
+                case Some(value) => value
+                case None => jobj()
+            }
+            let data = JsonObject()
+            data.set("ok", JBool(true))
+            data.set("id", JStr(id))
+            data.set("name", JStr(docStr(category, "name", def: name.trimAscii())))
+            data.set("slug", JStr(docStr(category, "slug")))
+            HttpResponse().json(JObj(data))
+        } catch (e: AppError) {
+            attachmentJsonError(e.message)
+        } catch (e: Exception) {
+            attachmentJsonError("分类创建失败")
+        }
     }
 
     public func tagsPage(ctx: Ctx): HttpResponse {
@@ -473,22 +507,41 @@ public class AdminSite {
             case Some(response) => return response
             case None => ()
         }
-        let status = ctx.query("status", def: "pending")
+        let status = normalizeCommentStatus(ctx.query("status", def: "pending"))
+        let search = ctx.query("q").trimAscii()
+        let postId = ctx.query("post").trimAscii()
         let page = ctx.pageNumber()
-        let result = services.comments.adminList(status, page, 30)
+        let result = services.comments.adminList(status, page, 30, query: search, postId: postId)
         let rows = JsonArray()
         for (comment in result.items) {
             let post = services.posts.get(docStr(comment, "post_id"))
-            let view = commentView(comment, post, 0)
+            let view = cloneDoc(commentView(comment, post, 0))
+            setField(view, "author_email", JStr(docStr(comment, "author_email")))
+            setField(view, "ip_hash", JStr(docStr(comment, "ip_hash")))
+            setField(view, "user_agent", JStr(docStr(comment, "user_agent")))
+            setField(view, "post_id", JStr(docStr(comment, "post_id")))
+            setField(view, "parent_id", JStr(docStr(comment, "parent_id")))
             rows.add(view)
+        }
+        let postOptions = JsonArray()
+        for (post in services.posts.publishedPosts()) {
+            let item = JsonObject()
+            item.set("id", JStr(docStr(post, "id")))
+            item.set("title", JStr(docStr(post, "title")))
+            item.set("selected", JBool(docStr(post, "id") == postId))
+            postOptions.add(JObj(item))
         }
         let data = JsonObject()
         data.set("page_title", JStr("评论"))
         data.set("active", JStr("comments"))
         data.set("status", JStr(status))
+        data.set("search", JStr(search))
+        data.set("post_filter", JStr(postId))
         data.set("rows", JArr(rows))
+        data.set("counts", services.comments.statusCounts())
+        data.set("post_options", JArr(postOptions))
         data.set("pagination", buildPagination(result.page, result.pages, result.total,
-                                               "/admin/comments?status=" + status, 30))
+            "/admin/comments?status=${status}&q=" + urlEncode(search) + "&post=" + urlEncode(postId), 30))
         ctx.renderAdminPage("comments.html", JObj(data))
     }
 
@@ -510,80 +563,210 @@ public class AdminSite {
         } catch (e: AppError) {
             ctx.setFlash("error", e.message)
         }
-        ctx.redirect("/admin/comments?status=" + ctx.form("status", def: "pending"), status: 303)
+        ctx.redirect(commentReturnUrl(ctx), status: 303)
+    }
+
+    public func commentsBulk(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let ids = ctx.req.formValues("ids")
+        let action = ctx.form("action")
+        if (ids.size == 0) {
+            ctx.setFlash("error", "请先选择评论")
+            return ctx.redirect(commentReturnUrl(ctx), status: 303)
+        }
+        var changed: Int64 = 0
+        var failed: Int64 = 0
+        for (id in ids) {
+            try {
+                if (action == "delete") {
+                    services.comments.delete(id, ctx.userDoc(), ctx.clientIp())
+                } else {
+                    services.comments.moderate(id, action, ctx.userDoc(), ctx.clientIp())
+                }
+                changed += 1
+            } catch (e: Exception) {
+                failed += 1
+            }
+        }
+        if (failed > 0) {
+            ctx.setFlash("error", "已处理 ${changed} 条，${failed} 条失败")
+        } else {
+            ctx.setFlash("success", "已处理 ${changed} 条评论")
+        }
+        ctx.redirect(commentReturnUrl(ctx), status: 303)
+    }
+
+    private func commentReturnUrl(ctx: Ctx): String {
+        let status = normalizeCommentStatus(ctx.form("return_status",
+            def: ctx.form("status", def: ctx.query("status", def: "pending"))))
+        let search = ctx.form("return_q", def: ctx.query("q"))
+        let postId = ctx.form("return_post", def: ctx.query("post"))
+        "/admin/comments?status=${status}&q=" + urlEncode(search) + "&post=" + urlEncode(postId)
+    }
+
+    private func normalizeCommentStatus(value: String): String {
+        if (value == "approved" || value == "spam" || value == "trash" || value == "all") {
+            return value
+        }
+        "pending"
     }
 
     // -----------------------------------------------------------------------
-    // Media
+    // Attachments (formerly media library)
     // -----------------------------------------------------------------------
 
     public func mediaPage(ctx: Ctx): HttpResponse {
-        match (guard(ctx)) {
-            case Some(response) => return response
-            case None => ()
-        }
-        let result = services.media.list(ctx.pageNumber(), 40)
-        let items = JsonArray()
-        for (item in result.items) {
-            let view = cloneDoc(item)
-            setField(view, "size_text", JStr(formatFileSize(docInt(item, "size"))))
-            setField(view, "date", JStr(formatDate(docInt(item, "created_at"))))
-            if (docInt(item, "width") > 0) {
-                setField(view, "dimensions", JStr("${docInt(item, "width")} × ${docInt(item, "height")}"))
-            } else {
-                setField(view, "dimensions", JStr(""))
-            }
-            items.add(view)
-        }
-        let data = JsonObject()
-        data.set("page_title", JStr("媒体库"))
-        data.set("active", JStr("media"))
-        data.set("items", JArr(items))
-        data.set("pagination", buildPagination(result.page, result.pages, result.total, "/admin/media", 40))
-        ctx.renderAdminPage("media.html", JObj(data))
+        // Legacy URL: render the renamed attachment library in place.
+        attachmentsPage(ctx)
     }
 
-    public func mediaUpload(ctx: Ctx): HttpResponse {
+    public func attachmentsPage(ctx: Ctx): HttpResponse {
         match (guard(ctx)) {
             case Some(response) => return response
             case None => ()
         }
+        let kind = normalizeAttachmentKind(ctx.query("kind", def: "all"))
+        let search = ctx.query("q").trimAscii()
+        let result = services.media.list(ctx.pageNumber(), 36, kind: kind, query: search)
+        let items = JsonArray()
+        for (item in result.items) {
+            items.add(attachmentView(item))
+        }
+        let counts = services.media.counts()
+        let data = JsonObject()
+        data.set("page_title", JStr("附件库"))
+        data.set("active", JStr("attachments"))
+        data.set("items", JArr(items))
+        data.set("counts", counts)
+        data.set("kind", JStr(kind))
+        data.set("search", JStr(search))
+        data.set("total_size", JStr(formatFileSize(docInt(counts, "bytes"))))
+        data.set("pagination", buildPagination(result.page, result.pages, result.total,
+            "/admin/attachments?kind=${kind}&q=" + urlEncode(search), 36))
+        ctx.renderAdminPage("attachments.html", JObj(data))
+    }
+
+    public func attachmentsData(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let kind = normalizeAttachmentKind(ctx.query("kind", def: "image"))
+        let search = ctx.query("q").trimAscii()
+        let page = ctx.pageNumber()
+        let result = services.media.list(page, 24, kind: kind, query: search)
+        let items = JsonArray()
+        for (item in result.items) {
+            items.add(attachmentView(item))
+        }
+        let data = JsonObject()
+        data.set("items", JArr(items))
+        data.set("page", JInt(result.page))
+        data.set("pages", JInt(result.pages))
+        data.set("total", JInt(result.total))
+        data.set("has_more", JBool(result.page < result.pages))
+        HttpResponse().json(JObj(data))
+    }
+
+    public func attachmentsUpload(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let wantsJson = ctx.query("format") == "json" ||
+            ctx.req.header("accept").toAsciiLower().contains("application/json")
         try {
             ctx.req.parseForm()
             if (ctx.req.files.size == 0) {
-                ctx.setFlash("error", "没有选择文件")
-            } else {
-                var count: Int64 = 0
-                var index: Int64 = 0
-                while (index < ctx.req.files.size && count < 10) {
-                    let file = ctx.req.files[index]
-                    services.media.upload(file, docStr(ctx.userDoc(), "id"), ctx.clientIp())
-                    count += 1
-                    index += 1
+                if (wantsJson) {
+                    return attachmentJsonError("没有选择文件")
                 }
-                ctx.setFlash("success", "已上传 ${count} 个文件")
+                ctx.setFlash("error", "没有选择文件")
+                return ctx.redirect("/admin/attachments", status: 303)
             }
+            var count: Int64 = 0
+            var index: Int64 = 0
+            let uploaded = JsonArray()
+            while (index < ctx.req.files.size && count < 10) {
+                let file = ctx.req.files[index]
+                let saved = services.media.upload(file, docStr(ctx.userDoc(), "id"), ctx.clientIp())
+                uploaded.add(attachmentView(saved))
+                count += 1
+                index += 1
+            }
+            if (wantsJson) {
+                let data = JsonObject()
+                data.set("ok", JBool(true))
+                data.set("items", JArr(uploaded))
+                return HttpResponse().json(JObj(data))
+            }
+            ctx.setFlash("success", "已上传 ${count} 个附件")
         } catch (e: AppError) {
+            if (wantsJson) {
+                return attachmentJsonError(e.message)
+            }
             ctx.setFlash("error", e.message)
         } catch (e: Exception) {
-            services.logger.error("media", e.message)
+            services.logger.error("attachments", e.message)
+            if (wantsJson) {
+                return attachmentJsonError("上传失败")
+            }
             ctx.setFlash("error", "上传失败")
         }
-        ctx.redirect("/admin/media", status: 303)
+        ctx.redirect("/admin/attachments", status: 303)
     }
 
-    public func mediaDelete(ctx: Ctx): HttpResponse {
+    public func attachmentsDelete(ctx: Ctx): HttpResponse {
         match (guard(ctx)) {
             case Some(response) => return response
             case None => ()
         }
+        let returnTo = safeNext(ctx.form("return_to"))
         try {
             services.media.delete(ctx.param("id"), ctx.userDoc(), ctx.clientIp())
-            ctx.setFlash("success", "文件已删除")
+            ctx.setFlash("success", "附件已删除")
         } catch (e: AppError) {
             ctx.setFlash("error", e.message)
         }
-        ctx.redirect("/admin/media", status: 303)
+        ctx.redirect(if (returnTo.size > 0) { returnTo } else { "/admin/attachments" }, status: 303)
+    }
+
+    public func mediaUpload(ctx: Ctx): HttpResponse {
+        attachmentsUpload(ctx)
+    }
+
+    public func mediaDelete(ctx: Ctx): HttpResponse {
+        attachmentsDelete(ctx)
+    }
+
+    private func attachmentView(item: JsonValue): JsonValue {
+        let view = cloneDoc(item)
+        let kind = mediaKindOfService(item)
+        setField(view, "kind", JStr(kind))
+        setField(view, "kind_label", JStr(matchKindLabel(kind)))
+        setField(view, "size_text", JStr(formatFileSize(docInt(item, "size"))))
+        setField(view, "date", JStr(formatDate(docInt(item, "created_at"))))
+        setField(view, "date_time", JStr(formatDateTime(docInt(item, "created_at"))))
+        if (docInt(item, "width") > 0) {
+            setField(view, "dimensions", JStr("${docInt(item, "width")} × ${docInt(item, "height")}"))
+        } else {
+            setField(view, "dimensions", JStr(""))
+        }
+        view
+    }
+
+    private func normalizeAttachmentKind(value: String): String {
+        if (value == "image" || value == "video" || value == "audio" || value == "document") {
+            return value
+        }
+        "all"
+    }
+
+    private func matchKindLabel(kind: String): String {
+        if (kind == "image") { "图片" } else if (kind == "video") { "视频" } else if (kind == "audio") { "音频" } else if (kind == "document") { "文档" } else { "附件" }
     }
 
     // -----------------------------------------------------------------------
@@ -595,17 +778,67 @@ public class AdminSite {
             case Some(response) => return response
             case None => ()
         }
+        let search = ctx.query("q").trimAscii().toAsciiLower()
+        let roleFilter = ctx.query("role").trimAscii()
+        let statusFilter = ctx.query("status").trimAscii()
         let users = JsonArray()
+        let counts = JsonObject()
+        var all: Int64 = 0
+        var active: Int64 = 0
+        var suspended: Int64 = 0
+        var admins: Int64 = 0
+        var editors: Int64 = 0
+        var authors: Int64 = 0
+        var contributors: Int64 = 0
+        var subscribers: Int64 = 0
         for (user in services.auth.listUsers()) {
+            all += 1
+            let role = docStr(user, "role")
+            if (role == ROLE_ADMIN) { admins += 1 } else if (role == ROLE_EDITOR) { editors += 1 } else if (role == ROLE_AUTHOR) { authors += 1 } else if (role == ROLE_CONTRIBUTOR) { contributors += 1 } else if (role == ROLE_SUBSCRIBER) { subscribers += 1 }
+            if (docStr(user, "status") == "active") { active += 1 } else { suspended += 1 }
+            if (roleFilter.size > 0 && role != roleFilter) {
+                continue
+            }
+            if (statusFilter.size > 0 && docStr(user, "status") != statusFilter) {
+                continue
+            }
+            if (search.size > 0) {
+                let haystack = (docStr(user, "username") + " " + docStr(user, "display_name") + " " +
+                                docStr(user, "email")).toAsciiLower()
+                if (!haystack.contains(search)) {
+                    continue
+                }
+            }
             let view = cloneDoc(user)
+            var postCount: Int64 = 0
+            for (post in services.store.list(COL_POSTS)) {
+                if (docStr(post, "author_id") == docStr(user, "id") && docStr(post, "status") != STATUS_TRASH) {
+                    postCount += 1
+                }
+            }
+            setField(view, "post_count", JInt(postCount))
             setField(view, "created", JStr(formatDate(docInt(user, "created_at"))))
             setField(view, "last_login", JStr(formatDateTime(docInt(user, "last_login_at"))))
+            setField(view, "initial", JStr(initialOf(docStr(user, "display_name", def: docStr(user, "username")))))
+            setField(view, "is_self", JBool(docStr(user, "id") == docStr(ctx.userDoc(), "id")))
             users.add(view)
         }
+        counts.set("all", JInt(all))
+        counts.set("active", JInt(active))
+        counts.set("suspended", JInt(suspended))
+        counts.set("admin", JInt(admins))
+        counts.set("editor", JInt(editors))
+        counts.set("author", JInt(authors))
+        counts.set("contributor", JInt(contributors))
+        counts.set("subscriber", JInt(subscribers))
         let data = JsonObject()
         data.set("page_title", JStr("用户"))
         data.set("active", JStr("users"))
         data.set("users", JArr(users))
+        data.set("counts", JObj(counts))
+        data.set("q", JStr(ctx.query("q")))
+        data.set("role_filter", JStr(roleFilter))
+        data.set("status_filter", JStr(statusFilter))
         data.set("roles", jsonStringList(["admin", "editor", "author", "contributor", "subscriber"]))
         ctx.renderAdminPage("users.html", JObj(data))
     }
@@ -852,7 +1085,7 @@ public class AdminSite {
     }
 
     // -----------------------------------------------------------------------
-    // Tools / backups
+    // Tools
     // -----------------------------------------------------------------------
 
     public func toolsPage(ctx: Ctx): HttpResponse {
@@ -860,19 +1093,81 @@ public class AdminSite {
             case Some(response) => return response
             case None => ()
         }
+        let counts = services.stats.counts()
+        let config = JsonObject()
+        config.set("version", JStr(APP_VERSION))
+        config.set("data_dir", JStr(services.config.dataDir))
+        config.set("uploads_dir", JStr(services.config.uploadsDir()))
+        config.set("backup_dir", JStr(services.config.backupDir()))
+        config.set("pbkdf2_iterations", JInt(services.config.pbkdf2Iterations))
+        config.set("wal_pending", JInt(services.store.pendingWalEntries()))
+        config.set("theme", JStr(services.settings.str("theme", def: services.config.theme)))
+        config.set("log_level", JInt(services.config.logLevel))
+        let checks = JsonArray()
+        let checksList = [
+            ("默认主题首页", services.templates.hasTemplate("home.html")),
+            ("后台登录模板", services.adminTemplates.hasTemplate("login.html")),
+            ("文章编辑器", services.adminTemplates.hasTemplate("editor.html")),
+            ("附件库", services.adminTemplates.hasTemplate("attachments.html")),
+            ("备份中心", services.adminTemplates.hasTemplate("backups.html")),
+            ("上传目录", isDirectory(services.config.uploadsDir())),
+            ("备份目录", isDirectory(services.config.backupDir()))
+        ]
+        for ((label, ok) in checksList) {
+            let item = JsonObject()
+            item.set("label", JStr(label))
+            item.set("ok", JBool(ok))
+            checks.add(JObj(item))
+        }
+        let data = JsonObject()
+        data.set("page_title", JStr("工具"))
+        data.set("active", JStr("tools"))
+        data.set("counts", counts)
+        data.set("config", JObj(config))
+        data.set("checks", JArr(checks))
+        data.set("backup_count", JInt(services.backup.list().size))
+        ctx.renderAdminPage("tools.html", JObj(data))
+    }
+
+    public func exportJson(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let text = services.backup.exportJson(pretty: true)
+        let response = HttpResponse().bytes(text.toArray(), "application/json; charset=utf-8")
+        response.headers.set("content-disposition", "attachment; filename=\"cangmo-export.json\"")
+        response
+    }
+
+    // -----------------------------------------------------------------------
+    // Backup center
+    // -----------------------------------------------------------------------
+
+    public func backupsPage(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
         let backups = JsonArray()
+        var totalBytes: Int64 = 0
         for (item in services.backup.list()) {
             let view = cloneDoc(item)
-            setField(view, "size_text", JStr(formatFileSize(docInt(item, "size"))))
+            let size = docInt(item, "size")
+            totalBytes += size
+            setField(view, "size_text", JStr(formatFileSize(size)))
             setField(view, "date", JStr(formatDateTime(docInt(item, "created_at"))))
             backups.add(view)
         }
         let data = JsonObject()
-        data.set("page_title", JStr("工具与备份"))
-        data.set("active", JStr("tools"))
+        data.set("page_title", JStr("备份"))
+        data.set("active", JStr("backups"))
         data.set("backups", JArr(backups))
+        data.set("backup_count", JInt(backups.items.size))
+        data.set("total_size", JStr(formatFileSize(totalBytes)))
+        data.set("backup_dir", JStr(services.config.backupDir()))
         data.set("counts", services.stats.counts())
-        ctx.renderAdminPage("tools.html", JObj(data))
+        ctx.renderAdminPage("backups.html", JObj(data))
     }
 
     public func backupAction(ctx: Ctx): HttpResponse {
@@ -890,25 +1185,34 @@ public class AdminSite {
             } else if (action == "delete") {
                 services.backup.deleteBackup(ctx.form("name"))
                 ctx.setFlash("success", "备份已删除")
-            } else if (action == "restore") {
+            } else if (action == "restore" || action == "restore_name") {
                 if (ctx.form("confirm") != "RESTORE") {
                     throw AppError("validation", "请输入 RESTORE 以确认恢复操作")
                 }
-                ctx.req.parseForm()
-                if (ctx.req.files.size == 0) {
-                    throw AppError("validation", "请选择备份 JSON 文件")
-                }
-                let file = ctx.req.files[0]
-                let text = try {
-                    String.fromUtf8(file.data)
-                } catch (e: Exception) {
-                    throw AppError("validation", "备份文件编码无效")
+                let text = if (action == "restore_name") {
+                    let name = ctx.form("name")
+                    match (services.backup.readBackup(name)) {
+                        case Some(value) => value
+                        case None => throw AppError("not_found", "备份不存在")
+                    }
+                } else {
+                    ctx.req.parseForm()
+                    if (ctx.req.files.size == 0) {
+                        throw AppError("validation", "请选择备份 JSON 文件")
+                    }
+                    try {
+                        String.fromUtf8(ctx.req.files[0].data)
+                    } catch (e: Exception) {
+                        throw AppError("validation", "备份文件编码无效")
+                    }
                 }
                 let count = services.backup.restore(text)
                 services.audit.log(docStr(ctx.userDoc(), "id"), docStr(ctx.userDoc(), "username"),
-                                   "backup_restored", "backup", file.filename, ctx.clientIp(), "${count} docs")
+                                   "backup_restored", "backup", ctx.form("name"), ctx.clientIp(), "${count} docs")
                 ctx.setFlash("success", "数据已恢复（${count} 个文档），请重新登录")
                 return ctx.redirect("/admin/login", status: 303)
+            } else {
+                throw AppError("validation", "无效操作")
             }
         } catch (e: AppError) {
             ctx.setFlash("error", e.message)
@@ -916,7 +1220,7 @@ public class AdminSite {
             services.logger.error("backup", e.message)
             ctx.setFlash("error", "操作失败：${e.message}")
         }
-        ctx.redirect("/admin/tools", status: 303)
+        ctx.redirect("/admin/backups", status: 303)
     }
 
     public func backupDownload(ctx: Ctx): HttpResponse {
@@ -931,17 +1235,6 @@ public class AdminSite {
         }
         let response = HttpResponse().bytes(text.toArray(), "application/json; charset=utf-8")
         response.headers.set("content-disposition", "attachment; filename=\"${sanitizeFilename(name)}\"")
-        response
-    }
-
-    public func exportJson(ctx: Ctx): HttpResponse {
-        match (requireAdmin(ctx)) {
-            case Some(response) => return response
-            case None => ()
-        }
-        let text = services.backup.exportJson(pretty: true)
-        let response = HttpResponse().bytes(text.toArray(), "application/json; charset=utf-8")
-        response.headers.set("content-disposition", "attachment; filename=\"cangmo-export.json\"")
         response
     }
 
@@ -963,7 +1256,7 @@ public class AdminSite {
         }
         let data = JsonObject()
         data.set("page_title", JStr("个人资料"))
-        data.set("active", JStr("profile"))
+        data.set("active", JStr(""))
         data.set("profile", ctx.userDoc())
         data.set("tokens", JArr(tokens))
         ctx.renderAdminPage("profile.html", JObj(data))
@@ -975,8 +1268,15 @@ public class AdminSite {
             case None => ()
         }
         try {
+            let avatar = ctx.form("avatar").trimAscii()
+            if (avatar.size > 0 && !avatar.startsWith("/media/") && !isValidWebUrl(avatar)) {
+                throw AppError("validation", "头像地址需为附件库链接或 http(s) 地址")
+            }
+            if (avatar.startsWith("/media/") && services.media.pathForUrl(avatar).isNone()) {
+                throw AppError("validation", "头像附件不存在")
+            }
             services.auth.updateProfile(docStr(ctx.userDoc(), "id"), ctx.form("display_name"),
-                                        ctx.form("email"), ctx.form("bio"))
+                                        ctx.form("email"), ctx.form("bio"), avatar: avatar)
             ctx.setFlash("success", "个人资料已保存")
         } catch (e: AppError) {
             ctx.setFlash("error", e.message)
@@ -1090,8 +1390,30 @@ public class AdminSite {
     }
 }
 
-func safeNext(value: String): String {
-    if (value.size == 0 || value.size > 500) {
+func mediaKindOfService(item: JsonValue): String {
+    let mime = docStr(item, "mime").toAsciiLower()
+    if (mime.startsWith("audio/")) {
+        return "audio"
+    }
+    if (mime.startsWith("video/")) {
+        return "video"
+    }
+    if (mime == "application/pdf") {
+        return "document"
+    }
+    let kind = docStr(item, "kind")
+    if (kind == "audio" || kind == "video" || kind == "document") {
+        return kind
+    }
+    "image"
+}
+
+func attachmentJsonError(message: String): HttpResponse {
+    let data = jsonObjectOf([("ok", JBool(false)), ("error", JStr(message))])
+    HttpResponse().json(data, status: 400)
+}
+
+func safeNext(value: String): String {    if (value.size == 0 || value.size > 500) {
         return ""
     }
     if (!value.startsWith("/") || value.startsWith("//")) {

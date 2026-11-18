@@ -9,7 +9,7 @@
     <div class="stat-card"><span class="stat-label">页面</span><strong>{{ counts.pages }}</strong><small>独立页面</small></div>
     <div class="stat-card"><span class="stat-label">评论</span><strong>{{ counts.comments }}</strong><small>{{ counts.comments_pending }} 待审核</small></div>
     <div class="stat-card"><span class="stat-label">浏览</span><strong>{{ counts.views }}</strong><small>累计阅读</small></div>
-    <div class="stat-card"><span class="stat-label">媒体</span><strong>{{ counts.media }}</strong><small>文件</small></div>
+    <div class="stat-card"><span class="stat-label">附件</span><strong>{{ counts.media }}</strong><small>文件</small></div>
     <div class="stat-card"><span class="stat-label">用户</span><strong>{{ counts.users }}</strong><small>注册账户</small></div>
   </section>
 
@@ -23,7 +23,7 @@
             {% for row in recent_posts %}
             <tr>
               <td><a href="{{ row.edit_url }}">{{ row.title }}</a></td>
-              <td><span class="status status-{{ row.status }}">{{ row.status }}</span></td>
+              <td><span class="status status-{{ row.status }}">{{ row.status_text }}</span></td>
               <td class="muted">{{ row.date }}</td>
               <td class="table-actions"><a href="{{ row.edit_url }}">编辑</a></td>
             </tr>
@@ -39,7 +39,7 @@
       <div class="comment-mini-list">
         {% for comment in recent_comments %}
         <div class="comment-mini">
-          <div class="comment-mini-head"><strong>{{ comment.author_name }}</strong><span class="status status-{{ comment.status }}">{{ comment.status }}</span></div>
+          <div class="comment-mini-head"><strong>{{ comment.author_name }}</strong><span class="status status-{{ comment.status }}">{{ comment.status_text }}</span></div>
           <p>{{ comment.content }}</p>
           <small>{{ comment.date }}{% if comment.post_title %} · {{ comment.post_title }}{% endif %}</small>
         </div>
@@ -52,9 +52,9 @@
       <header class="panel-head"><h2>快捷操作</h2></header>
       <div class="quick-actions">
         <a class="quick-action" href="/admin/posts/new"><strong>写文章</strong><span>使用 Markdown 编辑</span></a>
-        <a class="quick-action" href="/admin/media"><strong>上传媒体</strong><span>图片、PDF、音视频</span></a>
+        <a class="quick-action" href="/admin/attachments"><strong>上传附件</strong><span>图片、PDF、音视频</span></a>
         <a class="quick-action" href="/admin/comments?status=pending"><strong>审核评论</strong><span>{{ counts.comments_pending }} 条待处理</span></a>
-        <a class="quick-action" href="/admin/tools"><strong>备份数据</strong><span>导出并下载 JSON</span></a>
+        <a class="quick-action" href="/admin/backups"><strong>备份数据</strong><span>创建、下载与恢复</span></a>
       </div>
     </section>
 

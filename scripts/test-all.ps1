@@ -21,8 +21,11 @@ Write-Host "== e2e =="
 Write-Host "== extended =="
 & $node "$root\tests\extended.mjs"
 
-Write-Host "== security =="
-& $node "$root\tests\security.mjs"
+Write-Host "== v1.0.1 =="
+& $node "$root\tests\v101.mjs"
 
 Write-Host "== load =="
 & $node "$root\tests\load.mjs"
+
+Write-Host "== security =="
+& $node "$root\tests\security.mjs"

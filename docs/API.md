@@ -65,7 +65,7 @@ Authorization: Bearer cmo_xxxxxxxxxxxxxxxxxxxxxxxx
   "name": "仓墨",
   "description": "……",
   "url": "https://example.com",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "locale": "zh-CN"
 }
 ```
@@ -163,23 +163,25 @@ Authorization: Bearer cmo_xxxxxxxxxxxxxxxxxxxxxxxx
 
 返回 `201` + 评论对象，`status` 可能是 `pending` 或 `approved`。
 
-## 媒体
+## 附件
 
-### `GET /media?page=1&per_page=20`（需认证）
+> 后台界面已更名为「附件库」。API 同时保留 `/media` 与 `/attachments` 两个路径。
 
-返回媒体对象数组与 `total`。
+### `GET /attachments?page=1&per_page=20`（需认证）
 
-### `POST /media`（需认证，multipart/form-data）
+返回附件对象数组与 `total`。`GET /media` 为兼容别名。
+
+### `POST /attachments`（需认证，multipart/form-data）
 
 字段名任意，文件字段示例：
 
 ```bash
-curl -X POST https://example.com/api/v1/media \
+curl -X POST https://example.com/api/v1/attachments \
   -H "Authorization: Bearer $TOKEN" \
   -F "file=@cover.png"
 ```
 
-返回 `201` + 媒体对象（含 `url`、`width`、`height`、`sha256`）。
+返回 `201` + 附件对象（含 `url`、`width`、`height`、`sha256`）。`POST /media` 为兼容别名。
 
 ## 分类与标签
 

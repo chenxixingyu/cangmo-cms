@@ -21,6 +21,12 @@
         </div>
       </header>
 
+      {% if post.cover %}
+      <figure class="post-cover">
+        <img src="{{ post.cover }}" alt="" loading="eager" decoding="async">
+      </figure>
+      {% endif %}
+
       {% if show_toc and post.headings.length > 0 %}
       <details class="toc" open>
         <summary>本文目录</summary>
