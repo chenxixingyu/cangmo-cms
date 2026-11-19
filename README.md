@@ -32,13 +32,9 @@
 | --- | --- |
 | ![附件库](docs/screenshots/admin-attachments.png) | ![编辑器](docs/screenshots/admin-editor.png) |
 
-| 评论管理 | 备份中心 |
+| 备份中心 | 设置 |
 | --- | --- |
-| ![评论](docs/screenshots/admin-comments.png) | ![备份](docs/screenshots/admin-backups.png) |
-
-| 用户与权限 | 仪表盘 |
-| --- | --- |
-| ![用户](docs/screenshots/admin-users.png) | ![仪表盘](docs/screenshots/admin-dashboard.png) |
+| ![备份](docs/screenshots/admin-backups.png) | ![设置](docs/screenshots/admin-settings.png) |
 
 ## 快速开始
 
