@@ -26,7 +26,7 @@ cjpm test
 
 ## 检查清单
 
-- [ ] 已阅读 [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md)
+- [ ] 已阅读 [CONTRIBUTING.md](https://github.com/chenxixingyu/cangmo-cms/blob/main/CONTRIBUTING.md)
 - [ ] 新功能/修复包含测试
 - [ ] 安全相关变更说明威胁模型与验证
 - [ ] 未提交 `data/`、`config.json`、日志、密钥

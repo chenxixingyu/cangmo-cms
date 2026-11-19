@@ -7,7 +7,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        请先查看 [FEATURES.md](../blob/main/docs/FEATURES.md) 与已有 Issue。
+        请先查看 [FEATURES.md](https://github.com/chenxixingyu/cangmo-cms/blob/main/docs/FEATURES.md) 与已有 Issue。
         功能建议越具体，越容易评估。
   - type: textarea
     id: problem
