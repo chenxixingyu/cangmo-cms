@@ -1,4 +1,4 @@
-# 仓墨 Cangmo v1.0.1
+# 仓墨 Cangmo v1.0.2
 
 > 用**仓颉语言**从零构建的现代、安全的博客 / CMS 系统。  
 > A modern, secure blog engine written natively in Cangjie.
@@ -35,6 +35,10 @@
 | 评论管理 | 备份中心 |
 | --- | --- |
 | ![评论](docs/screenshots/admin-comments.png) | ![备份](docs/screenshots/admin-backups.png) |
+
+| 用户与权限 | 仪表盘 |
+| --- | --- |
+| ![用户](docs/screenshots/admin-users.png) | ![仪表盘](docs/screenshots/admin-dashboard.png) |
 
 ## 快速开始
 
@@ -86,7 +90,7 @@ $env:CANGMO_SETUP_TOKEN = "my-setup-token"
 ## 功能菜单
 
 完整功能清单、版本分层与可选模块见 **[docs/FEATURES.md](docs/FEATURES.md)**。  
-v1.0.1 默认交付全部 ✅ 功能；标 ◇ 的模块可按需关闭，标 ○ 的模块在路线图中。
+v1.0.2 默认交付全部 ✅ 功能；标 ◇ 的模块可按需关闭，标 ○ 的模块在路线图中。
 
 ## 常用命令
 

@@ -99,9 +99,13 @@ const scheduled = await postForm("/admin/posts/save", {
 assert(scheduled.status === 303, "scheduled post saved");
 page = await req("/admin/posts?status=scheduled");
 assert(page.text.includes("定时发布测试"), "scheduled post visible in scheduled tab");
-await new Promise((resolve) => setTimeout(resolve, 26000));
-page = await req("/posts/scheduled-test");
-assert(page.status === 200, "scheduler published the scheduled post");
+let published = false;
+for (let attempt = 0; attempt < 18; attempt += 1) {
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  page = await req("/posts/scheduled-test");
+  if (page.status === 200) { published = true; break; }
+}
+assert(published, "scheduler published the scheduled post");
 
 // API token + create/update/delete + API comment.
 page = await req("/admin/profile");

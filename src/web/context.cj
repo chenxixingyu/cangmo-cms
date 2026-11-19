@@ -276,14 +276,6 @@ public func jsonArrayFrom(items: Array<JsonValue>): JsonValue {
     JArr(arr)
 }
 
-func jsonArrayFromTitles(items: Array<JsonValue>): JsonValue {
-    let arr = JsonArray()
-    for (item in items) {
-        arr.add(item)
-    }
-    JArr(arr)
-}
-
 // ---------------------------------------------------------------------------
 // Web router
 // ---------------------------------------------------------------------------

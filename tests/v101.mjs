@@ -37,7 +37,7 @@ let csrf = csrfOf(page.text);
 const stamp = Date.now().toString(36);
 const slug = "v101-acceptance-" + stamp;
 const title = "v1.0.1 功能验收 " + stamp;
-const categoryName = "V101 分类 " + stamp;
+const categoryName = "中文分类";
 let login = await req("/admin/login", {
   method: "POST",
   headers: { "content-type": "application/x-www-form-urlencoded" },
@@ -94,6 +94,7 @@ const category = await req("/admin/categories/quick", {
 });
 const categoryDoc = JSON.parse(category.text);
 assert(category.status === 200 && categoryDoc.id.startsWith("cat_"), "inline category creation works");
+assert(categoryDoc.slug.startsWith("category-"), "Chinese category gets a readable fallback slug");
 const saved = await req("/admin/posts/save", {
   method: "POST",
   headers: { "content-type": "application/x-www-form-urlencoded" },

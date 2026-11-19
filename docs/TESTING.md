@@ -1,8 +1,8 @@
-# 仓墨测试与验收（v1.0.1）
+# 仓墨测试与验收（v1.0.2）
 
 > 本地环境：Windows 11 x64 · 仓颉 1.2.1 (cjnative) · Node.js 22.2.0 · Microsoft Edge  
-> 测试对象：v1.0.1。所有集成测试均在**全新数据目录**上执行，原始输出保存在 `docs/reports/`。  
-> Linux：GitHub Actions `ubuntu-latest` 已通过 `cjpm build` + `cjpm test`（run 44401589115）。
+> 测试对象：v1.0.2。所有集成测试均在**全新数据目录**上执行，原始输出保存在 `docs/reports/`。  
+> Linux：GitHub Actions `ubuntu-latest` 已通过 `cjpm build` + `cjpm test`（run 44403624874）。
 
 ## 1. 一键运行
 
@@ -35,15 +35,17 @@ node tests\security.mjs
 | 初始化与公共站 `smoke.mjs` | 24 | **24 / 24** | [smoke-v101.txt](reports/smoke-v101.txt) |
 | 后台与内容闭环 `e2e.mjs` | 30 | **30 / 30** | [e2e-v101.txt](reports/e2e-v101.txt) |
 | 扩展功能 `extended.mjs` | 20 | **20 / 20** | [extended-v101.txt](reports/extended-v101.txt) |
-| v1.0.1 验收 `v101.mjs` | 30 | **30 / 30** | [v101-final.txt](reports/v101-final.txt) |
+| v1.0.1 验收 `v101.mjs` | 31 | **31 / 31** | [v101-final.txt](reports/v101-final.txt) |
 | 并发/协议 `load.mjs` | 6 | **6 / 6** | [load-v101.txt](reports/load-v101.txt) |
 | 安全回归 `security.mjs` | 27 | **27 / 27** | [security-v101.txt](reports/security-v101.txt) |
 | 部署自检 `doctor` | 17 模板 | **通过，17/17** | [doctor-v101.txt](reports/doctor-v101.txt) |
-| 静态分析 `cjlint` | 730 条 | 709 建议 + 21 强制风格项 | [cjlint.json](reports/cjlint.json) |
+| 静态分析 `cjlint` | 731 条 | 710 建议 + 21 强制风格项 | [cjlint.json](reports/cjlint.json) |
 
-**合计：21 个单元测试 + 137 项集成/安全断言 = 158 项，全部通过。**
+**合计：21 个单元测试 + 138 项集成/安全断言 = 159 项，全部通过。**
 
-### v1.0.1 新增覆盖
+另执行 **13 项浏览器交互审计**（Edge/CDP）：封面附件库、分类内联创建、标签 Chip、附件灯箱、评论全选、头像选择器与全局 JS 异常检查，全部通过，见 [ui-audit.txt](reports/ui-audit.txt)。
+
+### v1.0.1 / v1.0.2 新增与回归覆盖
 
 - 附件库：页面渲染、旧“媒体库”文案移除、JSON 上传、类型筛选、文件名搜索、选择器数据、删除
 - 编辑器：封面/标签 UI、AJAX 新建分类、带分类/标签/封面的文章保存
@@ -82,7 +84,7 @@ node tests\security.mjs
 cjlint -f .\src -o .\docs\reports\cjlint -r json
 ```
 
-结果：**730 条**（`MANDATORY` 21、`SUGGESTIONS` 709）。强制项仍集中在：
+结果：**731 条**（`MANDATORY` 21、`SUGGESTIONS` 710）。强制项仍集中在：
 
 | 类型 | 数量 | 说明 |
 | --- | --- | --- |
@@ -96,7 +98,7 @@ cjlint -f .\src -o .\docs\reports\cjlint -r json
 
 - **Linux**：需要 OpenSSL 开发库；本地 Windows 测试机无法执行 Linux 二进制，Linux 构建/单测由 GitHub Actions 验证。
 - **HTTPS/HSTS**：进程内无 TLS；由 Caddy/Nginx 终止。
-- **邮件/TOTP/OAuth/插件/对象存储**：v1.0.1 不含。
+- **邮件/TOTP/OAuth/插件/对象存储**：v1.0.2 不含。
 - **长时间浸泡**：未做 24h 稳定性测试。
 - **恶意文件**：未做图片解码模糊测试。
 - **浏览器兼容**：Edge/Chromium 验证；Firefox/Safari 未逐一测试。

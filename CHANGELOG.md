@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.0.2 — 2026-11-20
+
+维护版本：修复中文 URL、封面校验与测试稳定性，清理重复文件。
+
+### 修复
+- 中文分类/标签的自动 slug 由无意义的 `item` 改为 `category-<hash>` / `tag-<hash>`
+- 中文文章标题无别名时使用 `p-<hash>`，避免 `item` 与重复冲突
+- 文章封面增加 URL 校验：只允许 `/media/` 或 http(s)，拒绝 `javascript:` 等协议
+- 定时发布回归测试改为轮询（最多 36 秒），消除调度线程 20 秒周期造成的偶发失败
+- 用户/评论筛选栏在宽屏下不再换行
+
+### 清理
+- 删除未引用的 `tests/adminflow.mjs`
+- 删除重复的 v1.0.0 测试报告（保留 v1.0.1 正式报告）
+- 删除未使用的 `jsonArrayFromTitles`、`PostService.categoryName`
+- 文档测试统计同步为 159 项 + 13 项浏览器交互审计
+
 ## v1.0.1 — 2026-11-19
 
 内容工作台与附件管理升级；新增 Linux x64 适配。
@@ -27,7 +44,7 @@
 - GitHub Actions CI 增加 `ubuntu-latest` 构建与单元测试
 
 ### 质量
-- 新增 `tests/v101.mjs`（30 项 v1.0.1 验收断言）
+- 新增 `tests/v101.mjs`（31 项 v1.0.1 验收断言）
 - 既有 smoke / e2e / extended / security / load 全部回归通过
 - 单元测试 21 项保持通过
 

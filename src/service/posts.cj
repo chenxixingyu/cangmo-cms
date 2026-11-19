@@ -135,6 +135,10 @@ public class PostService {
             throw AppError("validation", "分类不存在")
         }
         let tagIds = if (isPage) { Array<String>(0, repeat: "") } else { resolveTags(input.tagNames) }
+        let cover = input.cover.trimAscii()
+        if (cover.size > 0 && !cover.startsWith("/media/") && !isValidWebUrl(cover)) {
+            throw AppError("validation", "封面地址需为附件库链接或 http(s) 地址")
+        }
         let postId = if (id.size > 0) { id } else { newId("post") }
         let slug = uniqueSlug(input.slug, title, postId)
         let postDoc = match (existing) {
@@ -166,7 +170,7 @@ public class PostService {
         setField(postDoc, "author_id", JStr(if (id.size > 0) { docStr(postDoc, "author_id") } else { actorId }))
         setField(postDoc, "category_id", JStr(categoryId))
         setField(postDoc, "tag_ids", jsonStringList(tagIds))
-        setField(postDoc, "cover", JStr(input.cover.trimAscii()))
+        setField(postDoc, "cover", JStr(cover))
         setField(postDoc, "allow_comments", JBool(input.allowComments))
         setField(postDoc, "pinned", JBool(input.pinned))
         setField(postDoc, "featured", JBool(input.featured))
@@ -334,7 +338,8 @@ public class PostService {
     private func uniqueTaxonomySlug(name: String, collection: String, excludeId: String): String {
         var base = slugify(name)
         if (base.size == 0) {
-            base = "item"
+            let prefix = if (collection == COL_TAGS) { "tag-" } else { "category-" }
+            base = prefix + sha256Hex(name)[0..8]
         }
         var candidate = base
         var counter = 2
@@ -361,7 +366,7 @@ public class PostService {
             base = slugify(title)
         }
         if (base.size == 0) {
-            base = "p-" + base36Encode(nowMillis())
+            base = "p-" + sha256Hex(title)[0..8]
         }
         if (base.size > 80) {
             base = truncateUtf8(base, 80)
@@ -753,13 +758,6 @@ public class TaxonomyService {
         result.toArray()
     }
 
-    public func categoryName(categoryId: String): String {
-        match (store.get(COL_CATEGORIES, categoryId)) {
-            case Some(category) => docStr(category, "name")
-            case None => ""
-        }
-    }
-
     public func deleteTag(id: String, ip: String): Unit {
         store.delete(COL_TAGS, id)
         for (post in store.list(COL_POSTS)) {
@@ -785,7 +783,8 @@ public class TaxonomyService {
             base = slugify(name)
         }
         if (base.size == 0) {
-            base = "item"
+            let prefix = if (collection == COL_TAGS) { "tag-" } else { "category-" }
+            base = prefix + sha256Hex(name)[0..8]
         }
         var candidate = base
         var counter = 2
