@@ -330,7 +330,9 @@ public class HttpRequest {
                 form[k] = values
             }
         } else if (ct.startsWith("multipart/form-data")) {
-            let boundary = multipartBoundary(ct)
+            // Use the original header value: browser boundaries are case-sensitive
+            // (e.g. ----WebKitFormBoundaryAbC...). Lowercasing it breaks parsing.
+            let boundary = multipartBoundary(contentType())
             if (boundary.size == 0) {
                 throw AppError("validation", "缺少 multipart boundary")
             }

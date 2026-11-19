@@ -69,6 +69,17 @@ const coverUrl = first.body.items[0].url;
 const second = await uploadImage("v101-delete.png");
 assert(second.status === 200, "second attachment uploaded");
 
+// Regression: Chromium boundaries are mixed-case; the parser must not lowercase them.
+const mixedBoundary = "----CangmoBoundaryAbCdEf123456";
+const mixedHead = Buffer.from(`--${mixedBoundary}\r\nContent-Disposition: form-data; name="_csrf"\r\n\r\n${csrf}\r\n--${mixedBoundary}\r\nContent-Disposition: form-data; name="files"; filename="mixed-case.png"\r\nContent-Type: image/png\r\n\r\n`);
+const mixedTail = Buffer.from(`\r\n--${mixedBoundary}--\r\n`);
+const mixedUpload = await req("/admin/attachments/upload?format=json", {
+  method: "POST",
+  headers: { "content-type": `multipart/form-data; boundary=${mixedBoundary}`, "x-csrf-token": csrf, accept: "application/json" },
+  body: Buffer.concat([mixedHead, png, mixedTail])
+});
+assert(mixedUpload.status === 200 && mixedUpload.text.includes("mixed-case.png"), "mixed-case multipart boundary works");
+
 page = await req("/admin/attachments?kind=image&q=v101-cover");
 assert(page.status === 200 && page.text.includes("v101-cover.png"), "attachment filter/search works");
 page = await req("/admin/attachments/data?kind=image");

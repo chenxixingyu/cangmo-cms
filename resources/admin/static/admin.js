@@ -186,8 +186,7 @@
       });
   }
 
-  var profilePickerButton = document.getElementById("profile-avatar-picker");
-  var profileDialog = document.getElementById("profile-avatar-dialog");
+  var profilePickerButton = document.getElementById("profile-avatar-picker");  var profileDialog = document.getElementById("profile-avatar-dialog");
   var profileGrid = document.getElementById("profile-avatar-grid");
   var profileInput = document.getElementById("profile-avatar-input");
   var profilePreview = document.getElementById("profile-avatar-preview");
@@ -200,6 +199,18 @@
       });
       profileDialog.showModal();
     });
+  }
+
+  // Backup dialogs: keep the page compact; open forms on demand.
+  var backupCreateOpen = document.getElementById("backup-create-open");
+  var backupCreateDialog = document.getElementById("backup-create-dialog");
+  var backupRestoreOpen = document.getElementById("backup-restore-open");
+  var backupRestoreDialog = document.getElementById("backup-restore-dialog");
+  if (backupCreateOpen && backupCreateDialog) {
+    backupCreateOpen.addEventListener("click", function () { backupCreateDialog.showModal(); });
+  }
+  if (backupRestoreOpen && backupRestoreDialog) {
+    backupRestoreOpen.addEventListener("click", function () { backupRestoreDialog.showModal(); });
   }
 
   // ---------------------------------------------------------------------
@@ -353,8 +364,10 @@
     if (!coverInput) return;
     coverInput.value = url || "";
     if (coverPreview) {
-      coverPreview.innerHTML = url ? "<img src=\"" + url + "\" alt=\"封面预览\">" : "<span>未设置封面</span>";
+      coverPreview.innerHTML = url ? "<img src=\"" + url + "\" alt=\"封面预览\">" : "<span>无</span>";
     }
+    var label = document.getElementById("cover-label");
+    if (label) label.textContent = url ? "已设置封面" : "未设置封面";
   }
 
   function fetchCoverGrid(query) {
@@ -427,6 +440,15 @@
   if (coverRemoveButton) {
     coverRemoveButton.addEventListener("click", function () { setCover(""); });
   }
+  ["cover-upload-button", "cover-library-button", "cover-url-button"].forEach(function (id) {
+    var button = document.getElementById(id);
+    if (button) {
+      button.addEventListener("click", function () {
+        var menu = button.closest("details");
+        if (menu) menu.open = false;
+      });
+    }
+  });
 
   // ---------------------------------------------------------------
   // Inline category creation

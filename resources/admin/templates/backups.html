@@ -8,49 +8,25 @@
     <div>
       <p class="eyebrow">BACKUP</p>
       <h2>备份中心</h2>
-      <p class="muted">创建、下载、恢复与删除数据快照。恢复会覆盖当前全部内容，请先创建新备份。</p>
+      <p class="muted">快速创建快照，或从已有备份恢复。</p>
     </div>
-    <div class="page-intro-stats">
-      <span><strong>{{ backup_count }}</strong> 个备份</span>
-      <span><strong>{{ total_size }}</strong> 总大小</span>
+    <div class="page-intro-actions">
+      <button type="button" class="btn" id="backup-create-open">新建备份</button>
+      <button type="button" class="btn btn-ghost" id="backup-restore-open">从文件恢复</button>
     </div>
   </div>
 
-  <section class="stat-grid stat-grid-compact">
-    <div class="stat-card"><span class="stat-label">文章</span><strong>{{ counts.posts }}</strong><small>含草稿与定时</small></div>
-    <div class="stat-card"><span class="stat-label">页面</span><strong>{{ counts.pages }}</strong><small>独立页面</small></div>
-    <div class="stat-card"><span class="stat-label">评论</span><strong>{{ counts.comments }}</strong><small>全部状态</small></div>
-    <div class="stat-card"><span class="stat-label">附件</span><strong>{{ counts.media }}</strong><small>文件记录</small></div>
-    <div class="stat-card"><span class="stat-label">用户</span><strong>{{ counts.users }}</strong><small>账户</small></div>
-  </section>
-
-  <div class="two-col">
-    <section class="panel">
-      <header class="panel-head"><h2>创建备份</h2></header>
-      <form method="post" action="/admin/backups/action" class="stack-form">
-        <input type="hidden" name="_csrf" value="{{ csrf }}">
-        <input type="hidden" name="action" value="create">
-        <label>备注（可选）<input type="text" name="label" maxlength="40" placeholder="例如：升级前 / 发布前"></label>
-        <button class="btn" type="submit">立即创建备份</button>
-      </form>
-      <p class="muted small">备份包含文章、页面、分类、标签、评论、用户、设置与审计日志（JSON）。<br>附件文件位于上传目录，请单独备份 <code>data/uploads</code>。</p>
-    </section>
-
-    <section class="panel">
-      <header class="panel-head"><h2>从文件恢复</h2></header>
-      <p class="muted">上传之前下载的备份 JSON。恢复成功后所有会话失效，需要重新登录。</p>
-      <form method="post" action="/admin/backups/action" enctype="multipart/form-data" class="stack-form">
-        <input type="hidden" name="_csrf" value="{{ csrf }}">
-        <input type="hidden" name="action" value="restore">
-        <label>备份 JSON 文件<input type="file" name="file" accept="application/json,.json" required></label>
-        <label>确认文字<input type="text" name="confirm" required placeholder="RESTORE" autocomplete="off"></label>
-        <button class="btn btn-danger" type="submit" data-confirm="恢复会覆盖当前全部数据，确定继续？">覆盖并恢复</button>
-      </form>
-    </section>
+  <div class="backup-summary">
+    <span><strong>{{ backup_count }}</strong> 个备份</span>
+    <span>总大小 <strong>{{ total_size }}</strong></span>
+    <span class="muted">文章 {{ counts.posts }} · 页面 {{ counts.pages }} · 评论 {{ counts.comments }} · 附件 {{ counts.media }} · 用户 {{ counts.users }}</span>
   </div>
 
   <section class="panel">
-    <header class="panel-head"><h2>备份文件</h2><span class="muted">按时间倒序</span></header>
+    <header class="panel-head">
+      <h2>备份文件</h2>
+      <span class="muted">按时间倒序</span>
+    </header>
     <div class="table-wrap">
       <table class="table">
         <thead><tr><th>文件</th><th>大小</th><th>创建时间</th><th>操作</th></tr></thead>
@@ -62,7 +38,7 @@
             <td class="muted">{{ backup.date }}</td>
             <td class="table-actions">
               <a href="/admin/backups/download?name={{ backup.name|urlencode }}">下载</a>
-              <form method="post" action="/admin/backups/action" class="inline-form" data-confirm="确定从备份「{{ backup.name }}」恢复？当前数据会被覆盖。">
+              <form method="post" action="/admin/backups/action" class="inline-form" data-confirm="确定从「{{ backup.name }}」恢复？当前数据会被覆盖。">
                 <input type="hidden" name="_csrf" value="{{ csrf }}">
                 <input type="hidden" name="action" value="restore_name">
                 <input type="hidden" name="name" value="{{ backup.name }}">
@@ -78,11 +54,34 @@
             </td>
           </tr>
           {% endfor %}
-          {% if backups.length == 0 %}<tr><td colspan="4" class="empty-row">还没有备份。先创建一份吧。</td></tr>{% endif %}
+          {% if backups.length == 0 %}<tr><td colspan="4" class="empty-row">还没有备份，点击右上角「新建备份」。</td></tr>{% endif %}
         </tbody>
       </table>
     </div>
   </section>
+
+  <dialog class="form-dialog" id="backup-create-dialog">
+    <div class="dialog-head"><h2>新建备份</h2><button type="button" class="link-btn" data-close-dialog>关闭</button></div>
+    <form method="post" action="/admin/backups/action" class="dialog-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <input type="hidden" name="action" value="create">
+      <label>备注（可选）<input type="text" name="label" maxlength="40" placeholder="例如：升级前"></label>
+      <p class="muted small">包含文章、页面、分类、标签、评论、用户、设置与审计日志；附件请单独备份 <code>data/uploads</code>。</p>
+      <button class="btn" type="submit">创建备份</button>
+    </form>
+  </dialog>
+
+  <dialog class="form-dialog" id="backup-restore-dialog">
+    <div class="dialog-head"><h2>从文件恢复</h2><button type="button" class="link-btn" data-close-dialog>关闭</button></div>
+    <form method="post" action="/admin/backups/action" enctype="multipart/form-data" class="dialog-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <input type="hidden" name="action" value="restore">
+      <label>备份 JSON<input type="file" name="file" accept="application/json,.json" required></label>
+      <label>输入 RESTORE 确认<input type="text" name="confirm" required placeholder="RESTORE" autocomplete="off"></label>
+      <p class="muted small">恢复会覆盖当前数据，并退出所有登录会话。</p>
+      <button class="btn btn-danger" type="submit" data-confirm="恢复会覆盖当前全部数据，确定继续？">覆盖并恢复</button>
+    </form>
+  </dialog>
 </main>
 </div>
 </div>

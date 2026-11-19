@@ -166,11 +166,17 @@ public class WebApp {
             let skipCsrf = isApi && token.size == 0
             if (unsafeMethod && !skipCsrf) {
                 var supplied = req.header("x-csrf-token").trimAscii()
-                if (supplied.size == 0) {
-                    let ct = req.contentType().toAsciiLower()
-                    if (ct.startsWith("application/x-www-form-urlencoded") || ct.startsWith("multipart/form-data")) {
-                        supplied = req.formValue("_csrf")
+                try {
+                    if (supplied.size == 0) {
+                        let ct = req.contentType().toAsciiLower()
+                        if (ct.startsWith("application/x-www-form-urlencoded") || ct.startsWith("multipart/form-data")) {
+                            supplied = req.formValue("_csrf")
+                        }
                     }
+                } catch (e: AppError) {
+                    return errorFromApp(ctx, e)
+                } catch (e: Exception) {
+                    return errorFromApp(ctx, AppError("validation", "表单数据无法解析"))
                 }
                 if (!secureEqualsText(supplied, session.csrf)) {
                     return csrfFailure(ctx)

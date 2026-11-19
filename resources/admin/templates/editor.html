@@ -75,23 +75,31 @@
 
         <section class="side-panel">
           <h2>封面</h2>
-          <div class="cover-picker" id="cover-picker">
+          <div class="cover-picker cover-compact" id="cover-picker">
             <input type="hidden" name="cover" id="cover-input" value="{{ post.cover }}">
-            <div class="cover-preview" id="cover-preview">
-              {% if post.cover %}<img src="{{ post.cover }}" alt="封面预览">{% else %}<span>未设置封面</span>{% endif %}
+            <div class="cover-thumb" id="cover-preview">
+              {% if post.cover %}<img src="{{ post.cover }}" alt="封面预览">{% else %}<span>无</span>{% endif %}
             </div>
-            <div class="cover-actions">
-              <button type="button" class="btn btn-ghost" id="cover-upload-button">上传</button>
-              <button type="button" class="btn btn-ghost" id="cover-library-button">附件库</button>
-              <button type="button" class="btn btn-ghost" id="cover-url-button">链接</button>
-              <button type="button" class="link-btn danger" id="cover-remove-button">移除</button>
+            <div class="cover-compact-info">
+              <strong id="cover-label">{% if post.cover %}已设置封面{% else %}未设置封面{% endif %}</strong>
+              <span class="muted small">建议 1200×630</span>
+              <div class="cover-actions">
+                <details class="cover-menu">
+                  <summary class="btn btn-ghost">选择封面</summary>
+                  <div class="cover-menu-pop">
+                    <button type="button" id="cover-upload-button">上传图片</button>
+                    <button type="button" id="cover-library-button">从附件库选择</button>
+                    <button type="button" id="cover-url-button">使用链接</button>
+                  </div>
+                </details>
+                <button type="button" class="link-btn danger" id="cover-remove-button">移除</button>
+              </div>
             </div>
             <input type="file" id="cover-file" accept="image/jpeg,image/png,image/gif,image/webp,image/avif" hidden>
             <div class="cover-url-row" id="cover-url-row" hidden>
               <input type="text" id="cover-url-input" placeholder="https://… 或 /media/…">
               <button type="button" class="btn btn-ghost" id="cover-url-apply">应用</button>
             </div>
-            <p class="muted small" id="cover-hint">建议 1200×630，支持图片附件。</p>
           </div>
         </section>
 
