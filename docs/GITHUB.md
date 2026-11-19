@@ -5,8 +5,8 @@
 - ✅ 仓库：<https://github.com/chenxixingyu/cangmo-cms>（2026-11-18 由 `cangmo-blog` 更名，旧地址 301 重定向）
 - ✅ `main` 已推送（最新提交以仓库为准）
 - ✅ 标签 `v1.0.3` 已推送
-- ✅ CI 双平台：Windows + Ubuntu，`cjpm build` + `cjpm test`（run 44589404409 全绿）
-- ✅ Release `v1.0.3` 待发布，附 `cangmo-v1.0.3-source.zip` 与 `cangmo-v1.0.3.bundle`
+- ✅ CI 双平台：Windows + Ubuntu，`cjpm build` + `cjpm test`（run 44605596305 全绿）
+- ✅ Release `v1.0.3` 已发布，附 `cangmo-v1.0.3-source.zip` 与 `cangmo-v1.0.3.bundle`
 - ✅ 私密漏洞报告、Secret scanning、Push protection、Dependabot alerts 已启用
 - ✅ Topics、描述、Discussions 已配置
 - ⚠️ 许可证为自定义许可证，GitHub 识别为 “Other”（非 OSI 认证）
