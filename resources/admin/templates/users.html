@@ -82,34 +82,45 @@
               </div>
             </td>
             <td>
-              <form method="post" action="/admin/users/action" class="row-form user-edit-form">
-                <input type="hidden" name="_csrf" value="{{ csrf }}">
-                <input type="hidden" name="action" value="update">
-                <input type="hidden" name="id" value="{{ item.id }}">
-                <select name="role" aria-label="角色">
-                  <option value="admin"{% if item.role == "admin" %} selected{% endif %}>管理员</option>
-                  <option value="editor"{% if item.role == "editor" %} selected{% endif %}>编辑</option>
-                  <option value="author"{% if item.role == "author" %} selected{% endif %}>作者</option>
-                  <option value="contributor"{% if item.role == "contributor" %} selected{% endif %}>投稿者</option>
-                  <option value="subscriber"{% if item.role == "subscriber" %} selected{% endif %}>订阅者</option>
-                </select>
-                <select name="status" class="status-select" aria-label="账户状态">
-                  <option value="active"{% if item.status == "active" %} selected{% endif %}>正常</option>
-                  <option value="suspended"{% if item.status == "suspended" %} selected{% endif %}>停用</option>
-                </select>
-                <input type="text" name="display_name" value="{{ item.display_name }}" maxlength="60" placeholder="显示名" aria-label="显示名">
-                <button type="submit" class="link-btn">保存</button>
-              </form>
+              <span class="user-role-label">{% if item.role == "admin" %}管理员{% elif item.role == "editor" %}编辑{% elif item.role == "author" %}作者{% elif item.role == "contributor" %}投稿者{% else %}订阅者{% endif %}</span>
+              <span class="status status-{{ item.status }}">{% if item.status == "active" %}正常{% else %}停用{% endif %}</span>
             </td>
             <td class="muted">{{ item.post_count }}</td>
             <td class="muted">{{ item.last_login }}</td>
             <td class="table-actions">
-              <form method="post" action="/admin/users/action" class="inline-form" data-confirm="确定重置「{{ item.username }}」的密码？新密码会显示在提示中。">
-                <input type="hidden" name="_csrf" value="{{ csrf }}">
-                <input type="hidden" name="action" value="reset">
-                <input type="hidden" name="id" value="{{ item.id }}">
-                <button type="submit" class="link-btn">重置密码</button>
-              </form>
+              <details class="row-menu user-row-menu">
+                <summary>操作 ▾</summary>
+                <div class="row-menu-pop user-menu-form">
+                  <form method="post" action="/admin/users/action" class="stack-form">
+                    <input type="hidden" name="_csrf" value="{{ csrf }}">
+                    <input type="hidden" name="action" value="update">
+                    <input type="hidden" name="id" value="{{ item.id }}">
+                    <label>角色
+                      <select name="role">
+                        <option value="admin"{% if item.role == "admin" %} selected{% endif %}>管理员</option>
+                        <option value="editor"{% if item.role == "editor" %} selected{% endif %}>编辑</option>
+                        <option value="author"{% if item.role == "author" %} selected{% endif %}>作者</option>
+                        <option value="contributor"{% if item.role == "contributor" %} selected{% endif %}>投稿者</option>
+                        <option value="subscriber"{% if item.role == "subscriber" %} selected{% endif %}>订阅者</option>
+                      </select>
+                    </label>
+                    <label>状态
+                      <select name="status" class="status-select">
+                        <option value="active"{% if item.status == "active" %} selected{% endif %}>正常</option>
+                        <option value="suspended"{% if item.status == "suspended" %} selected{% endif %}>停用</option>
+                      </select>
+                    </label>
+                    <label>显示名<input type="text" name="display_name" value="{{ item.display_name }}" maxlength="60" aria-label="显示名"></label>
+                    <button type="submit" class="btn btn-ghost">保存</button>
+                  </form>
+                  <form method="post" action="/admin/users/action" class="inline-form" data-confirm="确定重置「{{ item.username }}」的密码？新密码会显示在提示中。">
+                    <input type="hidden" name="_csrf" value="{{ csrf }}">
+                    <input type="hidden" name="action" value="reset">
+                    <input type="hidden" name="id" value="{{ item.id }}">
+                    <button type="submit" class="link-btn">重置密码</button>
+                  </form>
+                </div>
+              </details>
             </td>
           </tr>
           {% endfor %}

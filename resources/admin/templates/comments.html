@@ -77,30 +77,39 @@
           <div class="comment-admin-post">
             评论于 {% if comment.post_url %}<a href="{{ comment.post_url }}" target="_blank" rel="noopener">{{ comment.post_title }}</a>{% else %}已删除文章{% endif %}
           </div>
-          <div class="comment-admin-actions">
-            {% if comment.status != "approved" %}
-            <form method="post" action="/admin/comments/{{ comment.id }}/approved" class="inline-form">
-              <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="status" value="{{ status }}">
-              <button type="submit" class="link-btn success">通过</button>
-            </form>
-            {% endif %}
-            {% if comment.status != "pending" %}
-            <form method="post" action="/admin/comments/{{ comment.id }}/pending" class="inline-form">
-              <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="status" value="{{ status }}">
-              <button type="submit" class="link-btn">待审核</button>
-            </form>
-            {% endif %}
-            {% if comment.status != "spam" %}
-            <form method="post" action="/admin/comments/{{ comment.id }}/spam" class="inline-form">
-              <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="status" value="{{ status }}">
-              <button type="submit" class="link-btn">垃圾</button>
-            </form>
-            {% endif %}
-            <form method="post" action="/admin/comments/{{ comment.id }}/delete" class="inline-form" data-confirm="确定永久删除这条评论及其回复？">
-              <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="status" value="{{ status }}">
-              <button type="submit" class="link-btn danger">删除</button>
-            </form>
-          </div>
+          <details class="row-menu comment-row-menu">
+            <summary>操作 ▾</summary>
+            <div class="row-menu-pop">
+              {% if comment.status != "approved" %}
+              <form method="post" action="/admin/comments/{{ comment.id }}/approved" class="inline-form">
+                <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="status" value="{{ status }}">
+                <button type="submit" class="link-btn success">通过</button>
+              </form>
+              {% endif %}
+              {% if comment.status != "pending" %}
+              <form method="post" action="/admin/comments/{{ comment.id }}/pending" class="inline-form">
+                <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="status" value="{{ status }}">
+                <button type="submit" class="link-btn">待审核</button>
+              </form>
+              {% endif %}
+              {% if comment.status != "spam" %}
+              <form method="post" action="/admin/comments/{{ comment.id }}/spam" class="inline-form">
+                <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="status" value="{{ status }}">
+                <button type="submit" class="link-btn">垃圾</button>
+              </form>
+              {% endif %}
+              {% if comment.status != "trash" %}
+              <form method="post" action="/admin/comments/{{ comment.id }}/trash" class="inline-form">
+                <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="status" value="{{ status }}">
+                <button type="submit" class="link-btn">回收站</button>
+              </form>
+              {% endif %}
+              <form method="post" action="/admin/comments/{{ comment.id }}/delete" class="inline-form" data-confirm="确定永久删除这条评论及其回复？">
+                <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="status" value="{{ status }}">
+                <button type="submit" class="link-btn danger">删除</button>
+              </form>
+            </div>
+          </details>
         </div>
       </div>
     </article>

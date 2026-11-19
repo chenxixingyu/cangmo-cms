@@ -272,6 +272,54 @@ public class AdminSite {
         ctx.redirect(if (returnTo.size > 0) { returnTo } else { "/admin/posts" }, status: 303)
     }
 
+    /** Bulk publish / trash / restore / delete for the post list. */
+    public func postsBulk(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let ids = ctx.req.formValues("ids")
+        let action = ctx.form("action")
+        let returnTo = safeNext(ctx.form("return_to"))
+        let fallback = if (returnTo.size > 0) { returnTo } else { "/admin/posts" }
+        if (ids.size == 0) {
+            ctx.setFlash("error", "请先选择内容")
+            return ctx.redirect(fallback, status: 303)
+        }
+        if (action != "publish" && action != "trash" && action != "restore" && action != "delete") {
+            ctx.setFlash("error", "无效操作")
+            return ctx.redirect(fallback, status: 303)
+        }
+        if (ids.size > 100) {
+            ctx.setFlash("error", "一次最多处理 100 项")
+            return ctx.redirect(fallback, status: 303)
+        }
+        var changed: Int64 = 0
+        var failed: Int64 = 0
+        for (id in ids) {
+            try {
+                if (action == "publish") {
+                    services.posts.publish(id, ctx.userDoc(), ctx.clientIp())
+                } else if (action == "trash") {
+                    services.posts.moveToTrash(id, ctx.userDoc(), ctx.clientIp())
+                } else if (action == "restore") {
+                    services.posts.restore(id, ctx.userDoc(), ctx.clientIp())
+                } else {
+                    services.posts.deletePermanently(id, ctx.userDoc(), ctx.clientIp())
+                }
+                changed += 1
+            } catch (e: Exception) {
+                failed += 1
+            }
+        }
+        if (failed > 0) {
+            ctx.setFlash("error", "已处理 ${changed} 项，${failed} 项失败")
+        } else {
+            ctx.setFlash("success", "已处理 ${changed} 项内容")
+        }
+        ctx.redirect(fallback, status: 303)
+    }
+
     private func editorResponse(ctx: Ctx, post: JsonValue, isNew: Bool, error: String): HttpResponse {
         let data = JsonObject()
         data.set("page_title", JStr(if (isNew) { "新建内容" } else { "编辑内容" }))

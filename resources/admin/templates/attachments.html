@@ -62,13 +62,18 @@
         <strong title="{{ item.original_name }}">{{ item.original_name }}</strong>
         <small>{{ item.size_text }}{% if item.dimensions %} · {{ item.dimensions }}{% endif %} · {{ item.date }}</small>
         <div class="attachment-actions">
-          <button type="button" class="link-btn copy-url" data-url="{{ item.url }}">复制链接</button>
-          <button type="button" class="link-btn" data-preview-url="{{ item.url }}" data-preview-kind="{{ item.kind }}" data-preview-name="{{ item.original_name }}">预览</button>
-          <form method="post" action="/admin/attachments/{{ item.id }}/delete" class="inline-form" data-confirm="确定删除附件「{{ item.original_name }}」？">
-            <input type="hidden" name="_csrf" value="{{ csrf }}">
-            <input type="hidden" name="return_to" value="/admin/attachments?kind={{ kind }}{% if search %}&q={{ search|urlencode }}{% endif %}">
-            <button type="submit" class="link-btn danger">删除</button>
-          </form>
+          <details class="row-menu attachment-row-menu">
+            <summary>操作 ▾</summary>
+            <div class="row-menu-pop">
+              <button type="button" class="copy-url" data-url="{{ item.url }}">复制链接</button>
+              <button type="button" data-preview-url="{{ item.url }}" data-preview-kind="{{ item.kind }}" data-preview-name="{{ item.original_name }}">预览</button>
+              <form method="post" action="/admin/attachments/{{ item.id }}/delete" class="inline-form" data-confirm="确定删除附件「{{ item.original_name }}」？">
+                <input type="hidden" name="_csrf" value="{{ csrf }}">
+                <input type="hidden" name="return_to" value="/admin/attachments?kind={{ kind }}{% if search %}&q={{ search|urlencode }}{% endif %}">
+                <button type="submit" class="link-btn danger">删除</button>
+              </form>
+            </div>
+          </details>
         </div>
       </div>
     </article>

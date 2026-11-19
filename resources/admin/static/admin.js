@@ -186,7 +186,8 @@
       });
   }
 
-  var profilePickerButton = document.getElementById("profile-avatar-picker");  var profileDialog = document.getElementById("profile-avatar-dialog");
+  var profilePickerButton = document.getElementById("profile-avatar-picker");
+  var profileDialog = document.getElementById("profile-avatar-dialog");
   var profileGrid = document.getElementById("profile-avatar-grid");
   var profileInput = document.getElementById("profile-avatar-input");
   var profilePreview = document.getElementById("profile-avatar-preview");
@@ -211,6 +212,70 @@
   }
   if (backupRestoreOpen && backupRestoreDialog) {
     backupRestoreOpen.addEventListener("click", function () { backupRestoreDialog.showModal(); });
+  }
+
+  // ---------------------------------------------------------------------
+  // Compact admin: popover menus, bulk selection, category dialog
+  // ---------------------------------------------------------------------
+  // Close any open `<details>` menu when clicking outside of it.
+  document.addEventListener("click", function (event) {
+    document.querySelectorAll("details[open]").forEach(function (panel) {
+      if (!panel.contains(event.target)) panel.open = false;
+    });
+  });
+
+  var bulkForm = document.getElementById("posts-bulk-form");
+  var bulkToggle = document.getElementById("posts-bulk-toggle");
+  var bulkClose = document.getElementById("posts-bulk-close");
+  var bulkSelectAll = document.getElementById("posts-select-all");
+  var postChecks = document.querySelectorAll(".post-check");
+  var bulkCount = document.getElementById("posts-selected-count");
+
+  function updateBulkCount() {
+    var selected = 0;
+    postChecks.forEach(function (box) { if (box.checked) selected += 1; });
+    if (bulkCount) bulkCount.textContent = String(selected);
+    if (bulkSelectAll) bulkSelectAll.checked = selected > 0 && selected === postChecks.length;
+    return selected;
+  }
+
+  function showBulk(show) {
+    if (!bulkForm) return;
+    bulkForm.hidden = !show;
+    var table = document.querySelector(".posts-table");
+    if (table) table.classList.toggle("bulk-mode", show);
+    if (!show) {
+      postChecks.forEach(function (box) { box.checked = false; });
+      updateBulkCount();
+    }
+  }
+
+  if (bulkToggle && bulkForm) {
+    bulkToggle.addEventListener("click", function () {
+      var menu = bulkToggle.closest("details");
+      if (menu) menu.open = false;
+      showBulk(bulkForm.hidden);
+    });
+  }
+  if (bulkClose) bulkClose.addEventListener("click", function () { showBulk(false); });
+  if (bulkSelectAll) {
+    bulkSelectAll.addEventListener("change", function () {
+      postChecks.forEach(function (box) { box.checked = bulkSelectAll.checked; });
+      updateBulkCount();
+    });
+  }
+  postChecks.forEach(function (box) {
+    box.addEventListener("change", function () {
+      if (bulkForm && bulkForm.hidden) bulkForm.hidden = false;
+      updateBulkCount();
+    });
+  });
+  if (bulkForm) updateBulkCount();
+
+  var categoryOpen = document.getElementById("category-create-open");
+  var categoryDialog = document.getElementById("category-create-dialog");
+  if (categoryOpen && categoryDialog) {
+    categoryOpen.addEventListener("click", function () { categoryDialog.showModal(); });
   }
 
   // ---------------------------------------------------------------------

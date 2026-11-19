@@ -42,7 +42,7 @@ function assert(ok, message) {
 function localDateTime(offsetMs) {
   const d = new Date(Date.now() + offsetMs);
   const p = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 }
 
 // Login.
@@ -86,8 +86,8 @@ assert(pageCreated.status === 303, "page created");
 page = await req("/pages/extended-page");
 assert(page.status === 200 && page.text.includes("页面正文"), "page is public");
 
-// Scheduled post, published by scheduler within ~25s.
-const scheduledAt = localDateTime(65000);
+// Scheduled post: due in 20s (seconds included), then the 20s scheduler tick publishes it.
+const scheduledAt = localDateTime(20000);
 page = await req("/admin/posts/new");
 csrf = csrfOf(page.text);
 const scheduled = await postForm("/admin/posts/save", {
@@ -100,7 +100,7 @@ assert(scheduled.status === 303, "scheduled post saved");
 page = await req("/admin/posts?status=scheduled");
 assert(page.text.includes("定时发布测试"), "scheduled post visible in scheduled tab");
 let published = false;
-for (let attempt = 0; attempt < 18; attempt += 1) {
+for (let attempt = 0; attempt < 30; attempt += 1) {
   await new Promise((resolve) => setTimeout(resolve, 2000));
   page = await req("/posts/scheduled-test");
   if (page.status === 200) { published = true; break; }

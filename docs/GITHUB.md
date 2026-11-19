@@ -4,9 +4,9 @@
 
 - ✅ 仓库：<https://github.com/chenxixingyu/cangmo-cms>（2026-11-18 由 `cangmo-blog` 更名，旧地址 301 重定向）
 - ✅ `main` 已推送（最新提交以仓库为准）
-- ✅ 标签 `v1.0.3` 已推送
-- ✅ CI 双平台：Windows + Ubuntu，`cjpm build` + `cjpm test`（run 44605596305 全绿）
-- ✅ Release `v1.0.3` 已发布，附 `cangmo-v1.0.3-source.zip` 与 `cangmo-v1.0.3.bundle`
+- ✅ 标签 `v1.0.4` 已推送
+- ✅ CI 双平台：Windows + Ubuntu，`cjpm build` + `cjpm test`（run 见 Actions）
+- ✅ Release `v1.0.4` 已发布，附 `cangmo-v1.0.4-source.zip` 与 `cangmo-v1.0.4.bundle`
 - ✅ 私密漏洞报告、Secret scanning、Push protection、Dependabot alerts 已启用
 - ✅ Topics、描述、Discussions 已配置
 - ⚠️ 许可证为自定义许可证，GitHub 识别为 “Other”（非 OSI 认证）
@@ -32,23 +32,23 @@
 cd E:\mianban\cangmo
 git remote add origin https://github.com/chenxixingyu/cangmo-cms.git
 git push -u origin main
-git push origin v1.0.3
+git push origin v1.0.4
 ```
 
 推送 `main` 会触发 CI（`.github/workflows/ci.yml`）。  
-推送 `v1.0.3` 标签会触发 `.github/workflows/release.yml`，自动创建
+推送 `v1.0.4` 标签会触发 `.github/workflows/release.yml`，自动创建
 GitHub Release 并附加源码 zip 与 git bundle。
 
 ## 发布后检查
 
 - [ ] Actions 中 `CI` 为绿色
-- [ ] Actions 中 `Release` 成功，Release 页面有 `cangmo-v1.0.3-source.zip`
-      与 `cangmo-v1.0.3.bundle`
+- [ ] Actions 中 `Release` 成功，Release 页面有 `cangmo-v1.0.4-source.zip`
+      与 `cangmo-v1.0.4.bundle`
 - [ ] 仓库 About 描述与 Topics 已填写
 - [ ] Issues / Discussions 已启用
 - [ ] 分支保护：`main` 要求 PR、至少 1 个审查、禁止强推
 - [ ] 私密漏洞报告（Private vulnerability reporting）已启用
-- [ ] Releases 中 v1.0.3 标记为 Latest
+- [ ] Releases 中 v1.0.4 标记为 Latest
 - [ ] README 徽章显示正常
 
 ## 版本发布流程
@@ -58,16 +58,16 @@ GitHub Release 并附加源码 zip 与 git bundle。
 3. 创建带注释标签：
 
    ```powershell
-   git tag -a v1.0.3 -m "Cangmo v1.0.3"
-   git push origin v1.0.3
+   git tag -a v1.0.4 -m "Cangmo v1.0.4"
+   git push origin v1.0.4
    ```
 
 4. 等待 Release workflow，检查附件与说明
 5. 如 Actions 不可用，可手动创建 Release 并上传：
 
    ```powershell
-   git archive --format=zip --output=cangmo-v1.0.3-source.zip HEAD
-   git bundle create cangmo-v1.0.3.bundle --all
+   git archive --format=zip --output=cangmo-v1.0.4-source.zip HEAD
+   git bundle create cangmo-v1.0.4.bundle --all
    ```
 
 ## 仓库设置建议

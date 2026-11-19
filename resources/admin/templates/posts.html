@@ -19,19 +19,43 @@
         <input type="search" name="search" value="{{ search }}" placeholder="搜索标题或正文…">
         <button type="submit">搜索</button>
       </form>
+      <details class="toolbar-menu">
+        <summary class="btn btn-ghost">管理 ▾</summary>
+        <div class="toolbar-menu-pop">
+          <a href="/admin/categories">分类管理</a>
+          <a href="/admin/tags">标签管理</a>
+          <button type="button" id="posts-bulk-toggle">批量操作</button>
+        </div>
+      </details>
       <a class="btn" href="/admin/posts/new?type={{ post_type }}">+ 新建{% if post_type == "page" %}页面{% else %}文章{% endif %}</a>
     </div>
   </div>
 
+  <form method="post" action="/admin/posts/bulk" id="posts-bulk-form" class="bulk-bar" hidden>
+    <input type="hidden" name="_csrf" value="{{ csrf }}">
+    <input type="hidden" name="return_to" value="/admin/posts?type={{ post_type }}&status={{ status }}&search={{ search|urlencode }}">
+    <label class="check-row"><input type="checkbox" id="posts-select-all"> 全选</label>
+    <span class="muted">已选 <strong id="posts-selected-count">0</strong> 项</span>
+    <select name="action" aria-label="批量操作">
+      <option value="publish">发布</option>
+      <option value="trash">移入回收站</option>
+      <option value="restore">恢复为草稿</option>
+      <option value="delete">永久删除</option>
+    </select>
+    <button type="submit" class="btn btn-ghost" data-confirm="确定对选中内容执行此操作？">应用</button>
+    <button type="button" class="link-btn" id="posts-bulk-close">取消</button>
+  </form>
+
   <div class="panel">
     <div class="table-wrap">
-      <table class="table">
+      <table class="table posts-table">
         <thead>
-          <tr><th>标题</th><th>状态</th><th>作者</th><th>发布</th><th>浏览</th><th class="table-actions-head">操作</th></tr>
+          <tr><th class="col-check"></th><th>标题</th><th>状态</th><th>作者</th><th>发布</th><th>浏览</th><th class="table-actions-head">操作</th></tr>
         </thead>
         <tbody>
           {% for row in rows %}
           <tr>
+            <td class="col-check"><input type="checkbox" name="ids" value="{{ row.id }}" form="posts-bulk-form" class="post-check" aria-label="选择《{{ row.title }}》"></td>
             <td>
               <a class="table-title" href="{{ row.edit_url }}">{{ row.title }}</a>
               <div class="table-sub">/{{ row.slug }}{% if row.pinned %} · 置顶{% endif %}</div>
@@ -42,34 +66,40 @@
             <td class="muted">{{ row.views }}</td>
             <td class="table-actions">
               <a href="{{ row.edit_url }}">编辑</a>
-              {% if row.status != "trash" %}
-              <form method="post" action="/admin/posts/{{ row.id }}/action" class="inline-form">
-                <input type="hidden" name="_csrf" value="{{ csrf }}">
-                <input type="hidden" name="return_to" value="/admin/posts?type={{ post_type }}&status={{ status }}">
-                <input type="hidden" name="action" value="{% if row.status == "published" %}trash{% else %}publish{% endif %}">
-                <button type="submit" class="link-btn">{% if row.status == "published" %}下线{% else %}发布{% endif %}</button>
-              </form>
-              {% else %}
-              <form method="post" action="/admin/posts/{{ row.id }}/action" class="inline-form">
-                <input type="hidden" name="_csrf" value="{{ csrf }}">
-                <input type="hidden" name="return_to" value="/admin/posts?type={{ post_type }}&status=trash">
-                <input type="hidden" name="action" value="restore">
-                <button type="submit" class="link-btn">恢复</button>
-              </form>
-              {% endif %}
-              {% if is_admin %}
-              <form method="post" action="/admin/posts/{{ row.id }}/action" class="inline-form" data-confirm="确定永久删除《{{ row.title }}》？此操作不可恢复。">
-                <input type="hidden" name="_csrf" value="{{ csrf }}">
-                <input type="hidden" name="return_to" value="/admin/posts?type={{ post_type }}&status={{ status }}">
-                <input type="hidden" name="action" value="delete">
-                <button type="submit" class="link-btn danger">删除</button>
-              </form>
-              {% endif %}
+              <details class="row-menu">
+                <summary>更多 ▾</summary>
+                <div class="row-menu-pop">
+                  {% if row.status == "published" %}<a href="/{% if post_type == 'page' %}pages{% else %}posts{% endif %}/{{ row.slug }}" target="_blank" rel="noopener">查看前台</a>{% endif %}
+                  {% if row.status != "trash" %}
+                  <form method="post" action="/admin/posts/{{ row.id }}/action" class="inline-form">
+                    <input type="hidden" name="_csrf" value="{{ csrf }}">
+                    <input type="hidden" name="return_to" value="/admin/posts?type={{ post_type }}&status={{ status }}">
+                    <input type="hidden" name="action" value="{% if row.status == "published" %}trash{% else %}publish{% endif %}">
+                    <button type="submit" class="link-btn">{% if row.status == "published" %}下线{% else %}发布{% endif %}</button>
+                  </form>
+                  {% else %}
+                  <form method="post" action="/admin/posts/{{ row.id }}/action" class="inline-form">
+                    <input type="hidden" name="_csrf" value="{{ csrf }}">
+                    <input type="hidden" name="return_to" value="/admin/posts?type={{ post_type }}&status=trash">
+                    <input type="hidden" name="action" value="restore">
+                    <button type="submit" class="link-btn">恢复</button>
+                  </form>
+                  {% endif %}
+                  {% if is_admin %}
+                  <form method="post" action="/admin/posts/{{ row.id }}/action" class="inline-form" data-confirm="确定永久删除《{{ row.title }}》？此操作不可恢复。">
+                    <input type="hidden" name="_csrf" value="{{ csrf }}">
+                    <input type="hidden" name="return_to" value="/admin/posts?type={{ post_type }}&status={{ status }}">
+                    <input type="hidden" name="action" value="delete">
+                    <button type="submit" class="link-btn danger">删除</button>
+                  </form>
+                  {% endif %}
+                </div>
+              </details>
             </td>
           </tr>
           {% endfor %}
           {% if rows.length == 0 %}
-          <tr><td colspan="6" class="empty-row">没有内容。 <a href="/admin/posts/new?type={{ post_type }}">立即创建</a></td></tr>
+          <tr><td colspan="7" class="empty-row">没有内容。 <a href="/admin/posts/new?type={{ post_type }}">立即创建</a></td></tr>
           {% endif %}
         </tbody>
       </table>

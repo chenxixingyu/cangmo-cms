@@ -70,6 +70,7 @@ public class WebApp {
         router.get("/admin/posts/new", { ctx: Ctx => adminSite.postNew(ctx) })
         router.get("/admin/posts/:id/edit", { ctx: Ctx => adminSite.postEdit(ctx) })
         router.post("/admin/posts/save", { ctx: Ctx => adminSite.postSave(ctx) })
+        router.post("/admin/posts/bulk", { ctx: Ctx => adminSite.postsBulk(ctx) })
         router.post("/admin/posts/:id/action", { ctx: Ctx => adminSite.postAction(ctx) })
         router.get("/admin/categories", { ctx: Ctx => adminSite.categoriesPage(ctx) })
         router.post("/admin/categories/save", { ctx: Ctx => adminSite.categorySave(ctx) })

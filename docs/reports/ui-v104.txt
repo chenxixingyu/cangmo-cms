@@ -1,0 +1,28 @@
+﻿ok: sidebar tag entry removed
+ok: system nav menu present
+ok: system nav menu opens
+ok: system menu holds settings
+ok: bulk checkboxes hidden by default
+ok: bulk bar appears from manage menu
+ok: bulk column appears
+ok: select-all checks rows
+ok: selected count updates
+ok: bulk bar closes
+ok: manage menu opens
+ok: tags link lives in manage menu
+ok: categories link lives in manage menu
+ok: post row menu opens
+ok: post row menu has actions
+ok: category dialog exists
+ok: category dialog opens
+ok: category dialog closes
+ok: tag rows use menus
+ok: tag row menu opens
+ok: user row menu exists
+ok: user row menu opens
+ok: user menu holds the edit form
+ok: attachment row menu exists
+ok: attachment row menu opens
+ok: attachment menu holds copy link
+ok: no browser exceptions during v1.0.4 audit
+v1.0.4 UI audit complete
