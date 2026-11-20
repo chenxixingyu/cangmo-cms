@@ -243,6 +243,8 @@
       pageForm.elements.summary.value = item.summary || "";
       pageForm.elements.content.value = item.content || "";
       pageForm.elements.cover.value = item.cover || "";
+      pageForm.elements.category_id.value = item.category_id || "";
+      pageForm.elements.tags.value = item.tags || "";
       pageForm.elements.seo_title.value = item.seo_title || "";
       pageForm.elements.seo_description.value = item.seo_description || "";
       pageForm.elements.status.value = item.status || "draft";

@@ -130,6 +130,16 @@ public class AdminSite {
             rows.add(adminPostRow(services, post))
         }
         let counts = statusCounts(ctx, postType)
+        let categories = JsonArray()
+        let allTags = JsonArray()
+        if (postType == "page") {
+            for (category in services.taxonomy.listCategories()) {
+                categories.add(category)
+            }
+            for (tag in services.taxonomy.listTags()) {
+                allTags.add(tag)
+            }
+        }
         let data = JsonObject()
         data.set("page_title", JStr(if (postType == "page") { "页面" } else { "文章" }))
         data.set("active", JStr(if (postType == "page") { "pages" } else { "posts" }))
@@ -138,6 +148,8 @@ public class AdminSite {
         data.set("search", JStr(search))
         data.set("rows", JArr(rows))
         data.set("counts", counts)
+        data.set("categories", JArr(categories))
+        data.set("all_tags", JArr(allTags))
         data.set("pagination", buildPagination(result.page, result.pages, result.total,
                                                "/admin/posts?type=${postType}&status=${status}&search=" + urlEncode(search), 20))
         ctx.renderAdminPage("posts.html", JObj(data))
@@ -364,6 +376,15 @@ public class AdminSite {
         item.set("seo_description", JStr(docStr(post, "seo_description")))
         item.set("allow_comments", JBool(docBool(post, "allow_comments", def: true)))
         item.set("scheduled_at", JStr(formatDateTime(docInt(post, "scheduled_at"))))
+        item.set("category_id", JStr(docStr(post, "category_id")))
+        let tagNames = ArrayList<String>()
+        for (tagId in docStrings(post, "tag_ids")) {
+            match (services.store.get(COL_TAGS, tagId)) {
+                case Some(tag) => tagNames.add(docStr(tag, "name"))
+                case None => ()
+            }
+        }
+        item.set("tags", JStr(String.join(tagNames.toArray(), delimiter: ", ")))
         let data = JsonObject()
         data.set("ok", JBool(true))
         data.set("item", JObj(item))
@@ -391,12 +412,20 @@ public class AdminSite {
         input.summary = ctx.form("summary")
         input.content = ctx.form("content")
         input.status = normalizeStatus(ctx.form("status"))
-        input.categoryId = docStr(post, "category_id")
+        let categoryForm = ctx.form("category_id")
+        input.categoryId = if (categoryForm.size > 0) { categoryForm } else { docStr(post, "category_id") }
+        let tagForm = ctx.form("tags")
         let tagNames = ArrayList<String>()
-        for (tagId in docStrings(post, "tag_ids")) {
-            match (services.store.get(COL_TAGS, tagId)) {
-                case Some(tag) => tagNames.add(docStr(tag, "name"))
-                case None => ()
+        if (tagForm.size > 0) {
+            for (name in splitTags(tagForm)) {
+                tagNames.add(name)
+            }
+        } else {
+            for (tagId in docStrings(post, "tag_ids")) {
+                match (services.store.get(COL_TAGS, tagId)) {
+                    case Some(tag) => tagNames.add(docStr(tag, "name"))
+                    case None => ()
+                }
             }
         }
         input.tagNames = tagNames.toArray()

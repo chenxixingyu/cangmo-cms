@@ -94,6 +94,7 @@ assert(!!pageId, "page drawer id is exposed");
 let drawer = await req(`/admin/posts/${pageId}/drawer`);
 let drawerData = JSON.parse(drawer.text);
 assert(drawer.status === 200 && drawerData.ok && drawerData.item.content.includes("页面正文"), "page drawer data loads");
+assert(drawerData.item.category_id !== undefined && drawerData.item.tags !== undefined, "page drawer carries taxonomy fields");
 csrf = csrfOf(page.text);
 const quickFields = {
   title: "扩展页面", slug: "extended-page", summary: "抽屉摘要", content: "## 抽屉正文",

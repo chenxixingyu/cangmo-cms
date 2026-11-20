@@ -1,0 +1,17 @@
+﻿ok: page drawer opens
+ok: page edit stays on the list
+ok: drawer shows page title
+ok: drawer carries all page fields
+ok: page drawer stays narrow (420px)
+ok: page drawer closes after save
+ok: list row updates in place
+ok: save does not navigate
+ok: editor publish drawer opens
+ok: editor has no permanent side column
+ok: settings tabs switch panels
+ok: attachment stats compact
+ok: attachment actions use a menu
+ok: user stats compact
+ok: user actions use a menu
+ok: no browser exceptions
+v1.0.7 UI audit complete

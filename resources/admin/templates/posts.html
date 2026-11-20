@@ -131,6 +131,7 @@
       <input type="hidden" name="_csrf" value="{{ csrf }}">
       <div class="drawer-body">
         <label>标题<input type="text" name="title" required maxlength="200"></label>
+        <label>路径<input type="text" name="slug" maxlength="96" pattern="[a-z0-9-]*" placeholder="自动生成"></label>
         <div class="drawer-grid-2">
           <label>状态
             <select name="status">
@@ -142,9 +143,15 @@
           <label>定时时间<input type="datetime-local" name="scheduled_at"></label>
         </div>
         <label>正文<textarea name="content" rows="12" spellcheck="false"></textarea></label>
-        <label>摘要<textarea name="summary" rows="2" maxlength="500"></textarea></label>
         <label>封面链接<input type="text" name="cover" placeholder="/media/… 或 https://…"></label>
-        <label>URL 别名<input type="text" name="slug" maxlength="96" pattern="[a-z0-9-]*"></label>
+        <label>摘要<textarea name="summary" rows="2" maxlength="500"></textarea></label>
+        <label>分类
+          <select name="category_id">
+            <option value="">未分类</option>
+            {% for category in categories %}<option value="{{ category.id }}">{{ category.name }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>标签<input type="text" name="tags" maxlength="200" placeholder="用逗号分隔"></label>
         <label>SEO 标题<input type="text" name="seo_title" maxlength="200"></label>
         <label>SEO 描述<textarea name="seo_description" rows="2" maxlength="300"></textarea></label>
         <label class="check-row"><input type="checkbox" name="allow_comments" value="on"> 允许评论</label>

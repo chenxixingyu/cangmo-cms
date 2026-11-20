@@ -1,8 +1,8 @@
-# 仓墨测试与验收（v1.0.6）
+# 仓墨测试与验收（v1.0.7）
 
 > 本地环境：Windows 11 x64 · 仓颉 1.2.1 (cjnative) · Node.js 22.2.0 · Microsoft Edge  
-> 测试对象：v1.0.6。所有集成测试均在**全新数据目录**上执行，原始输出保存在 `docs/reports/`。  
-> Linux：GitHub Actions `ubuntu-latest` 已通过 `cjpm build` + `cjpm test`（run 44815640412）。
+> 测试对象：v1.0.7。所有集成测试均在**全新数据目录**上执行，原始输出保存在 `docs/reports/`。  
+> Linux：GitHub Actions `ubuntu-latest` 已通过 `cjpm build` + `cjpm test`（run 见 GitHub Actions）。
 
 ## 1. 一键运行
 
@@ -34,20 +34,20 @@ node tests\security.mjs
 | 单元测试 `cjpm test` | 21 | **21 / 21** | [unit-tests-v101.txt](reports/unit-tests-v101.txt) |
 | 初始化与公共站 `smoke.mjs` | 24 | **24 / 24** | [smoke-v101.txt](reports/smoke-v101.txt) |
 | 后台与内容闭环 `e2e.mjs` | 31 | **31 / 31** | [e2e-v101.txt](reports/e2e-v101.txt) |
-| 扩展功能 `extended.mjs` | 28 | **28 / 28** | [extended-v101.txt](reports/extended-v101.txt) |
+| 扩展功能 `extended.mjs` | 29 | **29 / 29** | [extended-v101.txt](reports/extended-v101.txt) |
 | v1.0.1 验收 `v101.mjs` | 35 | **35 / 35** | [v101-final.txt](reports/v101-final.txt) |
 | 并发/协议 `load.mjs` | 6 | **6 / 6** | [load-v101.txt](reports/load-v101.txt) |
 | 安全回归 `security.mjs` | 31 | **31 / 31** | [security-v101.txt](reports/security-v101.txt) |
 | 部署自检 `doctor` | 17 模板 | **通过，17/17** | [doctor-v101.txt](reports/doctor-v101.txt) |
-| 静态分析 `cjlint` | 737 条 | 715 建议 + 22 强制风格项 | [cjlint.json](reports/cjlint.json) |
+| 静态分析 `cjlint` | 740 条 | 718 建议 + 22 强制风格项 | [cjlint.json](reports/cjlint.json) |
 
-**合计：21 个单元测试 + 155 项集成/安全断言 = 176 项，全部通过。**
+**合计：21 个单元测试 + 156 项集成/安全断言 = 177 项，全部通过。**
 
 > 本轮排查、修复与五维验收明细见 [audit-v105.md](reports/audit-v105.md)。
 
-另执行 **21 项 v1.0.6 浏览器交互审计**（Edge/CDP）：发布抽屉、页面内联编辑、设置标签切换、附件/用户菜单、紧凑统计卡与全局 JS 异常，全部通过，见 [ui-v106.txt](reports/ui-v106.txt)。
+另执行 **16 项 v1.0.7 浏览器审计**（Edge/CDP）：页面抽屉字段、窄幅尺寸、原位保存、编辑器抽屉、设置标签、附件/用户密度与全局 JS 异常，全部通过，见 [ui-v107.txt](reports/ui-v107.txt)。
 
-### v1.0.1 ~ v1.0.6 新增与回归覆盖
+### v1.0.1 ~ v1.0.7 新增与回归覆盖
 
 - 附件库：页面渲染、旧“媒体库”文案移除、JSON 上传、类型筛选、文件名搜索、选择器数据、删除
 - 编辑器：封面/标签 UI、AJAX 新建分类、带分类/标签/封面的文章保存
@@ -58,6 +58,7 @@ node tests\security.mjs
 - v1.0.4 布局：侧栏无标签入口、系统管理折叠、文章批量操作、行操作菜单、分类弹窗
 - v1.0.5：定时发布权限、中文文件名、复制为草稿、相关文章开关、设置项向后兼容
 - v1.0.6：发布抽屉、页面内联抽屉、快速保存接口、设置横向标签、附件/用户密度
+- v1.0.7：页面抽屉补路径/分类/标签，宽度收窄至 420px
 - 恢复后会话失效，必须重新登录
 
 ### 既有覆盖
@@ -89,7 +90,7 @@ node tests\security.mjs
 cjlint -f .\src -o .\docs\reports\cjlint -r json
 ```
 
-结果：**737 条**（`MANDATORY` 22、`SUGGESTIONS` 715）。强制项仍集中在：
+结果：**740 条**（`MANDATORY` 22、`SUGGESTIONS` 718）。强制项仍集中在：
 
 | 类型 | 数量 | 说明 |
 | --- | --- | --- |
@@ -103,7 +104,7 @@ cjlint -f .\src -o .\docs\reports\cjlint -r json
 
 - **Linux**：需要 OpenSSL 开发库；本地 Windows 测试机无法执行 Linux 二进制，Linux 构建/单测由 GitHub Actions 验证。
 - **HTTPS/HSTS**：进程内无 TLS；由 Caddy/Nginx 终止。
-- **邮件/TOTP/OAuth/插件/对象存储**：v1.0.6 不含。
+- **邮件/TOTP/OAuth/插件/对象存储**：v1.0.7 不含。
 - **长时间浸泡**：未做 24h 稳定性测试。
 - **恶意文件**：未做图片解码模糊测试。
 - **浏览器兼容**：Edge/Chromium 验证；Firefox/Safari 未逐一测试。
