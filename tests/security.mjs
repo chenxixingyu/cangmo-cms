@@ -147,6 +147,35 @@ page = await req("/admin/profile"); // first view: token is shown once
 page = await req("/admin/profile"); // reload: token must be gone
 assert(!/cmo_[A-Za-z0-9_-]{20,}/.test(page.text), "API token is not shown again after creation");
 
+// Deferred publish must not bypass publish permission (contributor role).
+page = await req("/admin/users");
+csrf = csrfOf(page.text);
+const contributor = await postForm("/admin/users/action", {
+  action: "create", username: "sched-contrib", email: "sched-contrib@example.com",
+  display_name: "定时投稿者", password: "Contrib-Test-2026!", role: "contributor"
+}, csrf);
+assert(contributor.status === 303, "contributor account created");
+const adminJar = new Map(jar);
+jar.clear();
+page = await req("/admin/login");
+csrf = csrfOf(page.text);
+const contributorLogin = await postForm("/admin/login", {
+  username: "sched-contrib", password: "Contrib-Test-2026!", next: ""
+}, csrf);
+assert(contributorLogin.status === 303, "contributor login succeeds");
+page = await req("/admin/posts/new");
+csrf = csrfOf(page.text);
+const bypass = await postForm("/admin/posts/save", {
+  id: "", type: "post", title: "越权定时", slug: "contrib-scheduled", summary: "", content: "body",
+  status: "scheduled", category_id: "", tags: "", cover: "", allow_comments: "on",
+  pinned: "", featured: "", seo_title: "", seo_description: "", scheduled_at: "2020-01-01 00:00"
+}, csrf);
+assert(bypass.status === 200 && bypass.text.includes("不能发布或定时发布"), "contributor cannot schedule content");
+page = await req("/posts/contrib-scheduled");
+assert(page.status === 404, "rejected schedule was not published");
+jar.clear();
+for (const [key, value] of adminJar) jar.set(key, value);
+
 // Generic login failure using a fresh session (not the logged-in one).
 jar.clear();
 page = await req("/admin/login");

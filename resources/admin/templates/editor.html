@@ -132,26 +132,28 @@
           <label class="check-row"><input type="checkbox" name="allow_comments" value="on"{% if post.allow_comments %} checked{% endif %}> 允许评论</label>
         </section>
 
-        <section class="side-panel">
-          <h2>SEO</h2>
-          <label>SEO 标题
-            <input type="text" name="seo_title" value="{{ post.seo_title }}" maxlength="200" placeholder="留空则使用文章标题">
-          </label>
-          <label>SEO 描述
-            <textarea name="seo_description" rows="3" maxlength="300" placeholder="留空则使用摘要">{{ post.seo_description }}</textarea>
-          </label>
-          <label>URL 别名
-            <input type="text" name="slug" value="{{ post.slug }}" id="post-slug" maxlength="96" placeholder="自动生成" pattern="[a-z0-9-]*">
-          </label>
-        </section>
+        <details class="side-panel side-fold">
+          <summary><h2>SEO</h2><span class="side-fold-hint">标题 / 描述 / 别名</span></summary>
+          <div class="side-fold-body">
+            <label>SEO 标题
+              <input type="text" name="seo_title" value="{{ post.seo_title }}" maxlength="200" placeholder="留空则使用文章标题">
+            </label>
+            <label>SEO 描述
+              <textarea name="seo_description" rows="3" maxlength="300" placeholder="留空则使用摘要">{{ post.seo_description }}</textarea>
+            </label>
+            <label>URL 别名
+              <input type="text" name="slug" value="{{ post.slug }}" id="post-slug" maxlength="96" placeholder="自动生成" pattern="[a-z0-9-]*">
+            </label>
+          </div>
+        </details>
 
         {% if revisions.length > 0 %}
-        <section class="side-panel">
-          <h2>历史版本</h2>
+        <details class="side-panel side-fold">
+          <summary><h2>历史版本</h2><span class="side-fold-hint">{{ revisions.length }} 个</span></summary>
           <ul class="revision-list">
             {% for revision in revisions %}<li><span>{{ revision.date }}</span><small>{{ revision.title }}</small></li>{% endfor %}
           </ul>
-        </section>
+        </details>
         {% endif %}
       </aside>
     </div>

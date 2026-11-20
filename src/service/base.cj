@@ -145,6 +145,7 @@ public class SettingsService {
         setDefault("theme_mode", JStr("auto"))
         setDefault("show_reading_time", JBool(true))
         setDefault("show_toc", JBool(true))
+        setDefault("show_related_posts", JBool(true))
         setDefault("comment_enabled", JBool(true))
         setDefault("comment_moderation", JBool(true))
         setDefault("comment_max_links", JInt(3))

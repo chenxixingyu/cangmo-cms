@@ -108,8 +108,8 @@ public class PostService {
                 throw AppError("forbidden", "无权创建内容")
             }
         }
-        if (input.status == STATUS_PUBLISHED && !canPublish(actor)) {
-            throw AppError("forbidden", "你的角色不能直接发布内容，请先保存为草稿")
+        if ((input.status == STATUS_PUBLISHED || input.status == STATUS_SCHEDULED) && !canPublish(actor)) {
+            throw AppError("forbidden", "你的角色不能发布或定时发布内容，请先保存为草稿")
         }
         var status = input.status
         var scheduledAt = input.scheduledAt
@@ -186,6 +186,46 @@ public class PostService {
         audit.log(actorId, docStr(actor, "username"), if (id.size > 0) { "post_updated" } else { "post_created" },
                   input.postType, postId, ip, "status=${status} slug=${slug}")
         postId
+    }
+
+    /** Copy a post/page into a fresh draft owned by the actor. */
+    public func duplicate(id: String, actor: JsonValue, ip: String): String {
+        let post = match (get(id)) {
+            case Some(value) => value
+            case None => throw AppError("not_found", "内容不存在")
+        }
+        if (!canEdit(actor, post)) {
+            throw AppError("forbidden", "无权复制此内容")
+        }
+        let postType = docStr(post, "type", def: "post")
+        if (!canCreate(actor, postType)) {
+            throw AppError("forbidden", "无权创建内容")
+        }
+        var categoryId = docStr(post, "category_id")
+        if (categoryId.size > 0 && store.get(COL_CATEGORIES, categoryId).isNone()) {
+            categoryId = ""
+        }
+        let tagNames = ArrayList<String>()
+        for (tagId in docStrings(post, "tag_ids")) {
+            match (store.get(COL_TAGS, tagId)) {
+                case Some(tag) => tagNames.add(docStr(tag, "name"))
+                case None => ()
+            }
+        }
+        let input = PostInput()
+        input.postType = postType
+        input.title = truncateUtf8(docStr(post, "title", def: "未命名") + "（副本）", 200)
+        input.slug = ""
+        input.summary = docStr(post, "summary")
+        input.content = docStr(post, "content")
+        input.status = STATUS_DRAFT
+        input.categoryId = categoryId
+        input.tagNames = tagNames.toArray()
+        input.cover = docStr(post, "cover")
+        input.allowComments = docBool(post, "allow_comments", def: true)
+        input.seoTitle = docStr(post, "seo_title")
+        input.seoDescription = docStr(post, "seo_description")
+        save(input, actor, "", ip)
     }
 
     private func canCreate(actor: JsonValue, postType: String): Bool {

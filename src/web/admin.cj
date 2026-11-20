@@ -320,6 +320,24 @@ public class AdminSite {
         ctx.redirect(fallback, status: 303)
     }
 
+    /** Copy a post/page into a fresh draft. */
+    public func postDuplicate(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let id = ctx.param("id")
+        let returnTo = safeNext(ctx.form("return_to"))
+        try {
+            let copyId = services.posts.duplicate(id, ctx.userDoc(), ctx.clientIp())
+            ctx.setFlash("success", "已复制为草稿")
+            return ctx.redirect("/admin/posts/" + copyId + "/edit", status: 303)
+        } catch (e: AppError) {
+            ctx.setFlash("error", e.message)
+        }
+        ctx.redirect(if (returnTo.size > 0) { returnTo } else { "/admin/posts" }, status: 303)
+    }
+
     private func editorResponse(ctx: Ctx, post: JsonValue, isNew: Bool, error: String): HttpResponse {
         let data = JsonObject()
         data.set("page_title", JStr(if (isNew) { "新建内容" } else { "编辑内容" }))
@@ -958,6 +976,10 @@ public class AdminSite {
             services.settings.setBool("comment_moderation", isChecked(ctx, "comment_moderation"))
             services.settings.setInt("comment_max_links", clampInt(ctx.form("comment_max_links"), 0, 20, 3))
             services.settings.setBool("show_toc", isChecked(ctx, "show_toc"))
+            // Preserve the default when an older/automated form omits the new toggle.
+            if (ctx.form("show_related_posts_present") == "1") {
+                services.settings.setBool("show_related_posts", isChecked(ctx, "show_related_posts"))
+            }
             services.settings.setBool("show_reading_time", isChecked(ctx, "show_reading_time"))
             services.settings.set("nav", JStr(navJson(ctx.form("nav_text"))))
             services.settings.set("social_links", JStr(socialJson(ctx.form("social_text"))))

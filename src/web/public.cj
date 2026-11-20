@@ -67,8 +67,10 @@ public class PublicSite {
         let comments = commentThread(docStr(post, "id"))
         let commentCount = comments.size
         let related = ArrayList<JsonValue>()
-        for (item in services.posts.related(post, 3)) {
-            related.add(postCard(services, item))
+        if (services.settings.bool("show_related_posts", def: true)) {
+            for (item in services.posts.related(post, 3)) {
+                related.add(postCard(services, item))
+            }
         }
         let (prevPost, nextPost) = neighborPosts(post)
         let data = JsonObject()

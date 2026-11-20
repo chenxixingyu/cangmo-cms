@@ -298,7 +298,7 @@ public class MediaService {
         if (file.data.size == 0 || file.data.size > config.maxBodyBytes) {
             throw AppError("validation", "文件为空或超过大小限制")
         }
-        let original = sanitizeFilename(file.filename)
+        let original = sanitizeDisplayName(file.filename)
         let ext = extensionOf(original)
         let allowed = ["jpg", "jpeg", "png", "gif", "webp", "avif", "pdf", "mp4", "webm", "mp3"]
         if (!allowed.contains(ext)) {

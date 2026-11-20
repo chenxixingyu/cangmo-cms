@@ -72,6 +72,7 @@ public class WebApp {
         router.post("/admin/posts/save", { ctx: Ctx => adminSite.postSave(ctx) })
         router.post("/admin/posts/bulk", { ctx: Ctx => adminSite.postsBulk(ctx) })
         router.post("/admin/posts/:id/action", { ctx: Ctx => adminSite.postAction(ctx) })
+        router.post("/admin/posts/:id/duplicate", { ctx: Ctx => adminSite.postDuplicate(ctx) })
         router.get("/admin/categories", { ctx: Ctx => adminSite.categoriesPage(ctx) })
         router.post("/admin/categories/save", { ctx: Ctx => adminSite.categorySave(ctx) })
         router.post("/admin/categories/quick", { ctx: Ctx => adminSite.categoryQuick(ctx) })

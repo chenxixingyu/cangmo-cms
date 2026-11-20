@@ -1,0 +1,13 @@
+﻿ok: duplicate action is in the post menu
+ok: editor has collapsible side panels
+ok: SEO fold starts closed
+ok: SEO fold opens on click
+ok: SEO fields remain in the form
+ok: settings sections remain accordions
+ok: related posts toggle defaults on
+ok: related section renders when enabled
+ok: related toggle persisted off
+ok: related section hidden when disabled
+ok: related section returns after re-enabling
+ok: no browser exceptions during v1.0.5 audit
+v1.0.5 UI audit complete

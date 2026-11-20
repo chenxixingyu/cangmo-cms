@@ -15,7 +15,7 @@ import std.random.*
 
 public let APP_NAME: String = "Cangmo"
 public let APP_NAME_CN: String = "仓墨"
-public let APP_VERSION: String = "1.0.4"
+public let APP_VERSION: String = "1.0.5"
 public let APP_CODENAME: String = "Qingyu"
 
 // ---------------------------------------------------------------------------
@@ -867,6 +867,53 @@ public func sanitizeFilename(name: String): String {
         out = "file"
     }
     return out
+}
+
+/**
+ * Sanitize a human-facing display name while keeping UTF-8 text (e.g. Chinese).
+ * Path separators and control characters are stripped, unsafe ASCII punctuation
+ * becomes '-', and multi-byte sequences are copied whole so the result stays valid.
+ * The on-disk name is always generated separately (media id + extension).
+ */
+public func sanitizeDisplayName(name: String): String {
+    let src = baseName(name).toArray()
+    let out = ArrayList<UInt8>()
+    var i = 0
+    var budget = 180
+    while (i < src.size && budget > 0) {
+        let b = src[i]
+        if (b < 0x80) {
+            if (b < 0x20 || b == 0x7F) {
+                i += 1
+                continue
+            }
+            let safe = (b >= 0x41 && b <= 0x5A) || (b >= 0x61 && b <= 0x7A) ||
+                       (b >= 0x30 && b <= 0x39) || b == 0x2D || b == 0x5F ||
+                       b == 0x2E || b == 0x20
+            out.add(if (safe) { b } else { 0x2D })
+            budget -= 1
+            i += 1
+            continue
+        }
+        let width = if (b >= 0xF0) { 4 } else if (b >= 0xE0) { 3 } else if (b >= 0xC0) { 2 } else { 1 }
+        if (i + width > src.size || budget < width) {
+            break
+        }
+        for (j in 0..width) {
+            out.add(src[i + j])
+        }
+        budget -= width
+        i += width
+    }
+    let cleaned = try {
+        String.fromUtf8(out.toArray()).trimAscii()
+    } catch (e: Exception) {
+        ""
+    }
+    if (cleaned.size == 0) {
+        return "file"
+    }
+    cleaned
 }
 
 // ---------------------------------------------------------------------------

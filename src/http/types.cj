@@ -614,7 +614,7 @@ func parseMultipart(request: HttpRequest, boundary: String): Unit {
         }
         let filenameRaw = headerValue(props, "filename", "")
         if (filenameRaw.size > 0) {
-            let safeName = sanitizeFilename(filenameRaw)
+            let safeName = sanitizeDisplayName(filenameRaw)
             let contentType = headerValue(partHeaders, "content-type", "application/octet-stream")
             request.files.add(UploadedFile(fieldName, safeName, contentType, content))
         } else {

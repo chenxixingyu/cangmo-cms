@@ -605,3 +605,12 @@ label { display: grid; gap: 5px; font-size: .82rem; color: var(--a-soft); }
 /* v1.0.4 bulk checkbox column */
 .posts-table .col-check { display: none; }
 .posts-table.bulk-mode .col-check { display: table-cell; }
+/* v1.0.5 editor low-frequency folds */
+.side-panel > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.side-panel > summary::-webkit-details-marker { display: none; }
+.side-panel > summary h2 { margin: 0; }
+.side-fold-hint { margin-left: auto; color: var(--a-muted); font-size: .72rem; }
+.side-fold > summary::after { content: "▾"; color: var(--a-muted); font-size: .72rem; transition: transform .15s ease; }
+.side-fold[open] > summary::after { transform: rotate(180deg); }
+.side-fold-body { display: grid; gap: 12px; margin-top: 2px; }
+.side-fold[open] { padding-bottom: 16px; }

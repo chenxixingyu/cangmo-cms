@@ -80,6 +80,10 @@ const mixedUpload = await req("/admin/attachments/upload?format=json", {
 });
 assert(mixedUpload.status === 200 && mixedUpload.text.includes("mixed-case.png"), "mixed-case multipart boundary works");
 
+const chinese = await uploadImage("测试 截图.png");
+assert(chinese.status === 200 && chinese.body.items[0].original_name === "测试 截图.png", "Chinese filename preserved");
+assert(/^media_[A-Za-z0-9]+\.png$/.test(chinese.body.items[0].filename), "stored filename stays ASCII");
+
 page = await req("/admin/attachments?kind=image&q=v101-cover");
 assert(page.status === 200 && page.text.includes("v101-cover.png"), "attachment filter/search works");
 page = await req("/admin/attachments/data?kind=image");

@@ -6,6 +6,7 @@
 <main class="admin-content">
   <form method="post" action="/admin/settings/save" class="settings-form">
     <input type="hidden" name="_csrf" value="{{ csrf }}">
+    <input type="hidden" name="show_related_posts_present" value="1">
 
     <details class="panel settings-accordion" open>
       <summary><span>站点信息</span><small>标题、域名、页脚</small></summary>
@@ -33,6 +34,7 @@
         </label>
         <label class="check-row"><input type="checkbox" name="show_toc" value="on"{% if settings.show_toc %} checked{% endif %}> 显示文章目录</label>
         <label class="check-row"><input type="checkbox" name="show_reading_time" value="on"{% if settings.show_reading_time %} checked{% endif %}> 显示阅读时间</label>
+        <label class="check-row"><input type="checkbox" name="show_related_posts" value="on"{% if settings.show_related_posts %} checked{% endif %}> 显示相关文章</label>
         <label class="span-2">导航菜单（每行：名称|链接）
           <textarea name="nav_text" rows="4" placeholder="首页|/&#10;归档|/archive">{{ nav_text }}</textarea>
         </label>

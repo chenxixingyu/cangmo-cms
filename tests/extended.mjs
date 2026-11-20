@@ -107,6 +107,15 @@ for (let attempt = 0; attempt < 30; attempt += 1) {
 }
 assert(published, "scheduler published the scheduled post");
 
+// Duplicate a post into a fresh draft.
+page = await req("/admin/posts?status=all");
+csrf = csrfOf(page.text);
+const scheduledId = (scheduled.location.match(/posts\/(post_[^/]+)\/edit/) || [])[1];
+const duplicated = await postForm(`/admin/posts/${scheduledId}/duplicate`, { return_to: "/admin/posts?status=all" }, csrf);
+assert(duplicated.status === 303, "post duplicated");
+page = await req(duplicated.location);
+assert(page.text.includes("定时发布测试（副本）") && page.text.includes("草稿"), "duplicate starts as a draft");
+
 // API token + create/update/delete + API comment.
 page = await req("/admin/profile");
 csrf = csrfOf(page.text);

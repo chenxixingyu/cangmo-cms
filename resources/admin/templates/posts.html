@@ -71,6 +71,13 @@
                 <div class="row-menu-pop">
                   {% if row.status == "published" %}<a href="/{% if post_type == 'page' %}pages{% else %}posts{% endif %}/{{ row.slug }}" target="_blank" rel="noopener">查看前台</a>{% endif %}
                   {% if row.status != "trash" %}
+                  <form method="post" action="/admin/posts/{{ row.id }}/duplicate" class="inline-form">
+                    <input type="hidden" name="_csrf" value="{{ csrf }}">
+                    <input type="hidden" name="return_to" value="/admin/posts?type={{ post_type }}&status={{ status }}">
+                    <button type="submit" class="link-btn">复制为草稿</button>
+                  </form>
+                  {% endif %}
+                  {% if row.status != "trash" %}
                   <form method="post" action="/admin/posts/{{ row.id }}/action" class="inline-form">
                     <input type="hidden" name="_csrf" value="{{ csrf }}">
                     <input type="hidden" name="return_to" value="/admin/posts?type={{ post_type }}&status={{ status }}">
