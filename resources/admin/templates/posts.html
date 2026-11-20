@@ -54,7 +54,7 @@
         </thead>
         <tbody>
           {% for row in rows %}
-          <tr>
+          <tr class="post-row" data-post-id="{{ row.id }}">
             <td class="col-check"><input type="checkbox" name="ids" value="{{ row.id }}" form="posts-bulk-form" class="post-check" aria-label="选择《{{ row.title }}》"></td>
             <td>
               <a class="table-title" href="{{ row.edit_url }}">{{ row.title }}</a>
@@ -62,10 +62,14 @@
             </td>
             <td><span class="status status-{{ row.status }}">{{ row.status_text }}</span></td>
             <td>{{ row.author.name }}</td>
-            <td class="muted">{{ row.date }}</td>
-            <td class="muted">{{ row.views }}</td>
+            <td class="muted js-date">{{ row.date }}</td>
+            <td class="muted js-views">{{ row.views }}</td>
             <td class="table-actions">
+              {% if post_type == "page" %}
+              <a href="{{ row.edit_url }}" class="page-edit-link" data-drawer-url="/admin/posts/{{ row.id }}/drawer">编辑</a>
+              {% else %}
               <a href="{{ row.edit_url }}">编辑</a>
+              {% endif %}
               <details class="row-menu">
                 <summary>更多 ▾</summary>
                 <div class="row-menu-pop">
@@ -113,6 +117,46 @@
     </div>
     {% include "partials/pagination.html" %}
   </div>
+
+  {% if post_type == "page" %}
+  <dialog class="page-drawer" id="page-drawer" tabindex="-1" aria-labelledby="page-drawer-title">
+    <div class="drawer-head">
+      <div>
+        <p class="eyebrow">PAGE</p>
+        <h2 id="page-drawer-title">编辑页面</h2>
+      </div>
+      <button type="button" class="link-btn" data-close-page-drawer>关闭</button>
+    </div>
+    <form id="page-drawer-form" data-csrf="{{ csrf }}">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <div class="drawer-body">
+        <label>标题<input type="text" name="title" required maxlength="200"></label>
+        <div class="drawer-grid-2">
+          <label>状态
+            <select name="status">
+              <option value="draft">草稿</option>
+              <option value="published">已发布</option>
+              <option value="scheduled">定时发布</option>
+            </select>
+          </label>
+          <label>定时时间<input type="datetime-local" name="scheduled_at"></label>
+        </div>
+        <label>正文<textarea name="content" rows="12" spellcheck="false"></textarea></label>
+        <label>摘要<textarea name="summary" rows="2" maxlength="500"></textarea></label>
+        <label>封面链接<input type="text" name="cover" placeholder="/media/… 或 https://…"></label>
+        <label>URL 别名<input type="text" name="slug" maxlength="96" pattern="[a-z0-9-]*"></label>
+        <label>SEO 标题<input type="text" name="seo_title" maxlength="200"></label>
+        <label>SEO 描述<textarea name="seo_description" rows="2" maxlength="300"></textarea></label>
+        <label class="check-row"><input type="checkbox" name="allow_comments" value="on"> 允许评论</label>
+        <p class="form-hint" id="page-drawer-error" role="alert"></p>
+      </div>
+      <div class="drawer-foot">
+        <button type="button" class="btn btn-ghost" data-close-page-drawer>取消</button>
+        <button type="submit" class="btn">保存</button>
+      </div>
+    </form>
+  </dialog>
+  {% endif %}
 </main>
 </div>
 </div>

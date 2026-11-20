@@ -1,0 +1,22 @@
+﻿ok: editor side column removed
+ok: editor gets full width
+ok: publish drawer opens
+ok: drawer holds publish fields
+ok: publish drawer closes
+ok: page drawer opens from list
+ok: page edit does not navigate
+ok: page drawer is populated
+ok: page drawer closes after save
+ok: list row updates in place
+ok: settings tabs rendered
+ok: site tab active by default
+ok: appearance tab switches panel
+ok: related toggle still defaults on
+ok: comments tab switches panel
+ok: attachment stats compact
+ok: attachment actions are a menu
+ok: user stats compact
+ok: user actions are a menu
+ok: user menu opens
+ok: no browser exceptions during v1.0.6 audit
+v1.0.6 UI audit complete

@@ -122,6 +122,7 @@ assert(media.status === 200 && media.headers.get("content-type") === "image/png"
 
 // 5. Settings.
 page = await req("/admin/settings");
+assert(page.text.includes('data-settings-tab="appearance"') && page.text.includes('data-settings-panel="comments"'), "settings render horizontal tabs");
 csrf = csrfOf(page.text);
 const saved = await postForm("/admin/settings/save", {
   site_title: "仓墨测试站",

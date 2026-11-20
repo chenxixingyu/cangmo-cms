@@ -101,6 +101,7 @@ assert(deleted.status === 303, "attachment delete succeeds");
 
 page = await req("/admin/posts/new");
 assert(page.status === 200 && page.text.includes("cover-picker") && page.text.includes("tag-editor"), "editor has cover and tag UI");
+assert(page.text.includes('id="publish-drawer"') && !page.text.includes('class="editor-side"'), "editor uses publish drawer");
 csrf = csrfOf(page.text);
 const category = await req("/admin/categories/quick", {
   method: "POST",

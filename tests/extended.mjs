@@ -86,6 +86,29 @@ assert(pageCreated.status === 303, "page created");
 page = await req("/pages/extended-page");
 assert(page.status === 200 && page.text.includes("页面正文"), "page is public");
 
+// Inline page drawer: read, save as draft, publish again without leaving the list.
+page = await req("/admin/posts?type=page");
+const pageRow = page.text.split('<tr class="post-row"').find((block) => block.includes("扩展页面")) || "";
+const pageId = (pageRow.match(/data-post-id="(post_[^"]+)"/) || [])[1];
+assert(!!pageId, "page drawer id is exposed");
+let drawer = await req(`/admin/posts/${pageId}/drawer`);
+let drawerData = JSON.parse(drawer.text);
+assert(drawer.status === 200 && drawerData.ok && drawerData.item.content.includes("页面正文"), "page drawer data loads");
+csrf = csrfOf(page.text);
+const quickFields = {
+  title: "扩展页面", slug: "extended-page", summary: "抽屉摘要", content: "## 抽屉正文",
+  cover: "", seo_title: "", seo_description: "", allow_comments: "on", scheduled_at: ""
+};
+let quick = await postForm(`/admin/posts/${pageId}/quick`, Object.assign({ status: "draft" }, quickFields), csrf);
+let quickData = JSON.parse(quick.text);
+assert(quick.status === 200 && quickData.ok && quickData.item.status === "draft", "quick save returns updated row");
+assert((await req("/pages/extended-page")).status === 404, "quick draft hides the page");
+quick = await postForm(`/admin/posts/${pageId}/quick`, Object.assign({ status: "published" }, quickFields), csrf);
+quickData = JSON.parse(quick.text);
+assert(quickData.ok && quickData.item.status === "published", "quick save can publish");
+page = await req("/pages/extended-page");
+assert(page.text.includes("抽屉正文"), "quick saved content is public");
+
 // Scheduled post: due in 20s (seconds included), then the 20s scheduler tick publishes it.
 const scheduledAt = localDateTime(20000);
 page = await req("/admin/posts/new");

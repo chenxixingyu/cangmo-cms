@@ -338,6 +338,97 @@ public class AdminSite {
         ctx.redirect(if (returnTo.size > 0) { returnTo } else { "/admin/posts" }, status: 303)
     }
 
+    /** JSON payload for the inline page drawer. */
+    public func postDrawerData(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let post = match (services.posts.get(ctx.param("id"))) {
+            case Some(value) => value
+            case None => return quickError(404, "内容不存在")
+        }
+        if (!services.posts.canEdit(ctx.userDoc(), post)) {
+            return quickError(403, "无权编辑此内容")
+        }
+        let item = JsonObject()
+        item.set("id", JStr(docStr(post, "id")))
+        item.set("type", JStr(docStr(post, "type")))
+        item.set("title", JStr(docStr(post, "title")))
+        item.set("slug", JStr(docStr(post, "slug")))
+        item.set("summary", JStr(docStr(post, "summary")))
+        item.set("content", JStr(docStr(post, "content")))
+        item.set("status", JStr(docStr(post, "status")))
+        item.set("cover", JStr(docStr(post, "cover")))
+        item.set("seo_title", JStr(docStr(post, "seo_title")))
+        item.set("seo_description", JStr(docStr(post, "seo_description")))
+        item.set("allow_comments", JBool(docBool(post, "allow_comments", def: true)))
+        item.set("scheduled_at", JStr(formatDateTime(docInt(post, "scheduled_at"))))
+        let data = JsonObject()
+        data.set("ok", JBool(true))
+        data.set("item", JObj(item))
+        HttpResponse().json(JObj(data))
+    }
+
+    /** Save from the inline page drawer without leaving the list. */
+    public func postQuickSave(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let id = ctx.param("id")
+        let post = match (services.posts.get(id)) {
+            case Some(value) => value
+            case None => return quickError(404, "内容不存在")
+        }
+        if (!services.posts.canEdit(ctx.userDoc(), post)) {
+            return quickError(403, "无权编辑此内容")
+        }
+        let input = PostInput()
+        input.postType = docStr(post, "type", def: "post")
+        input.title = ctx.form("title")
+        input.slug = ctx.form("slug")
+        input.summary = ctx.form("summary")
+        input.content = ctx.form("content")
+        input.status = normalizeStatus(ctx.form("status"))
+        input.categoryId = docStr(post, "category_id")
+        let tagNames = ArrayList<String>()
+        for (tagId in docStrings(post, "tag_ids")) {
+            match (services.store.get(COL_TAGS, tagId)) {
+                case Some(tag) => tagNames.add(docStr(tag, "name"))
+                case None => ()
+            }
+        }
+        input.tagNames = tagNames.toArray()
+        input.cover = ctx.form("cover")
+        input.allowComments = isChecked(ctx, "allow_comments")
+        input.pinned = docBool(post, "pinned")
+        input.featured = docBool(post, "featured")
+        input.seoTitle = ctx.form("seo_title")
+        input.seoDescription = ctx.form("seo_description")
+        input.scheduledAt = parseDateTimeInput(ctx.form("scheduled_at"))
+        try {
+            services.posts.save(input, ctx.userDoc(), id, ctx.clientIp())
+        } catch (e: AppError) {
+            return quickError(if (e.kind == "forbidden") { 403 } else { 400 }, e.message)
+        }
+        let saved = match (services.posts.get(id)) {
+            case Some(value) => value
+            case None => return quickError(500, "保存后读取失败")
+        }
+        let data = JsonObject()
+        data.set("ok", JBool(true))
+        data.set("item", adminPostRow(services, saved))
+        HttpResponse().json(JObj(data))
+    }
+
+    private func quickError(status: Int64, message: String): HttpResponse {
+        let data = JsonObject()
+        data.set("ok", JBool(false))
+        data.set("error", JStr(message))
+        HttpResponse().json(JObj(data), status: status)
+    }
+
     private func editorResponse(ctx: Ctx, post: JsonValue, isNew: Bool, error: String): HttpResponse {
         let data = JsonObject()
         data.set("page_title", JStr(if (isNew) { "新建内容" } else { "编辑内容" }))

@@ -241,9 +241,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 427,
+        "line": 518,
         "column": 9,
-        "endLine": 427,
+        "endLine": 518,
         "endColumn": 40,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'role' to follow the principle of minimizing scope.",
@@ -253,9 +253,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 438,
+        "line": 529,
         "column": 9,
-        "endLine": 441,
+        "endLine": 532,
         "endColumn": 10,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'role' to follow the principle of minimizing scope.",
@@ -265,9 +265,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 484,
+        "line": 575,
         "column": 9,
-        "endLine": 484,
+        "endLine": 575,
         "endColumn": 40,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'action' to follow the principle of minimizing scope.",
@@ -277,9 +277,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 619,
+        "line": 710,
         "column": 9,
-        "endLine": 619,
+        "endLine": 710,
         "endColumn": 33,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'id' to follow the principle of minimizing scope.",
@@ -289,9 +289,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 620,
+        "line": 711,
         "column": 9,
-        "endLine": 620,
+        "endLine": 711,
         "endColumn": 41,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'action' to follow the principle of minimizing scope.",
@@ -301,9 +301,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 641,
+        "line": 732,
         "column": 9,
-        "endLine": 641,
+        "endLine": 732,
         "endColumn": 40,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'action' to follow the principle of minimizing scope.",
@@ -313,9 +313,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 646,
+        "line": 737,
         "column": 9,
-        "endLine": 646,
+        "endLine": 737,
         "endColumn": 31,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'changed' to follow the principle of minimizing scope.",
@@ -325,9 +325,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 745,
+        "line": 836,
         "column": 9,
-        "endLine": 746,
+        "endLine": 837,
         "endColumn": 81,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'wantsJson' to follow the principle of minimizing scope.",
@@ -337,9 +337,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 842,
+        "line": 933,
         "column": 5,
-        "endLine": 910,
+        "endLine": 1001,
         "endColumn": 6,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.FUN.01: The function 'usersPage' is recommended to have no more than 50 lines of code.",
@@ -349,9 +349,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 847,
+        "line": 938,
         "column": 9,
-        "endLine": 847,
+        "endLine": 938,
         "endColumn": 63,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'search' to follow the principle of minimizing scope.",
@@ -361,9 +361,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 872,
+        "line": 963,
         "column": 17,
-        "endLine": 873,
+        "endLine": 964,
         "endColumn": 70,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'haystack' to follow the principle of minimizing scope.",
@@ -373,9 +373,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 917,
+        "line": 1008,
         "column": 9,
-        "endLine": 917,
+        "endLine": 1008,
         "endColumn": 40,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'action' to follow the principle of minimizing scope.",
@@ -385,9 +385,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 928,
+        "line": 1019,
         "column": 21,
-        "endLine": 928,
+        "endLine": 1019,
         "endColumn": 32,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.OTH.04: Avoid using 'String' to store sensitive data. Sensitive data should be cleared immediately after being used.",
@@ -397,9 +397,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 968,
+        "line": 1059,
         "column": 17,
-        "endLine": 968,
+        "endLine": 1059,
         "endColumn": 73,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.ERR.01: The exception types that may be thrown should be described in the API comments.",
@@ -409,9 +409,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 1081,
+        "line": 1172,
         "column": 9,
-        "endLine": 1081,
+        "endLine": 1172,
         "endColumn": 85,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'activeTheme' to follow the principle of minimizing scope.",
@@ -421,9 +421,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 1085,
+        "line": 1176,
         "column": 13,
-        "endLine": 1085,
+        "endLine": 1176,
         "endColumn": 61,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'dir' to follow the principle of minimizing scope.",
@@ -433,9 +433,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 1243,
+        "line": 1334,
         "column": 5,
-        "endLine": 1294,
+        "endLine": 1385,
         "endColumn": 6,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.FUN.01: The function 'backupAction' is recommended to have no more than 50 lines of code.",
@@ -445,9 +445,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 1248,
+        "line": 1339,
         "column": 9,
-        "endLine": 1248,
+        "endLine": 1339,
         "endColumn": 40,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'action' to follow the principle of minimizing scope.",
@@ -457,9 +457,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 1260,
+        "line": 1351,
         "column": 21,
-        "endLine": 1260,
+        "endLine": 1351,
         "endColumn": 92,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.ERR.01: The exception types that may be thrown should be described in the API comments.",
@@ -469,9 +469,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 1266,
+        "line": 1357,
         "column": 38,
-        "endLine": 1266,
+        "endLine": 1357,
         "endColumn": 84,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.ERR.01: The exception types that may be thrown should be described in the API comments.",
@@ -481,9 +481,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 1271,
+        "line": 1362,
         "column": 25,
-        "endLine": 1271,
+        "endLine": 1362,
         "endColumn": 84,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.ERR.01: The exception types that may be thrown should be described in the API comments.",
@@ -493,9 +493,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 1276,
+        "line": 1367,
         "column": 25,
-        "endLine": 1276,
+        "endLine": 1367,
         "endColumn": 81,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.ERR.01: The exception types that may be thrown should be described in the API comments.",
@@ -505,9 +505,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 1285,
+        "line": 1376,
         "column": 17,
-        "endLine": 1285,
+        "endLine": 1376,
         "endColumn": 61,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.ERR.01: The exception types that may be thrown should be described in the API comments.",
@@ -517,9 +517,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 1343,
+        "line": 1434,
         "column": 17,
-        "endLine": 1343,
+        "endLine": 1434,
         "endColumn": 100,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.ERR.01: The exception types that may be thrown should be described in the API comments.",
@@ -529,9 +529,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 1346,
+        "line": 1437,
         "column": 17,
-        "endLine": 1346,
+        "endLine": 1437,
         "endColumn": 70,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.ERR.01: The exception types that may be thrown should be described in the API comments.",
@@ -541,9 +541,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 1409,
+        "line": 1500,
         "column": 13,
-        "endLine": 1409,
+        "endLine": 1500,
         "endColumn": 69,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.ERR.01: The exception types that may be thrown should be described in the API comments.",
@@ -553,9 +553,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 1413,
+        "line": 1504,
         "column": 26,
-        "endLine": 1413,
+        "endLine": 1504,
         "endColumn": 82,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.ERR.01: The exception types that may be thrown should be described in the API comments.",
@@ -565,9 +565,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 1474,
+        "line": 1565,
         "column": 5,
-        "endLine": 1474,
+        "endLine": 1565,
         "endColumn": 36,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'kind' to follow the principle of minimizing scope.",
@@ -577,9 +577,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 1522,
+        "line": 1613,
         "column": 5,
-        "endLine": 1522,
+        "endLine": 1613,
         "endColumn": 45,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'normalized' to follow the principle of minimizing scope.",
@@ -589,9 +589,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 1528,
+        "line": 1619,
         "column": 32,
-        "endLine": 1528,
+        "endLine": 1619,
         "endColumn": 33,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.ERR.01: Exceptions should not be discarded without any processing.",
@@ -601,9 +601,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 1530,
+        "line": 1621,
         "column": 5,
-        "endLine": 1530,
+        "endLine": 1621,
         "endColumn": 67,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.ERR.01: The exception types that may be thrown should be described in the API comments.",
@@ -613,9 +613,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\admin.cj",
-        "line": 1536,
+        "line": 1627,
         "column": 9,
-        "endLine": 1536,
+        "endLine": 1627,
         "endColumn": 101,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.ERR.01: The exception types that may be thrown should be described in the API comments.",
@@ -1107,7 +1107,7 @@
         "file": "E:\\mianban\\cangmo\\src\\web\\app.cj",
         "line": 41,
         "column": 5,
-        "endLine": 130,
+        "endLine": 132,
         "endColumn": 6,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.FUN.01: The function 'registerRoutes' is recommended to have no more than 50 lines of code.",
@@ -1117,9 +1117,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\app.cj",
-        "line": 132,
+        "line": 134,
         "column": 5,
-        "endLine": 245,
+        "endLine": 247,
         "endColumn": 6,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.FUN.01: The function 'handle' is recommended to have no more than 50 lines of code.",
@@ -1129,9 +1129,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\app.cj",
-        "line": 142,
+        "line": 144,
         "column": 9,
-        "endLine": 142,
+        "endLine": 144,
         "endColumn": 106,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'loaded' to follow the principle of minimizing scope.",
@@ -1141,9 +1141,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\app.cj",
-        "line": 173,
+        "line": 175,
         "column": 25,
-        "endLine": 173,
+        "endLine": 175,
         "endColumn": 66,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'ct' to follow the principle of minimizing scope.",
@@ -1153,9 +1153,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\app.cj",
-        "line": 269,
+        "line": 271,
         "column": 9,
-        "endLine": 269,
+        "endLine": 271,
         "endColumn": 58,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'providedToken' to follow the principle of minimizing scope.",
@@ -1165,9 +1165,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\app.cj",
-        "line": 274,
+        "line": 276,
         "column": 9,
-        "endLine": 274,
+        "endLine": 276,
         "endColumn": 56,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'username' to follow the principle of minimizing scope.",
@@ -1177,9 +1177,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\app.cj",
-        "line": 275,
+        "line": 277,
         "column": 9,
-        "endLine": 275,
+        "endLine": 277,
         "endColumn": 50,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'email' to follow the principle of minimizing scope.",
@@ -1189,9 +1189,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\app.cj",
-        "line": 276,
+        "line": 278,
         "column": 9,
-        "endLine": 276,
+        "endLine": 278,
         "endColumn": 44,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'password' to follow the principle of minimizing scope.",
@@ -1201,9 +1201,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\app.cj",
-        "line": 276,
+        "line": 278,
         "column": 9,
-        "endLine": 276,
+        "endLine": 278,
         "endColumn": 44,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.OTH.02: SenInfoName found!password is sensitive information is hard-coded in the program",
@@ -1213,9 +1213,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\app.cj",
-        "line": 276,
+        "line": 278,
         "column": 13,
-        "endLine": 276,
+        "endLine": 278,
         "endColumn": 21,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.OTH.04: Avoid using 'String' to store sensitive data. Sensitive data should be cleared immediately after being used.",
@@ -1225,9 +1225,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\app.cj",
-        "line": 277,
+        "line": 279,
         "column": 9,
-        "endLine": 277,
+        "endLine": 279,
         "endColumn": 51,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'confirm' to follow the principle of minimizing scope.",
@@ -1237,9 +1237,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\app.cj",
-        "line": 291,
+        "line": 293,
         "column": 30,
-        "endLine": 291,
+        "endLine": 293,
         "endColumn": 81,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.ERR.01: The exception types that may be thrown should be described in the API comments.",
@@ -1249,9 +1249,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\app.cj",
-        "line": 392,
+        "line": 394,
         "column": 27,
-        "endLine": 392,
+        "endLine": 394,
         "endColumn": 36,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.FUN.02: Parameter 'webStatus' is unused parameter",
@@ -1261,9 +1261,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\app.cj",
-        "line": 410,
+        "line": 412,
         "column": 9,
-        "endLine": 410,
+        "endLine": 412,
         "endColumn": 39,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'cacheSeconds' to follow the principle of minimizing scope.",
@@ -1273,9 +1273,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\app.cj",
-        "line": 419,
+        "line": 421,
         "column": 13,
-        "endLine": 419,
+        "endLine": 421,
         "endColumn": 62,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'icon' to follow the principle of minimizing scope.",
@@ -1285,9 +1285,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\app.cj",
-        "line": 425,
+        "line": 427,
         "column": 13,
-        "endLine": 425,
+        "endLine": 427,
         "endColumn": 61,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'worker' to follow the principle of minimizing scope.",
@@ -1297,9 +1297,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\app.cj",
-        "line": 485,
+        "line": 487,
         "column": 9,
-        "endLine": 485,
+        "endLine": 487,
         "endColumn": 40,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'range' to follow the principle of minimizing scope.",
@@ -1309,9 +1309,9 @@
     },
     {
         "file": "E:\\mianban\\cangmo\\src\\web\\app.cj",
-        "line": 492,
+        "line": 494,
         "column": 17,
-        "endLine": 492,
+        "endLine": 494,
         "endColumn": 94,
         "analyzerName": "cangjieCodeCheck",
         "description": "G.VAR.02: Prefer variable 'end' to follow the principle of minimizing scope.",
@@ -1806,9 +1806,9 @@
         "endLine": 8,
         "endColumn": 1961,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testDateTimeInput' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -1818,9 +1818,9 @@
         "endLine": 8,
         "endColumn": 1961,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testDateTimeInput' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -1878,9 +1878,9 @@
         "endLine": 22,
         "endColumn": 1893,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testSafeNext' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -1890,9 +1890,9 @@
         "endLine": 22,
         "endColumn": 1893,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testSafeNext' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -1950,9 +1950,9 @@
         "endLine": 31,
         "endColumn": 1524,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testInitialOf' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -1962,9 +1962,9 @@
         "endLine": 31,
         "endColumn": 1524,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testInitialOf' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -2022,9 +2022,9 @@
         "endLine": 37,
         "endColumn": 1816,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testPaginationUrls' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -2034,9 +2034,9 @@
         "endLine": 37,
         "endColumn": 1816,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testPaginationUrls' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -3270,9 +3270,9 @@
         "endLine": 6,
         "endColumn": 2079,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testMarkdownBasics' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -3282,9 +3282,9 @@
         "endLine": 6,
         "endColumn": 2079,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testMarkdownBasics' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -3342,9 +3342,9 @@
         "endLine": 15,
         "endColumn": 1831,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testMarkdownEscapesHtml' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -3354,9 +3354,9 @@
         "endLine": 15,
         "endColumn": 1831,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testMarkdownEscapesHtml' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -3414,9 +3414,9 @@
         "endLine": 22,
         "endColumn": 1784,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testMarkdownCodeFence' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -3426,9 +3426,9 @@
         "endLine": 22,
         "endColumn": 1784,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testMarkdownCodeFence' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -3486,9 +3486,9 @@
         "endLine": 29,
         "endColumn": 1727,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testMarkdownTable' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -3498,9 +3498,9 @@
         "endLine": 29,
         "endColumn": 1727,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testMarkdownTable' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -3558,9 +3558,9 @@
         "endLine": 36,
         "endColumn": 1761,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testMarkdownHeadingsToc' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -3570,9 +3570,9 @@
         "endLine": 36,
         "endColumn": 1761,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testMarkdownHeadingsToc' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -3882,9 +3882,9 @@
         "endLine": 6,
         "endColumn": 2034,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testJsonRoundTrip' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -3894,9 +3894,9 @@
         "endLine": 6,
         "endColumn": 2034,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testJsonRoundTrip' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -3954,9 +3954,9 @@
         "endLine": 18,
         "endColumn": 1920,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testJsonEscapes' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -3966,9 +3966,9 @@
         "endLine": 18,
         "endColumn": 1920,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testJsonEscapes' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -4026,9 +4026,9 @@
         "endLine": 27,
         "endColumn": 1604,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testJsonDepthLimit' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -4038,9 +4038,9 @@
         "endLine": 27,
         "endColumn": 1604,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testJsonDepthLimit' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -4098,9 +4098,9 @@
         "endLine": 36,
         "endColumn": 1676,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testJsonUnicodeSurrogate' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -4110,9 +4110,9 @@
         "endLine": 36,
         "endColumn": 1676,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testJsonUnicodeSurrogate' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -4170,9 +4170,9 @@
         "endLine": 42,
         "endColumn": 1811,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testJsonInvalidInput' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -4182,9 +4182,9 @@
         "endLine": 42,
         "endColumn": 1811,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testJsonInvalidInput' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -7710,9 +7710,9 @@
         "endLine": 6,
         "endColumn": 1649,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testSha256KnownVector' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -7722,9 +7722,9 @@
         "endLine": 6,
         "endColumn": 1649,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testSha256KnownVector' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -7782,9 +7782,9 @@
         "endLine": 11,
         "endColumn": 1732,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testHmacKnownVector' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -7794,9 +7794,9 @@
         "endLine": 11,
         "endColumn": 1732,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testHmacKnownVector' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -7854,9 +7854,9 @@
         "endLine": 17,
         "endColumn": 1799,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testPasswordRoundTrip' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -7866,9 +7866,9 @@
         "endLine": 17,
         "endColumn": 1799,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testPasswordRoundTrip' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -7926,9 +7926,9 @@
         "endLine": 24,
         "endColumn": 1651,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testBase64RoundTrip' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -7938,9 +7938,9 @@
         "endLine": 24,
         "endColumn": 1651,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testBase64RoundTrip' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -7998,9 +7998,9 @@
         "endLine": 31,
         "endColumn": 1515,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testUrlRoundTrip' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -8010,9 +8010,9 @@
         "endLine": 31,
         "endColumn": 1515,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testUrlRoundTrip' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -8070,9 +8070,9 @@
         "endLine": 37,
         "endColumn": 1774,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testUtf8Helpers' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -8082,9 +8082,9 @@
         "endLine": 37,
         "endColumn": 1774,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testUtf8Helpers' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -8142,9 +8142,9 @@
         "endLine": 44,
         "endColumn": 1678,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testPasswordPolicy' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -8154,9 +8154,9 @@
         "endLine": 44,
         "endColumn": 1678,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testPasswordPolicy' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {

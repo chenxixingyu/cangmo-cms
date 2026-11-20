@@ -215,6 +215,130 @@
   }
 
   // ---------------------------------------------------------------------
+  // Publishing drawer (editor) and inline page drawer (list)
+  // ---------------------------------------------------------------------
+  var publishDrawer = document.getElementById("publish-drawer");
+  var publishOpen = document.getElementById("publish-drawer-open");
+  if (publishDrawer && publishOpen) {
+    publishOpen.addEventListener("click", function () { publishDrawer.showModal(); publishDrawer.focus(); });
+    publishDrawer.querySelectorAll("[data-close-drawer]").forEach(function (button) {
+      button.addEventListener("click", function () { publishDrawer.close(); });
+    });
+    publishDrawer.addEventListener("click", function (event) {
+      if (event.target === publishDrawer) publishDrawer.close();
+    });
+  }
+
+  var pageDrawer = document.getElementById("page-drawer");
+  var pageForm = document.getElementById("page-drawer-form");
+  var pageError = document.getElementById("page-drawer-error");
+  if (pageDrawer && pageForm) {
+    var pageCsrf = pageForm.getAttribute("data-csrf") || "";
+    var pageCurrent = null;
+    var pageLinks = document.querySelectorAll(".page-edit-link");
+
+    function fillPage(item) {
+      pageForm.elements.title.value = item.title || "";
+      pageForm.elements.slug.value = item.slug || "";
+      pageForm.elements.summary.value = item.summary || "";
+      pageForm.elements.content.value = item.content || "";
+      pageForm.elements.cover.value = item.cover || "";
+      pageForm.elements.seo_title.value = item.seo_title || "";
+      pageForm.elements.seo_description.value = item.seo_description || "";
+      pageForm.elements.status.value = item.status || "draft";
+      pageForm.elements.scheduled_at.value = (item.scheduled_at || "").replace(" ", "T");
+      pageForm.elements.allow_comments.checked = !!item.allow_comments;
+      pageError.textContent = "";
+      pageDrawer.showModal();
+      pageDrawer.focus();
+    }
+
+    function updatePageRow(item) {
+      var row = document.querySelector('.post-row[data-post-id="' + item.id + '"]');
+      if (!row) return;
+      var title = row.querySelector(".table-title");
+      if (title) title.textContent = item.title;
+      var sub = row.querySelector(".table-sub");
+      if (sub) sub.textContent = "/" + item.slug;
+      var badge = row.querySelector(".status");
+      if (badge) { badge.className = "status status-" + item.status; badge.textContent = item.status_text; }
+      var date = row.querySelector(".js-date");
+      if (date) date.textContent = item.date;
+      var views = row.querySelector(".js-views");
+      if (views) views.textContent = String(item.views);
+    }
+
+    pageLinks.forEach(function (link) {
+      link.addEventListener("click", function (event) {
+        event.preventDefault();
+        fetch(link.getAttribute("data-drawer-url"), { headers: { "Accept": "application/json" } })
+          .then(function (response) { return response.json(); })
+          .then(function (data) {
+            if (!data || !data.ok) { window.alert((data && data.error) || "加载页面失败"); return; }
+            pageCurrent = data.item;
+            fillPage(pageCurrent);
+          })
+          .catch(function () { window.alert("加载页面失败，请重试"); });
+      });
+    });
+
+    pageDrawer.querySelectorAll("[data-close-page-drawer]").forEach(function (button) {
+      button.addEventListener("click", function () { pageDrawer.close(); });
+    });
+    pageDrawer.addEventListener("click", function (event) {
+      if (event.target === pageDrawer) pageDrawer.close();
+    });
+
+    pageForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      if (!pageCurrent) return;
+      var submit = pageForm.querySelector("button[type=submit]");
+      pageError.textContent = "";
+      if (submit) submit.disabled = true;
+      fetch("/admin/posts/" + pageCurrent.id + "/quick", {
+        method: "POST",
+        headers: { "X-CSRF-Token": pageCsrf, "Accept": "application/json" },
+        body: new FormData(pageForm)
+      })
+        .then(function (response) {
+          return response.json().then(function (data) { return { ok: response.ok, data: data }; });
+        })
+        .then(function (result) {
+          if (submit) submit.disabled = false;
+          if (!result.ok || !result.data.ok) {
+            pageError.textContent = (result.data && result.data.error) || "保存失败";
+            return;
+          }
+          updatePageRow(result.data.item);
+          pageDrawer.close();
+        })
+        .catch(function () {
+          if (submit) submit.disabled = false;
+          pageError.textContent = "网络错误，请重试";
+        });
+    });
+  }
+
+  // Settings tabs: one panel at a time, all fields still submit with the form.
+  var settingsTabs = document.querySelectorAll("[data-settings-tab]");
+  var settingsPanels = document.querySelectorAll("[data-settings-panel]");
+  if (settingsTabs.length > 0 && settingsPanels.length > 0) {
+    settingsTabs.forEach(function (tab) {
+      tab.addEventListener("click", function () {
+        var key = tab.getAttribute("data-settings-tab");
+        settingsTabs.forEach(function (item) {
+          var active = item === tab;
+          item.classList.toggle("active", active);
+          item.setAttribute("aria-selected", active ? "true" : "false");
+        });
+        settingsPanels.forEach(function (panel) {
+          panel.hidden = panel.getAttribute("data-settings-panel") !== key;
+        });
+      });
+    });
+  }
+
+  // ---------------------------------------------------------------------
   // Compact admin: popover menus, bulk selection, category dialog
   // ---------------------------------------------------------------------
   // Close any open `<details>` menu when clicking outside of it.

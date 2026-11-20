@@ -20,11 +20,11 @@
       </div>
       <div class="editor-head-actions">
         {% if not is_new %}<a class="btn btn-ghost" href="/{% if post.type == 'page' %}pages{% else %}posts{% endif %}/{{ post.slug }}" target="_blank" rel="noopener">查看</a>{% endif %}
-        <button class="btn" type="submit" id="save-button">保存</button>
+        <button class="btn" type="button" id="publish-drawer-open" aria-haspopup="dialog">发布</button>
       </div>
     </div>
 
-    <div class="editor-grid">
+    <div class="editor-grid editor-grid-full">
       <div class="editor-main">
         <input class="title-input" type="text" name="title" value="{{ post.title }}" placeholder="标题" required maxlength="200" autocomplete="off" id="post-title">
         <div class="editor-toolbar-row">
@@ -52,11 +52,20 @@
           <button type="button" class="link-btn" id="restore-draft" hidden>恢复本地草稿</button>
         </div>
       </div>
+    </div>
 
-      <aside class="editor-side">
-        <section class="side-panel">
-          <h2>发布</h2>
-          <label>状态
+    <dialog class="editor-drawer" id="publish-drawer" tabindex="-1" aria-labelledby="publish-drawer-title">
+      <div class="drawer-head">
+        <div>
+          <p class="eyebrow">PUBLISH</p>
+          <h2 id="publish-drawer-title">发布设置</h2>
+        </div>
+        <button type="button" class="link-btn" data-close-drawer>关闭</button>
+      </div>
+      <div class="drawer-body">
+        <section class="drawer-section">
+          <h3>状态</h3>
+          <label>发布状态
             <select name="status" id="post-status">
               <option value="draft"{% if post.status == "draft" %} selected{% endif %}>草稿</option>
               <option value="published"{% if post.status == "published" %} selected{% endif %}>已发布</option>
@@ -67,14 +76,18 @@
             <input type="datetime-local" name="scheduled_at" value="{{ post.scheduled_at }}">
           </label>
           {% if post.published_at %}<p class="muted small">首次发布：{{ post.published_at }}</p>{% endif %}
+        </section>
+
+        <section class="drawer-section">
+          <h3>摘要</h3>
           <label>摘要
             <textarea name="summary" id="post-summary" rows="3" maxlength="500" placeholder="留空则自动截取正文">{{ post.summary }}</textarea>
           </label>
           <p class="muted small"><span id="summary-count">0</span> / 500</p>
         </section>
 
-        <section class="side-panel">
-          <h2>封面</h2>
+        <section class="drawer-section">
+          <h3>封面</h3>
           <div class="cover-picker cover-compact" id="cover-picker">
             <input type="hidden" name="cover" id="cover-input" value="{{ post.cover }}">
             <div class="cover-thumb" id="cover-preview">
@@ -103,8 +116,8 @@
           </div>
         </section>
 
-        <section class="side-panel">
-          <h2>组织</h2>
+        <section class="drawer-section">
+          <h3>组织</h3>
           <label>分类
             <div class="inline-select">
               <select name="category_id" id="category-select">
@@ -127,14 +140,16 @@
             <input type="hidden" name="tags" id="tags-input" value="{{ post.tags }}">
           </label>
           {% if all_tags.length > 0 %}<div class="tag-suggest"><span class="muted small">常用：</span>{% for tag in all_tags %}<button type="button" class="tag-pill" data-tag="{{ tag.name }}">#{{ tag.name }}</button>{% endfor %}</div>{% endif %}
-          <label class="check-row"><input type="checkbox" name="pinned" value="on"{% if post.pinned %} checked{% endif %}> 置顶</label>
-          <label class="check-row"><input type="checkbox" name="featured" value="on"{% if post.featured %} checked{% endif %}> 精选</label>
-          <label class="check-row"><input type="checkbox" name="allow_comments" value="on"{% if post.allow_comments %} checked{% endif %}> 允许评论</label>
+          <div class="drawer-checks">
+            <label class="check-row"><input type="checkbox" name="pinned" value="on"{% if post.pinned %} checked{% endif %}> 置顶</label>
+            <label class="check-row"><input type="checkbox" name="featured" value="on"{% if post.featured %} checked{% endif %}> 精选</label>
+            <label class="check-row"><input type="checkbox" name="allow_comments" value="on"{% if post.allow_comments %} checked{% endif %}> 允许评论</label>
+          </div>
         </section>
 
-        <details class="side-panel side-fold">
-          <summary><h2>SEO</h2><span class="side-fold-hint">标题 / 描述 / 别名</span></summary>
-          <div class="side-fold-body">
+        <details class="drawer-advanced">
+          <summary>SEO 与别名</summary>
+          <div class="drawer-advanced-body">
             <label>SEO 标题
               <input type="text" name="seo_title" value="{{ post.seo_title }}" maxlength="200" placeholder="留空则使用文章标题">
             </label>
@@ -148,15 +163,19 @@
         </details>
 
         {% if revisions.length > 0 %}
-        <details class="side-panel side-fold">
-          <summary><h2>历史版本</h2><span class="side-fold-hint">{{ revisions.length }} 个</span></summary>
+        <details class="drawer-advanced">
+          <summary>历史版本（{{ revisions.length }}）</summary>
           <ul class="revision-list">
             {% for revision in revisions %}<li><span>{{ revision.date }}</span><small>{{ revision.title }}</small></li>{% endfor %}
           </ul>
         </details>
         {% endif %}
-      </aside>
-    </div>
+      </div>
+      <div class="drawer-foot">
+        <button type="button" class="btn btn-ghost" data-close-drawer>取消</button>
+        <button type="submit" class="btn" id="drawer-save">保存</button>
+      </div>
+    </dialog>
   </form>
 
   {% if not is_new %}
