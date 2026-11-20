@@ -58,7 +58,7 @@
             <td class="col-check"><input type="checkbox" name="ids" value="{{ row.id }}" form="posts-bulk-form" class="post-check" aria-label="选择《{{ row.title }}》"></td>
             <td>
               <a class="table-title" href="{{ row.edit_url }}">{{ row.title }}</a>
-              <div class="table-sub">/{{ row.slug }}{% if row.pinned %} · 置顶{% endif %}</div>
+              <div class="table-sub">{% if post_type == "page" %}/pages/{% else %}/posts/{% endif %}{{ row.slug }}{% if row.pinned %} · 置顶{% endif %}</div>
             </td>
             <td><span class="status status-{{ row.status }}">{{ row.status_text }}</span></td>
             <td>{{ row.author.name }}</td>

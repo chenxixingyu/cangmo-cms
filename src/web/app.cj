@@ -129,6 +129,8 @@ public class WebApp {
         router.get("/api/v1/categories", { ctx: Ctx => apiSite.categories(ctx) })
         router.get("/api/v1/tags", { ctx: Ctx => apiSite.tags(ctx) })
         router.get("/api/v1/stats", { ctx: Ctx => apiSite.stats(ctx) })
+        // Keep legacy root-level page URLs working; registered last so explicit routes win.
+        router.get("/:slug", { ctx: Ctx => publicSite.pageShortcut(ctx) })
     }
 
     public func handle(req: HttpRequest): HttpResponse {

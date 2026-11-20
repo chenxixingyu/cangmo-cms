@@ -108,6 +108,15 @@ public class PublicSite {
         ctx.renderPage("page.html", JObj(data))
     }
 
+    /** Legacy/short page URLs such as /about redirect to the canonical /pages/about. */
+    public func pageShortcut(ctx: Ctx): HttpResponse {
+        let slug = ctx.param("slug")
+        match (services.posts.getPublishedBySlug(slug, postType: "page")) {
+            case Some(_) => ctx.redirect("/pages/" + slug, status: 301)
+            case None => notFound(ctx)
+        }
+    }
+
     public func categoryPage(ctx: Ctx): HttpResponse {
         let slug = ctx.param("slug")
         let category = match (services.taxonomy.categoryBySlug(slug)) {

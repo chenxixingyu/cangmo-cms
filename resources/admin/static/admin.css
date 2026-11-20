@@ -765,3 +765,8 @@ label { display: grid; gap: 5px; font-size: .82rem; color: var(--a-soft); }
   border: 0; text-align: left; padding: 7px 9px;
 }
 .table-wrap .row-menu-pop a:hover, .table-wrap .row-menu-pop button:hover { background: #eef1ec; }
+/* fallback before JS upgrades a row menu to a fixed popover */
+.row-menu:not(.menu-floating) > .row-menu-pop,
+.table-wrap .row-menu:not(.menu-floating) > .row-menu-pop {
+  position: absolute; left: auto; right: 0; top: calc(100% + 5px);
+}

@@ -1,8 +1,8 @@
 ﻿== 仓墨自检 ==
-版本：1.0.8
-配置：.\data\doctor-v108\config.json
-数据目录：./data/doctor-v108 ✓
-上传目录：./data/doctor-v108/uploads ✓
+版本：1.0.9
+配置：.\data\doctor-v109\config.json
+数据目录：./data/doctor-v109 ✓
+上传目录：./data/doctor-v109/uploads ✓
 主题：default ✓
 后台模板：✓
 静态资源：✓

@@ -1,0 +1,16 @@
+﻿ok: admin.js is cache-busted by version
+ok: sidebar has no system-menu label
+ok: settings entry is directly visible
+ok: post list shows the real public path
+ok: row menu is a fixed popover
+ok: row menu stays inside the viewport
+ok: row menu is anchored to its trigger
+ok: row menu does not stretch the row
+ok: page list shows /pages/ path
+ok: page drawer hugs the right edge
+ok: page drawer is full height
+ok: editor drawer hugs the right edge and full height {"right":1425,"top":0,"bottom":1000,"cw":1425,"vh":1000}
+ok: root page URL redirects to the canonical /pages/about
+ok: redirected page renders content
+ok: no browser exceptions
+v1.0.9 UI audit complete

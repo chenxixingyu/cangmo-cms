@@ -65,7 +65,7 @@ Authorization: Bearer cmo_xxxxxxxxxxxxxxxxxxxxxxxx
   "name": "仓墨",
   "description": "……",
   "url": "https://example.com",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "locale": "zh-CN"
 }
 ```

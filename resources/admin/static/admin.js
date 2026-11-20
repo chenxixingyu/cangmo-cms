@@ -370,6 +370,7 @@
     pop.style.top = top + "px";
   }
   document.querySelectorAll(".row-menu").forEach(function (menu) {
+    menu.classList.add("menu-floating");
     menu.addEventListener("toggle", function () {
       if (!menu.open) return;
       var pop = menu.querySelector(".row-menu-pop");
