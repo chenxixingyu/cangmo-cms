@@ -350,6 +350,43 @@
     });
   });
 
+  // Row menus are fixed-position popovers so table overflow never clips them.
+  function closeRowMenus() {
+    document.querySelectorAll(".row-menu[open]").forEach(function (menu) { menu.open = false; });
+  }
+  function positionRowMenu(menu) {
+    var pop = menu.querySelector(".row-menu-pop");
+    var summary = menu.querySelector("summary");
+    if (!pop || !summary) return;
+    var rect = summary.getBoundingClientRect();
+    var width = pop.offsetWidth;
+    var height = pop.offsetHeight;
+    var left = Math.min(Math.max(8, rect.right - width), window.innerWidth - width - 8);
+    var top = rect.bottom + 6;
+    if (top + height > window.innerHeight - 8) {
+      top = Math.max(8, rect.top - height - 6);
+    }
+    pop.style.left = left + "px";
+    pop.style.top = top + "px";
+  }
+  document.querySelectorAll(".row-menu").forEach(function (menu) {
+    menu.addEventListener("toggle", function () {
+      if (!menu.open) return;
+      var pop = menu.querySelector(".row-menu-pop");
+      if (pop) pop.style.visibility = "hidden";
+      requestAnimationFrame(function () {
+        positionRowMenu(menu);
+        if (pop) pop.style.visibility = "";
+      });
+    });
+  });
+  window.addEventListener("resize", closeRowMenus);
+  window.addEventListener("scroll", function (event) {
+    var target = event.target;
+    if (target && target.closest && target.closest(".row-menu-pop")) return;
+    closeRowMenus();
+  }, true);
+
   var bulkForm = document.getElementById("posts-bulk-form");
   var bulkToggle = document.getElementById("posts-bulk-toggle");
   var bulkClose = document.getElementById("posts-bulk-close");

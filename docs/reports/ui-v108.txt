@@ -1,0 +1,11 @@
+﻿ok: sidebar no longer shows the system menu label
+ok: settings entry is directly visible
+ok: row menu opens
+ok: row menu uses a viewport popover
+ok: row menu stays inside the viewport
+ok: opening the menu does not stretch the table row
+ok: actions live inside the popover
+ok: clicking outside closes the popover
+ok: bottom-row menu flips inside the viewport
+ok: no browser exceptions
+v1.0.8 menu audit complete

@@ -7746,9 +7746,9 @@
         "endLine": 6,
         "endColumn": 1649,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testSha256KnownVector' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -7758,9 +7758,9 @@
         "endLine": 6,
         "endColumn": 1649,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testSha256KnownVector' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -7818,9 +7818,9 @@
         "endLine": 11,
         "endColumn": 1732,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testHmacKnownVector' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -7830,9 +7830,9 @@
         "endLine": 11,
         "endColumn": 1732,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testHmacKnownVector' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -7890,9 +7890,9 @@
         "endLine": 17,
         "endColumn": 1799,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testPasswordRoundTrip' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -7902,9 +7902,9 @@
         "endLine": 17,
         "endColumn": 1799,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testPasswordRoundTrip' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -7962,9 +7962,9 @@
         "endLine": 24,
         "endColumn": 1651,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testBase64RoundTrip' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -7974,9 +7974,9 @@
         "endLine": 24,
         "endColumn": 1651,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testBase64RoundTrip' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -8034,9 +8034,9 @@
         "endLine": 31,
         "endColumn": 1515,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testUrlRoundTrip' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -8046,9 +8046,9 @@
         "endLine": 31,
         "endColumn": 1515,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testUrlRoundTrip' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -8106,9 +8106,9 @@
         "endLine": 37,
         "endColumn": 1774,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testUtf8Helpers' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -8118,9 +8118,9 @@
         "endLine": 37,
         "endColumn": 1774,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testUtf8Helpers' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {
@@ -8178,9 +8178,9 @@
         "endLine": 44,
         "endColumn": 1678,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.NAM.04: Function name 'registerTestCase_testPasswordPolicy' recommend to use lower camel case",
+        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_NAM_04_function_naming_information",
+        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
         "language": "cangjie"
     },
     {
@@ -8190,9 +8190,9 @@
         "endLine": 44,
         "endColumn": 1678,
         "analyzerName": "cangjieCodeCheck",
-        "description": "G.ITF.02: Prefer implementing interfaces at the type definition level rather than through extension.",
+        "description": "G.NAM.04: Function name 'registerTestCase_testPasswordPolicy' recommend to use lower camel case",
         "defectLevel": "SUGGESTIONS",
-        "defectType": "G_ITF_02_prefer_implement_interfaces_at_type_definition",
+        "defectType": "G_NAM_04_function_naming_information",
         "language": "cangjie"
     },
     {

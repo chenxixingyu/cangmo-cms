@@ -749,3 +749,19 @@ label { display: grid; gap: 5px; font-size: .82rem; color: var(--a-soft); }
 .page-drawer .drawer-foot { flex: 0 0 auto; }
 /* v1.0.6 page drawer refinement */
 .page-drawer { width: min(420px, 100vw); }
+/* v1.0.8 floating row menus (viewport-positioned, never clipped by table scroll) */
+.row-menu-pop {
+  position: fixed; left: 0; top: 0; right: auto; bottom: auto;
+  z-index: 95; min-width: 172px; max-height: 70vh; overflow-y: auto;
+  background: #fff; border: 1px solid var(--a-border); border-radius: 10px;
+  padding: 7px; box-shadow: 0 18px 40px -18px rgba(0, 0, 0, .4);
+}
+.table-wrap .row-menu-pop {
+  position: fixed; margin-top: 0; min-width: 172px; padding: 7px;
+  border: 1px solid var(--a-border); border-radius: 10px;
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, .4); grid-template-columns: 1fr;
+}
+.table-wrap .row-menu-pop a, .table-wrap .row-menu-pop button {
+  border: 0; text-align: left; padding: 7px 9px;
+}
+.table-wrap .row-menu-pop a:hover, .table-wrap .row-menu-pop button:hover { background: #eef1ec; }

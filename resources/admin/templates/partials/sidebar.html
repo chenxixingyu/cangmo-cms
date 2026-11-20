@@ -32,20 +32,26 @@
     {% endif %}
     <div class="nav-sep"></div>
     {% if is_admin %}
-    <details class="nav-menu"{% if active == "settings" or active == "themes" or active == "audit" or active == "tools" or active == "backups" %} open{% endif %}>
-      <summary>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        <span>系统管理</span>
-        <svg class="nav-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      </summary>
-      <div class="nav-menu-pop">
-        <a href="/admin/settings" class="{% if active == "settings" %}active{% endif %}">设置</a>
-        <a href="/admin/themes" class="{% if active == "themes" %}active{% endif %}">主题</a>
-        <a href="/admin/audit" class="{% if active == "audit" %}active{% endif %}">审计日志</a>
-        <a href="/admin/tools" class="{% if active == "tools" %}active{% endif %}">工具</a>
-        <a href="/admin/backups" class="{% if active == "backups" %}active{% endif %}">备份</a>
-      </div>
-    </details>
+    <a href="/admin/settings" class="{% if active == "settings" %}active{% endif %}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      设置
+    </a>
+    <a href="/admin/themes" class="{% if active == "themes" %}active{% endif %}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.5a2.5 2.5 0 0 0 0-5H12a2 2 0 0 1 0-4h4a5 5 0 0 0 0-10h-4Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="7.5" cy="10" r="1" fill="currentColor"/><circle cx="9.5" cy="6.5" r="1" fill="currentColor"/></svg>
+      主题
+    </a>
+    <a href="/admin/audit" class="{% if active == "audit" %}active{% endif %}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14v18H5V3Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      审计日志
+    </a>
+    <a href="/admin/tools" class="{% if active == "tools" %}active{% endif %}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v13H4V7Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 7V4h8v3M4 12h16" stroke="currentColor" stroke-width="1.8"/></svg>
+      工具
+    </a>
+    <a href="/admin/backups" class="{% if active == "backups" %}active{% endif %}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c4.4 0 8 1.6 8 3.5S16.4 10 12 10 4 8.4 4 6.5 7.6 3 12 3Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 6.5v11C4 19.4 7.6 21 12 21s8-1.6 8-3.5v-11M4 12c0 1.9 3.6 3.5 8 3.5s8-1.6 8-3.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+      备份
+    </a>
     {% endif %}
   </nav>
   <div class="admin-sidebar-foot">
