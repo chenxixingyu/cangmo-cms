@@ -2,7 +2,7 @@
 
 > 本地环境：Windows 11 x64 · 仓颉 1.2.1 (cjnative) · Node.js 22.2.0 · Microsoft Edge  
 > 测试对象：v1.1.0。所有集成测试均在**全新数据目录**上执行，原始输出保存在 `docs/reports/`。  
-> Linux：GitHub Actions `ubuntu-latest` 已通过 `cjpm build` + `cjpm test`（run 见 GitHub Actions）。
+> Linux：GitHub Actions `ubuntu-latest` 已通过 `cjpm build` + `cjpm test`（run 44923991922）。
 
 ## 1. 一键运行
 
