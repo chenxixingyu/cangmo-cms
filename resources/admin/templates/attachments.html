@@ -12,6 +12,7 @@
     <div class="stat-card"><span class="stat-label">文档</span><strong>{{ counts.document }}</strong><small>PDF</small></div>
   </section>
 
+  {% if can_manage_media %}
   <section class="panel upload-panel">
     <form method="post" action="/admin/attachments/upload" enctype="multipart/form-data" class="upload-form" id="attachment-upload-form">
       <input type="hidden" name="_csrf" value="{{ csrf }}">
@@ -25,6 +26,7 @@
       </div>
     </form>
   </section>
+  {% endif %}
 
   <div class="list-toolbar">
     <div class="tabs">
@@ -66,11 +68,10 @@
             <div class="row-menu-pop">
               <button type="button" class="copy-url" data-url="{{ item.url }}">复制链接</button>
               <button type="button" data-preview-url="{{ item.url }}" data-preview-kind="{{ item.kind }}" data-preview-name="{{ item.original_name }}">预览</button>
-              <form method="post" action="/admin/attachments/{{ item.id }}/delete" class="inline-form" data-confirm="确定删除附件「{{ item.original_name }}」？">
-                <input type="hidden" name="_csrf" value="{{ csrf }}">
-                <input type="hidden" name="return_to" value="/admin/attachments?kind={{ kind }}{% if search %}&q={{ search|urlencode }}{% endif %}">
-                <button type="submit" class="link-btn danger">删除</button>
-              </form>
+              {% if can_manage_media %}
+              <button type="button" class="attachment-rename" data-name="{{ item.original_name }}" data-rename-url="/admin/attachments/{{ item.id }}/rename">重命名</button>
+              <button type="button" class="link-btn danger attachment-delete" data-name="{{ item.original_name }}" data-delete-url="/admin/attachments/{{ item.id }}/delete" data-usage-url="/admin/attachments/{{ item.id }}/usage">删除</button>
+              {% endif %}
             </div>
           </details>
         </div>
@@ -92,6 +93,34 @@
       <button type="button" class="link-btn" data-close-dialog>关闭</button>
     </div>
     <div class="attachment-dialog-body" id="attachment-dialog-body"></div>
+  </dialog>
+
+  <dialog class="form-dialog" id="attachment-rename-dialog">
+    <div class="dialog-head"><h2>重命名附件</h2><button type="button" class="link-btn" data-close-dialog>关闭</button></div>
+    <form method="post" id="attachment-rename-form" class="dialog-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <input type="hidden" name="return_to" value="/admin/attachments?kind={{ kind }}{% if search %}&q={{ search|urlencode }}{% endif %}">
+      <label>显示名称<input type="text" name="name" required maxlength="160"></label>
+      <p class="muted small">只修改显示名称，文件地址与扩展名保持不变。</p>
+      <button class="btn" type="submit">保存名称</button>
+    </form>
+  </dialog>
+
+  <dialog class="form-dialog" id="attachment-delete-dialog">
+    <div class="dialog-head"><h2>删除附件</h2><button type="button" class="link-btn" data-close-dialog>关闭</button></div>
+    <div class="dialog-form">
+      <p id="attachment-usage-summary" class="muted"></p>
+      <ul class="attachment-usage-list" id="attachment-usage-list"></ul>
+      <form method="post" id="attachment-delete-form">
+        <input type="hidden" name="_csrf" value="{{ csrf }}">
+        <input type="hidden" name="return_to" value="/admin/attachments?kind={{ kind }}{% if search %}&q={{ search|urlencode }}{% endif %}">
+        <input type="hidden" name="force" value="1">
+        <div class="drawer-foot">
+          <button type="button" class="btn btn-ghost" data-close-dialog>取消</button>
+          <button type="submit" class="btn btn-danger">仍然删除</button>
+        </div>
+      </form>
+    </div>
   </dialog>
 </main>
 </div>

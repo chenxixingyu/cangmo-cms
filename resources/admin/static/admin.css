@@ -770,3 +770,22 @@ label { display: grid; gap: 5px; font-size: .82rem; color: var(--a-soft); }
 .table-wrap .row-menu:not(.menu-floating) > .row-menu-pop {
   position: absolute; left: auto; right: 0; top: calc(100% + 5px);
 }
+/* v1.1 revisions, attachments and import */
+.revision-dialog { width: min(680px, calc(100vw - 36px)); }
+.revision-dialog-body { padding: 16px 18px; max-height: 64vh; overflow-y: auto; display: grid; gap: 10px; }
+.revision-dialog-summary { margin: 0; color: var(--a-soft); font-size: .82rem; }
+.revision-dialog-content {
+  margin: 0; padding: 12px 14px; background: #f6f7f4; border: 1px solid var(--a-border);
+  border-radius: 9px; white-space: pre-wrap; word-break: break-word;
+  font-family: "Cascadia Code", Consolas, monospace; font-size: .78rem; line-height: 1.55;
+  max-height: 38vh; overflow: auto;
+}
+.revision-list li { grid-template-columns: 1fr auto; align-items: center; }
+.revision-list li small { grid-column: 1; }
+.revision-list .revision-view { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+.attachment-usage-list { margin: 0; padding-left: 18px; display: grid; gap: 5px; font-size: .8rem; color: var(--a-soft); }
+.import-example {
+  margin: 0; padding: 12px 14px; background: #f6f7f4; border: 1px solid var(--a-border);
+  border-radius: 9px; white-space: pre-wrap; font-size: .76rem; line-height: 1.55;
+  font-family: "Cascadia Code", Consolas, monospace; color: var(--a-soft);
+}

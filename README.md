@@ -1,4 +1,4 @@
-# 仓墨 Cangmo v1.0.9
+# 仓墨 Cangmo v1.1.0
 
 > 用**仓颉语言**从零构建的现代、安全的博客 / CMS 系统。  
 > A modern, secure blog engine written natively in Cangjie.
@@ -18,7 +18,7 @@
 - **自主版权**：代码、模板、样式、脚本均为原创，未复制 Halo、WordPress、Ghost、Typecho 等项目的任何代码或资源；不引用 CDN、外部字体、第三方图标库。详见 [LICENSE](LICENSE) 与 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 - **安全默认**：CNG / OpenSSL 系统级 CSPRNG、PBKDF2-SHA256（12 万次迭代）、会话轮换、CSRF、严格 CSP、路径穿越防护、上传魔数校验、登录锁定与限流、审计日志。
 - **现代体验**：响应式默认主题、深色模式、文章目录、阅读进度、相关文章（可关闭）、代码复制、Markdown 实时预览、PWA、RSS / Sitemap / SEO。
-- **内容工作台**：发布抽屉、页面内联编辑、附件库、封面三选一（上传 / 附件库 / 链接）、编辑器内新建分类、标签 Chip、文章批量发布 / 下线 / 回收站、一键复制为草稿、行操作弹出菜单、快捷键保存。
+- **内容工作台**：发布抽屉、页面内联编辑、版本查看与恢复、附件重命名/引用保护、Markdown 批量导入、文章批量发布 / 下线 / 回收站、一键复制为草稿、行操作弹出菜单、快捷键保存。
 - **跨平台**：Windows x64 使用 CNG，Linux x64 使用 OpenSSL + `getrandom(2)`；GitHub Actions 双平台构建。
 - **可运维**：初始化向导、CLI、每日日志、独立备份中心（创建 / 下载 / 恢复 / 删除）、健康检查、定时发布、WAL 崩溃恢复。
 
@@ -90,7 +90,7 @@ $env:CANGMO_SETUP_TOKEN = "my-setup-token"
 ## 功能菜单
 
 完整功能清单、版本分层与可选模块见 **[docs/FEATURES.md](docs/FEATURES.md)**。  
-v1.0.9 默认交付全部 ✅ 功能；标 ◇ 的模块可按需关闭，标 ○ 的模块在路线图中。
+v1.1.0 默认交付全部 ✅ 功能；标 ◇ 的模块可按需关闭，标 ○ 的模块在路线图中。
 
 ## 常用命令
 

@@ -451,6 +451,143 @@ public class AdminSite {
         HttpResponse().json(JObj(data))
     }
 
+    /** JSON payload for the revision preview dialog. */
+    public func postRevisionData(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let postId = ctx.param("id")
+        let post = match (services.posts.get(postId)) {
+            case Some(value) => value
+            case None => return quickError(404, "内容不存在")
+        }
+        if (!services.posts.canEdit(ctx.userDoc(), post)) {
+            return quickError(403, "无权查看此内容")
+        }
+        let revision = match (services.posts.revision(postId, ctx.param("rev"))) {
+            case Some(value) => value
+            case None => return quickError(404, "版本不存在")
+        }
+        let item = JsonObject()
+        item.set("id", JStr(docStr(revision, "id")))
+        item.set("title", JStr(docStr(revision, "title")))
+        item.set("summary", JStr(docStr(revision, "summary")))
+        item.set("content", JStr(docStr(revision, "content")))
+        item.set("date", JStr(formatDateTime(docInt(revision, "created_at"))))
+        let data = JsonObject()
+        data.set("ok", JBool(true))
+        data.set("item", JObj(item))
+        HttpResponse().json(JObj(data))
+    }
+
+    /** Restore one revision as the current draft. */
+    public func postRevisionRestore(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let postId = ctx.param("id")
+        let returnTo = "/admin/posts/" + postId + "/edit"
+        try {
+            services.posts.restoreRevision(postId, ctx.param("rev"), ctx.userDoc(), ctx.clientIp())
+            ctx.setFlash("success", "已恢复该版本为草稿")
+        } catch (e: AppError) {
+            ctx.setFlash("error", e.message)
+        }
+        ctx.redirect(returnTo, status: 303)
+    }
+
+    public func importPage(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        if (!ctx.can("post.create")) {
+            return errorPage(ctx, 403, "无权导入内容")
+        }
+        importResponse(ctx, JsonArray(), "")
+    }
+
+    public func importSubmit(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        if (!ctx.can("post.create")) {
+            return errorPage(ctx, 403, "无权导入内容")
+        }
+        ctx.req.parseForm()
+        let files = ctx.req.files
+        let results = JsonArray()
+        if (files.size == 0) {
+            return importResponse(ctx, results, "请选择 Markdown 文件")
+        }
+        if (files.size > 20) {
+            return importResponse(ctx, results, "单次最多导入 20 个文件")
+        }
+        let publish = isChecked(ctx, "publish") && ctx.can("post.publish")
+        let importer = MarkdownImporter(services.posts, services.taxonomy)
+        var success: Int64 = 0
+        var failed: Int64 = 0
+        for (file in files) {
+            let ext = extensionOf(file.filename)
+            if (ext != "md" && ext != "markdown") {
+                failed += 1
+                results.add(importResultRow(file.filename, "", "仅支持 .md / .markdown 文件"))
+                continue
+            }
+            if (file.data.size > 1024 * 1024) {
+                failed += 1
+                results.add(importResultRow(file.filename, "", "文件超过 1MB"))
+                continue
+            }
+            let text = try {
+                String.fromUtf8(file.data)
+            } catch (e: Exception) {
+                failed += 1
+                results.add(importResultRow(file.filename, "", "文件不是有效 UTF-8"))
+                continue
+            }
+            try {
+                let doc = importer.parse(text, file.filename)
+                let imported = importer.importOne(doc, ctx.userDoc(), publish, ctx.clientIp())
+                success += 1
+                results.add(importResultRow(file.filename, imported.title, ""))
+            } catch (e: AppError) {
+                failed += 1
+                results.add(importResultRow(file.filename, "", e.message))
+            } catch (e: Exception) {
+                failed += 1
+                results.add(importResultRow(file.filename, "", "导入失败"))
+            }
+        }
+        services.audit.log(docStr(ctx.userDoc(), "id"), docStr(ctx.userDoc(), "username"),
+                           "posts_imported", "post", "", ctx.clientIp(),
+                           "success=${success} failed=${failed}")
+        let summary = "成功 ${success} 个，失败 ${failed} 个"
+        importResponse(ctx, results, summary)
+    }
+
+    private func importResultRow(name: String, title: String, error: String): JsonValue {
+        let row = JsonObject()
+        row.set("name", JStr(name))
+        row.set("title", JStr(title))
+        row.set("error", JStr(error))
+        row.set("ok", JBool(error.size == 0))
+        JObj(row)
+    }
+
+    private func importResponse(ctx: Ctx, results: JsonArray, summary: String): HttpResponse {
+        let data = JsonObject()
+        data.set("page_title", JStr("Markdown 导入"))
+        data.set("active", JStr("tools"))
+        data.set("can_publish", JBool(ctx.can("post.publish")))
+        data.set("results", JArr(results))
+        data.set("summary", JStr(summary))
+        ctx.renderAdminPage("import.html", JObj(data))
+    }
+
     private func quickError(status: Int64, message: String): HttpResponse {
         let data = JsonObject()
         data.set("ok", JBool(false))
@@ -830,6 +967,7 @@ public class AdminSite {
         data.set("kind", JStr(kind))
         data.set("search", JStr(search))
         data.set("total_size", JStr(formatFileSize(docInt(counts, "bytes"))))
+        data.set("can_manage_media", JBool(ctx.can("media.manage")))
         data.set("pagination", buildPagination(result.page, result.pages, result.total,
             "/admin/attachments?kind=${kind}&q=" + urlEncode(search), 36))
         ctx.renderAdminPage("attachments.html", JObj(data))
@@ -864,6 +1002,13 @@ public class AdminSite {
         }
         let wantsJson = ctx.query("format") == "json" ||
             ctx.req.header("accept").toAsciiLower().contains("application/json")
+        if (!ctx.can("media.manage")) {
+            if (wantsJson) {
+                return quickError(403, "无权上传附件")
+            }
+            ctx.setFlash("error", "无权上传附件")
+            return ctx.redirect("/admin/attachments", status: 303)
+        }
         try {
             ctx.req.parseForm()
             if (ctx.req.files.size == 0) {
@@ -911,13 +1056,50 @@ public class AdminSite {
             case None => ()
         }
         let returnTo = safeNext(ctx.form("return_to"))
+        if (!ctx.can("media.manage")) {
+            ctx.setFlash("error", "无权删除附件")
+            return ctx.redirect(if (returnTo.size > 0) { returnTo } else { "/admin/attachments" }, status: 303)
+        }
         try {
-            services.media.delete(ctx.param("id"), ctx.userDoc(), ctx.clientIp())
+            let force = ctx.form("force") == "1"
+            services.media.delete(ctx.param("id"), ctx.userDoc(), ctx.clientIp(), force: force)
             ctx.setFlash("success", "附件已删除")
         } catch (e: AppError) {
             ctx.setFlash("error", e.message)
         }
         ctx.redirect(if (returnTo.size > 0) { returnTo } else { "/admin/attachments" }, status: 303)
+    }
+
+    public func attachmentsRename(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let returnTo = safeNext(ctx.form("return_to"))
+        let fallback = if (returnTo.size > 0) { returnTo } else { "/admin/attachments" }
+        if (!ctx.can("media.manage")) {
+            ctx.setFlash("error", "无权重命名附件")
+            return ctx.redirect(fallback, status: 303)
+        }
+        try {
+            services.media.rename(ctx.param("id"), ctx.form("name"), ctx.userDoc(), ctx.clientIp())
+            ctx.setFlash("success", "附件名称已更新")
+        } catch (e: AppError) {
+            ctx.setFlash("error", e.message)
+        }
+        ctx.redirect(fallback, status: 303)
+    }
+
+    public func attachmentsUsage(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        try {
+            HttpResponse().json(services.media.usage(ctx.param("id")))
+        } catch (e: AppError) {
+            quickError(if (e.kind == "not_found") { 404 } else { 400 }, e.message)
+        }
     }
 
     public func mediaUpload(ctx: Ctx): HttpResponse {

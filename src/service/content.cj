@@ -407,10 +407,89 @@ public class MediaService {
         store.get(COL_MEDIA, id)
     }
 
-    public func delete(id: String, actor: JsonValue, ip: String): Unit {
+    /** Rename only the display name; the public URL and stored file stay unchanged. */
+    public func rename(id: String, name: String, actor: JsonValue, ip: String): Unit {
         let media = match (get(id)) {
             case Some(value) => value
             case None => throw AppError("not_found", "附件不存在")
+        }
+        let current = docStr(media, "original_name", def: docStr(media, "filename"))
+        let ext = extensionOf(current)
+        let trimmed = name.trimAscii()
+        if (trimmed.size == 0) {
+            throw AppError("validation", "名称不能为空")
+        }
+        if (trimmed.size > 160) {
+            throw AppError("validation", "名称过长")
+        }
+        let inputExt = extensionOf(trimmed)
+        if (inputExt.size > 0 && inputExt != ext) {
+            throw AppError("validation", "不能修改附件扩展名")
+        }
+        var base = trimmed
+        if (inputExt.size > 0 && ext.size > 0 && trimmed.size > ext.size + 1) {
+            base = trimmed[0..trimmed.size - ext.size - 1]
+        }
+        let safe = sanitizeDisplayName(base)
+        if (safe.size == 0 || safe == "file") {
+            throw AppError("validation", "名称无效")
+        }
+        let finalName = if (ext.size > 0) { safe + "." + ext } else { safe }
+        if (finalName.size > 180) {
+            throw AppError("validation", "名称过长")
+        }
+        let updated = cloneDoc(media)
+        setField(updated, "original_name", JStr(finalName))
+        store.put(COL_MEDIA, id, updated)
+        audit.log(docStr(actor, "id"), docStr(actor, "username"), "media_renamed", "media", id, ip, finalName)
+    }
+
+    private func usageRows(url: String): JsonArray {
+        let rows = JsonArray()
+        for (post in store.list(COL_POSTS)) {
+            let reasons = ArrayList<String>()
+            if (docStr(post, "cover") == url) {
+                reasons.add("封面")
+            }
+            if (docStr(post, "content").contains(url)) {
+                reasons.add("正文")
+            }
+            if (reasons.size == 0) {
+                continue
+            }
+            let row = JsonObject()
+            row.set("id", JStr(docStr(post, "id")))
+            row.set("title", JStr(docStr(post, "title")))
+            row.set("type", JStr(docStr(post, "type")))
+            row.set("status", JStr(docStr(post, "status")))
+            row.set("reason", JStr(String.join(reasons.toArray(), delimiter: "、")))
+            rows.add(JObj(row))
+        }
+        rows
+    }
+
+    public func usage(id: String): JsonValue {
+        let media = match (get(id)) {
+            case Some(value) => value
+            case None => throw AppError("not_found", "附件不存在")
+        }
+        let rows = usageRows(docStr(media, "url"))
+        let data = JsonObject()
+        data.set("count", JInt(rows.size()))
+        data.set("items", JArr(rows))
+        JObj(data)
+    }
+
+    public func delete(id: String, actor: JsonValue, ip: String, force!: Bool = false): Unit {
+        let media = match (get(id)) {
+            case Some(value) => value
+            case None => throw AppError("not_found", "附件不存在")
+        }
+        if (!force) {
+            let rows = usageRows(docStr(media, "url"))
+            if (rows.size() > 0) {
+                throw AppError("validation", "附件被 ${rows.size()} 篇内容引用，请确认后再删除")
+            }
         }
         let path = config.uploadsDir() + "/" + docStr(media, "path")
         if (exists(path)) {

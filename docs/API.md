@@ -65,7 +65,7 @@ Authorization: Bearer cmo_xxxxxxxxxxxxxxxxxxxxxxxx
   "name": "仓墨",
   "description": "……",
   "url": "https://example.com",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "locale": "zh-CN"
 }
 ```
@@ -231,6 +231,20 @@ curl -X POST https://example.com/api/v1/posts \
 # 列出文章
 curl "https://example.com/api/v1/posts?page=1&per_page=5"
 ```
+
+## 后台辅助接口
+
+以下接口使用后台会话 Cookie + CSRF，不替代 `/api/v1` 的 Token 认证：
+
+| 方法 | 路径 | 用途 |
+| --- | --- | --- |
+| GET | `/admin/posts/:id/revisions/:rev` | 读取版本快照（需 `canEdit`） |
+| POST | `/admin/posts/:id/revisions/:rev/restore` | 恢复为草稿 |
+| GET | `/admin/attachments/:id/usage` | 查询附件引用 |
+| POST | `/admin/attachments/:id/rename` | 修改附件显示名 |
+| POST | `/admin/attachments/:id/delete` | 删除附件；`force=1` 跳过引用保护 |
+| GET | `/admin/import` | Markdown 导入页 |
+| POST | `/admin/import` | 多文件 Markdown 导入 |
 
 ## 版本与兼容性
 

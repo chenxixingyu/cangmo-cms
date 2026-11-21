@@ -1,0 +1,14 @@
+﻿ok: rename dialog opens
+ok: rename dialog is prefilled
+ok: rename dialog closes
+ok: delete dialog opens
+ok: delete dialog shows reference count
+ok: delete dialog lists referencing content
+ok: revision post is listed
+ok: revision dialog opens
+ok: revision dialog shows snapshot content
+ok: import page has file input
+ok: import page documents front matter
+ok: tools page links to import
+ok: no browser exceptions
+v1.1 UI audit complete

@@ -166,7 +166,13 @@
         <details class="drawer-advanced">
           <summary>历史版本（{{ revisions.length }}）</summary>
           <ul class="revision-list">
-            {% for revision in revisions %}<li><span>{{ revision.date }}</span><small>{{ revision.title }}</small></li>{% endfor %}
+            {% for revision in revisions %}
+            <li>
+              <span>{{ revision.date }}</span>
+              <small>{{ revision.title }}</small>
+              <button type="button" class="link-btn revision-view" data-revision-url="/admin/posts/{{ post.id }}/revisions/{{ revision.id }}">查看</button>
+            </li>
+            {% endfor %}
           </ul>
         </details>
         {% endif %}
@@ -177,6 +183,26 @@
       </div>
     </dialog>
   </form>
+
+  <dialog class="form-dialog revision-dialog" id="revision-dialog">
+    <div class="dialog-head">
+      <div>
+        <p class="eyebrow">REVISION</p>
+        <h2 id="revision-dialog-title">历史版本</h2>
+      </div>
+      <button type="button" class="link-btn" data-close-revision>关闭</button>
+    </div>
+    <div class="revision-dialog-body">
+      <p class="muted small" id="revision-dialog-date"></p>
+      <p class="revision-dialog-summary" id="revision-dialog-summary"></p>
+      <pre class="revision-dialog-content" id="revision-dialog-content"></pre>
+      <p class="form-hint" id="revision-dialog-error" role="alert"></p>
+    </div>
+    <div class="drawer-foot">
+      <button type="button" class="btn btn-ghost" data-close-revision>取消</button>
+      <button type="button" class="btn" id="revision-restore">恢复为草稿</button>
+    </div>
+  </dialog>
 
   {% if not is_new %}
   <form method="post" action="/admin/posts/{{ post.id }}/action" class="editor-danger-zone" data-confirm="确定把「{{ post.title }}」移入回收站？">

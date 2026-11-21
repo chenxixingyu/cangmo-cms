@@ -1,5 +1,31 @@
 # Changelog
 
+## v1.1.0 — 2026-11-22
+
+内容工作流完善：版本恢复、附件治理、Markdown 导入。
+
+### 新增
+- 版本历史支持查看与恢复：快照扩展为标题、正文、摘要、状态、分类、标签、封面、SEO 等字段；恢复后保持当前 slug、状态为草稿，并先保存当前快照，可再次撤销。
+- 附件支持重命名显示名（URL、磁盘文件、扩展名不变）。
+- 附件删除前检查引用：列出引用文章/页面与位置，默认拒绝删除，确认后可强制删除。
+- Markdown 批量导入：支持多文件、简单 front matter、默认草稿；发布开关仅对有发布权限的角色生效。
+
+### 修复
+- 附件上传/删除仅校验登录、未校验 `media.manage` 的权限缺口；后台与 API 均已收紧。
+- contributor 不能再通过直接 POST 或 API Token 上传/删除附件。
+
+### 接口
+- `GET /admin/posts/:id/revisions/:rev`
+- `POST /admin/posts/:id/revisions/:rev/restore`
+- `POST /admin/attachments/:id/rename`
+- `GET /admin/attachments/:id/usage`
+- `GET /admin/import`、`POST /admin/import`
+- `POST /admin/attachments/:id/delete` 新增可选 `force=1`
+
+### 验证
+- 24 个单元测试 + 188 项集成/安全断言 = **212 项**
+- 13 项 v1.1 浏览器审计
+
 ## v1.0.9 — 2026-11-21
 
 后台脚本缓存与页面路径修复。

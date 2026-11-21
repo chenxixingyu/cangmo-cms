@@ -266,6 +266,17 @@ public class PostService {
         revision.set("title", JStr(docStr(post, "title")))
         revision.set("content", JStr(docStr(post, "content")))
         revision.set("summary", JStr(docStr(post, "summary")))
+        revision.set("status", JStr(docStr(post, "status")))
+        revision.set("slug", JStr(docStr(post, "slug")))
+        revision.set("category_id", JStr(docStr(post, "category_id")))
+        revision.set("tag_ids", match (post.get("tag_ids")) { case Some(value) => value; case None => jarr() })
+        revision.set("cover", JStr(docStr(post, "cover")))
+        revision.set("allow_comments", JBool(docBool(post, "allow_comments", def: true)))
+        revision.set("pinned", JBool(docBool(post, "pinned")))
+        revision.set("featured", JBool(docBool(post, "featured")))
+        revision.set("seo_title", JStr(docStr(post, "seo_title")))
+        revision.set("seo_description", JStr(docStr(post, "seo_description")))
+        revision.set("scheduled_at", JInt(docInt(post, "scheduled_at")))
         revision.set("created_at", JInt(nowSeconds()))
         revision.set("author_id", JStr(actorId))
         store.put(COL_REVISIONS, docStr(JObj(revision), "id"), JObj(revision))
@@ -303,6 +314,89 @@ public class PostService {
         }
         sortDocsDesc(items, "created_at")
         items.toArray()
+    }
+
+    public func revision(postId: String, revisionId: String): ?JsonValue {
+        match (store.get(COL_REVISIONS, revisionId)) {
+            case Some(value) =>
+                if (docStr(value, "post_id") == postId) {
+                    return Some(value)
+                }
+            case None => ()
+        }
+        None
+    }
+
+    /**
+     * Restore a snapshot as a draft. Current slug is preserved so links stay stable;
+     * the current content is saved as a new revision first, making the restore undoable.
+     */
+    public func restoreRevision(postId: String, revisionId: String, actor: JsonValue, ip: String): String {
+        let post = match (get(postId)) {
+            case Some(value) => value
+            case None => throw AppError("not_found", "内容不存在")
+        }
+        if (!canEdit(actor, post)) {
+            throw AppError("forbidden", "无权恢复此内容")
+        }
+        let snapshot = match (revision(postId, revisionId)) {
+            case Some(value) => value
+            case None => throw AppError("not_found", "版本不存在")
+        }
+        let currentCategory = docStr(post, "category_id")
+        let categoryId = match (snapshot.get("category_id")) {
+            case Some(JStr(value)) => value
+            case _ => currentCategory
+        }
+        let validCategory = if (categoryId.size > 0 && store.get(COL_CATEGORIES, categoryId).isSome()) {
+            categoryId
+        } else {
+            ""
+        }
+        let tagIds = ArrayList<String>()
+        match (snapshot.get("tag_ids")) {
+            case Some(JArr(items)) =>
+                for (item in items.items) {
+                    match (item) {
+                        case JStr(value) => tagIds.add(value)
+                        case _ => ()
+                    }
+                }
+            case _ =>
+                for (tagId in docStrings(post, "tag_ids")) {
+                    tagIds.add(tagId)
+                }
+        }
+        let tagNames = ArrayList<String>()
+        for (tagId in tagIds) {
+            if (tagId.size == 0) {
+                continue
+            }
+            match (store.get(COL_TAGS, tagId)) {
+                case Some(tag) => tagNames.add(docStr(tag, "name"))
+                case None => ()
+            }
+        }
+        let input = PostInput()
+        input.postType = docStr(post, "type", def: "post")
+        input.title = docStr(snapshot, "title", def: docStr(post, "title"))
+        input.content = docStr(snapshot, "content", def: docStr(post, "content"))
+        input.summary = docStr(snapshot, "summary", def: docStr(post, "summary"))
+        input.slug = docStr(post, "slug")
+        input.categoryId = validCategory
+        input.tagNames = tagNames.toArray()
+        input.cover = docStr(snapshot, "cover", def: docStr(post, "cover"))
+        input.allowComments = docBool(snapshot, "allow_comments", def: docBool(post, "allow_comments", def: true))
+        input.pinned = docBool(snapshot, "pinned", def: docBool(post, "pinned"))
+        input.featured = docBool(snapshot, "featured", def: docBool(post, "featured"))
+        input.seoTitle = docStr(snapshot, "seo_title", def: docStr(post, "seo_title"))
+        input.seoDescription = docStr(snapshot, "seo_description", def: docStr(post, "seo_description"))
+        input.status = STATUS_DRAFT
+        input.scheduledAt = 0
+        let savedId = save(input, actor, postId, ip)
+        audit.log(docStr(actor, "id"), docStr(actor, "username"), "post_revision_restored",
+                  input.postType, postId, ip, "revision=${revisionId}")
+        savedId
     }
 
     private func headingsJson(headings: Array<Heading>): JsonValue {

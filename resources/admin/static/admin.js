@@ -106,6 +106,55 @@
     });
   }
 
+  // Attachment rename + reference-aware delete.
+  var renameDialog = document.getElementById("attachment-rename-dialog");
+  var renameForm = document.getElementById("attachment-rename-form");
+  var renameInput = renameForm ? renameForm.querySelector("input[name=name]") : null;
+  document.querySelectorAll(".attachment-rename").forEach(function (button) {
+    button.addEventListener("click", function () {
+      if (!renameDialog || !renameForm) return;
+      renameForm.action = button.getAttribute("data-rename-url");
+      if (renameInput) renameInput.value = button.getAttribute("data-name") || "";
+      renameDialog.showModal();
+      if (renameInput) renameInput.focus();
+    });
+  });
+
+  var deleteDialog = document.getElementById("attachment-delete-dialog");
+  var deleteForm = document.getElementById("attachment-delete-form");
+  var usageSummary = document.getElementById("attachment-usage-summary");
+  var usageList = document.getElementById("attachment-usage-list");
+  document.querySelectorAll(".attachment-delete").forEach(function (button) {
+    button.addEventListener("click", function () {
+      if (!deleteDialog || !deleteForm) return;
+      var usageUrl = button.getAttribute("data-usage-url");
+      deleteForm.action = button.getAttribute("data-delete-url");
+      if (usageSummary) usageSummary.textContent = "正在检查引用…";
+      if (usageList) usageList.innerHTML = "";
+      fetch(usageUrl, { headers: { "Accept": "application/json" } })
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+          var count = (data && data.count) || 0;
+          if (usageSummary) {
+            usageSummary.textContent = count > 0 ? "该附件被 " + count + " 篇内容引用：" : "该附件未被内容引用。";
+          }
+          if (usageList) {
+            (data && data.items ? data.items : []).forEach(function (item) {
+              var li = document.createElement("li");
+              var kind = item.type === "page" ? "页面" : "文章";
+              li.textContent = item.title + "（" + kind + " · " + item.reason + "）";
+              usageList.appendChild(li);
+            });
+          }
+          deleteDialog.showModal();
+        })
+        .catch(function () {
+          if (usageSummary) usageSummary.textContent = "无法检查引用，仍可继续删除。";
+          deleteDialog.showModal();
+        });
+    });
+  });
+
   // Bulk selection on the comments page.
   var selectAll = document.getElementById("comments-select-all");
   if (selectAll) {
@@ -227,6 +276,60 @@
     publishDrawer.addEventListener("click", function (event) {
       if (event.target === publishDrawer) publishDrawer.close();
     });
+  }
+
+  var revisionDialog = document.getElementById("revision-dialog");
+  var revisionButtons = document.querySelectorAll(".revision-view");
+  if (revisionDialog && revisionButtons.length > 0) {
+    var revisionRestore = document.getElementById("revision-restore");
+    var revisionTitle = document.getElementById("revision-dialog-title");
+    var revisionDate = document.getElementById("revision-dialog-date");
+    var revisionSummary = document.getElementById("revision-dialog-summary");
+    var revisionContent = document.getElementById("revision-dialog-content");
+    var revisionError = document.getElementById("revision-dialog-error");
+    var revisionUrl = "";
+
+    revisionButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        revisionError.textContent = "";
+        fetch(button.getAttribute("data-revision-url"), { headers: { "Accept": "application/json" } })
+          .then(function (response) { return response.json(); })
+          .then(function (data) {
+            if (!data || !data.ok) { revisionError.textContent = (data && data.error) || "加载版本失败"; return; }
+            revisionUrl = button.getAttribute("data-revision-url");
+            revisionTitle.textContent = data.item.title || "历史版本";
+            revisionDate.textContent = data.item.date || "";
+            revisionSummary.textContent = data.item.summary || "";
+            revisionContent.textContent = data.item.content || "";
+            revisionDialog.showModal();
+          })
+          .catch(function () { revisionError.textContent = "加载版本失败，请重试"; });
+      });
+    });
+
+    revisionDialog.querySelectorAll("[data-close-revision]").forEach(function (button) {
+      button.addEventListener("click", function () { revisionDialog.close(); });
+    });
+    revisionDialog.addEventListener("click", function (event) {
+      if (event.target === revisionDialog) revisionDialog.close();
+    });
+    if (revisionRestore) {
+      revisionRestore.addEventListener("click", function () {
+        if (!revisionUrl) return;
+        var form = document.getElementById("editor-form");
+        var csrf = form ? (form.getAttribute("data-csrf") || "") : "";
+        var helper = document.createElement("form");
+        helper.method = "post";
+        helper.action = revisionUrl + "/restore";
+        var token = document.createElement("input");
+        token.type = "hidden";
+        token.name = "_csrf";
+        token.value = csrf;
+        helper.appendChild(token);
+        document.body.appendChild(helper);
+        helper.submit();
+      });
+    }
   }
 
   var pageDrawer = document.getElementById("page-drawer");

@@ -166,6 +166,9 @@ public class ApiSite {
 
     public func uploadMedia(ctx: Ctx): HttpResponse {
         let user = requireUser(ctx)
+        if (!services.auth.can(user, "media.manage")) {
+            throw AppError("forbidden", "无权上传附件")
+        }
         ctx.req.parseForm()
         if (ctx.req.files.size == 0) {
             throw AppError("validation", "没有文件")
