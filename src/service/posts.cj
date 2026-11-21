@@ -26,6 +26,7 @@ public class PostInput {
     public var featured: Bool = false
     public var seoTitle: String = ""
     public var seoDescription: String = ""
+    public var template: String = ""
     public var scheduledAt: Int64 = 0
 }
 
@@ -176,6 +177,7 @@ public class PostService {
         setField(postDoc, "featured", JBool(input.featured))
         setField(postDoc, "seo_title", JStr(truncateUtf8(input.seoTitle.trimAscii(), 200)))
         setField(postDoc, "seo_description", JStr(truncateUtf8(input.seoDescription.trimAscii(), 300)))
+        setField(postDoc, "template", JStr(truncateUtf8(input.template.trimAscii(), 100)))
         setField(postDoc, "scheduled_at", JInt(scheduledAt))
         setField(postDoc, "reading_minutes", JInt(readingMinutes(content)))
         setField(postDoc, "created_at", JInt(if (id.size > 0) { docInt(postDoc, "created_at") } else { now }))
@@ -183,6 +185,16 @@ public class PostService {
         setField(postDoc, "published_at", JInt(publishedAt))
         setField(postDoc, "views", JInt(docInt(postDoc, "views")))
         store.put(COL_POSTS, postId, postDoc)
+        if (id.size > 0) {
+            match (existing) {
+                case Some(value) =>
+                    let oldSlug = docStr(value, "slug")
+                    if (oldSlug.size > 0 && oldSlug != slug) {
+                        recordSlugRedirect(oldSlug, slug, input.postType, actorId, ip)
+                    }
+                case None => ()
+            }
+        }
         audit.log(actorId, docStr(actor, "username"), if (id.size > 0) { "post_updated" } else { "post_created" },
                   input.postType, postId, ip, "status=${status} slug=${slug}")
         postId
@@ -259,6 +271,30 @@ public class PostService {
         false
     }
 
+    private func recordSlugRedirect(oldSlug: String, newSlug: String, postType: String,
+                                   actorId: String, ip: String): Unit {
+        let base = if (postType == "page") { "/pages/" } else { "/posts/" }
+        addRedirect(base + oldSlug, base + newSlug, actorId, ip)
+        if (postType == "page") {
+            addRedirect("/" + oldSlug, base + newSlug, actorId, ip)
+        }
+    }
+
+    private func addRedirect(from: String, to: String, actorId: String, ip: String): Unit {
+        for (item in store.list(COL_REDIRECTS)) {
+            if (docStr(item, "from") == from) {
+                return
+            }
+        }
+        let doc = JsonObject()
+        doc.set("id", JStr(newId("redir")))
+        doc.set("from", JStr(from))
+        doc.set("to", JStr(to))
+        doc.set("created_at", JInt(nowSeconds()))
+        doc.set("created_by", JStr(actorId))
+        store.put(COL_REDIRECTS, docStr(JObj(doc), "id"), JObj(doc))
+    }
+
     public func saveRevision(post: JsonValue, actorId: String): Unit {
         let revision = JsonObject()
         revision.set("id", JStr(newId("rev")))
@@ -276,6 +312,7 @@ public class PostService {
         revision.set("featured", JBool(docBool(post, "featured")))
         revision.set("seo_title", JStr(docStr(post, "seo_title")))
         revision.set("seo_description", JStr(docStr(post, "seo_description")))
+        revision.set("template", JStr(docStr(post, "template")))
         revision.set("scheduled_at", JInt(docInt(post, "scheduled_at")))
         revision.set("created_at", JInt(nowSeconds()))
         revision.set("author_id", JStr(actorId))
@@ -391,6 +428,7 @@ public class PostService {
         input.featured = docBool(snapshot, "featured", def: docBool(post, "featured"))
         input.seoTitle = docStr(snapshot, "seo_title", def: docStr(post, "seo_title"))
         input.seoDescription = docStr(snapshot, "seo_description", def: docStr(post, "seo_description"))
+        input.template = docStr(snapshot, "template", def: docStr(post, "template"))
         input.status = STATUS_DRAFT
         input.scheduledAt = 0
         let savedId = save(input, actor, postId, ip)

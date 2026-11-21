@@ -27,6 +27,9 @@ Write-Host "== v1.0.1 =="
 Write-Host "== v1.1 features =="
 & $node "$root\tests\v110.mjs"
 
+Write-Host "== v1.2 features =="
+& $node "$root\tests\v120.mjs"
+
 Write-Host "== load =="
 & $node "$root\tests\load.mjs"
 

@@ -4,6 +4,9 @@
   </button>
   <h1>{{ page_title }}</h1>
   <div class="topbar-actions">
+    <button class="topbar-command" id="command-open" type="button" aria-haspopup="dialog">
+      <span>搜索或跳转</span><kbd>Ctrl K</kbd>
+    </button>
     <a class="topbar-link" href="/admin/posts/new">写文章</a>
     <details class="user-menu">
       <summary class="user-chip">
@@ -21,6 +24,14 @@
     </details>
   </div>
 </header>
+<dialog class="command-dialog" id="command-dialog" aria-labelledby="command-title">
+  <div class="command-head">
+    <h2 id="command-title">搜索或跳转</h2>
+    <button type="button" class="link-btn" data-close-dialog>Esc</button>
+  </div>
+  <input type="search" id="command-input" placeholder="搜索页面、操作…" autocomplete="off" aria-label="搜索页面或操作">
+  <div class="command-list" id="command-list"></div>
+</dialog>
 {% if flash.length > 0 %}
 <div class="toast-stack" role="status" aria-live="polite">
   {% for message in flash %}<div class="toast toast-{{ message.kind }}">{{ message.text }}</div>{% endfor %}

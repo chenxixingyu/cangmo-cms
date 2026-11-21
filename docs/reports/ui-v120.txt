@@ -1,0 +1,12 @@
+﻿ok: revision dialog opens
+ok: line diff renders
+ok: template page is listed
+ok: page drawer opens
+ok: page drawer keeps template selection
+ok: redirect table lists automatic rule
+ok: redirect dialog opens
+ok: search results highlight the query
+ok: command palette opens with Ctrl+K
+ok: command palette filters entries
+ok: no browser exceptions
+v1.2 UI audit complete

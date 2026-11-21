@@ -28,5 +28,6 @@ node tests/e2e.mjs
 node tests/extended.mjs
 node tests/v101.mjs
 node tests/v110.mjs
+node tests/v120.mjs
 node tests/load.mjs
 node tests/security.mjs

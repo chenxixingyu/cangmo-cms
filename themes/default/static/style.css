@@ -456,3 +456,7 @@ html[data-theme="dark"] .prose pre { background: #0e120f; }
 @media (max-width: 640px) {
   .post-cover { margin-left: -18px; margin-right: -18px; border-radius: 0; border-left: 0; border-right: 0; }
 }
+/* Optional full-width page template */
+.page-wide.layout { display: block; max-width: 920px; margin: 0 auto; }
+.page-wide .content { max-width: 100%; }
+mark { background: #f2df9b; color: inherit; padding: 0 2px; border-radius: 2px; }

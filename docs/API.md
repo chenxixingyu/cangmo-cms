@@ -65,7 +65,7 @@ Authorization: Bearer cmo_xxxxxxxxxxxxxxxxxxxxxxxx
   "name": "仓墨",
   "description": "……",
   "url": "https://example.com",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "locale": "zh-CN"
 }
 ```
@@ -243,7 +243,7 @@ curl "https://example.com/api/v1/posts?page=1&per_page=5"
 | GET | `/admin/attachments/:id/usage` | 查询附件引用 |
 | POST | `/admin/attachments/:id/rename` | 修改附件显示名 |
 | POST | `/admin/attachments/:id/delete` | 删除附件；`force=1` 跳过引用保护 |
-| GET | `/admin/import` | Markdown 导入页 |
+| GET | `/admin/redirects` | 301 重定向管理页 |\n| POST | `/admin/redirects/save` | 新建/删除重定向 |\n| GET | `/admin/import` | Markdown 导入页 |
 | POST | `/admin/import` | 多文件 Markdown 导入 |
 
 ## 版本与兼容性

@@ -789,3 +789,33 @@ label { display: grid; gap: 5px; font-size: .82rem; color: var(--a-soft); }
   border-radius: 9px; white-space: pre-wrap; font-size: .76rem; line-height: 1.55;
   font-family: "Cascadia Code", Consolas, monospace; color: var(--a-soft);
 }
+/* v1.2 command palette */
+.topbar-command {
+  display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--a-border);
+  background: #fff; border-radius: 8px; padding: 6px 9px; font: inherit; font-size: .76rem;
+  color: var(--a-muted); cursor: pointer;
+}
+.topbar-command:hover { border-color: var(--a-accent); color: var(--a-accent); }
+.topbar-command kbd {
+  font-family: inherit; font-size: .68rem; border: 1px solid var(--a-border);
+  border-radius: 4px; padding: 1px 4px; background: #f6f7f4;
+}
+.command-dialog {
+  width: min(560px, calc(100vw - 32px)); margin: 12vh auto auto; padding: 0;
+  border: 1px solid var(--a-border); border-radius: 12px; box-shadow: 0 30px 80px -30px rgba(0,0,0,.5);
+}
+.command-dialog::backdrop { background: rgba(15,22,18,.45); }
+.command-head { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px 8px; }
+.command-head h2 { font-size: .84rem; color: var(--a-muted); }
+.command-dialog input[type=search] {
+  width: calc(100% - 28px); margin: 0 14px 8px; border: 1px solid var(--a-border);
+  border-radius: 8px; padding: 9px 11px; font-size: .86rem;
+}
+.command-list { max-height: 52vh; overflow-y: auto; padding: 0 8px 10px; display: grid; gap: 2px; }
+.command-item {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  padding: 9px 10px; border-radius: 7px; color: var(--a-soft); text-decoration: none;
+}
+.command-item:hover { background: #eef1ec; color: var(--a-text); text-decoration: none; }
+.command-item strong { font-size: .84rem; }
+.command-item span { color: var(--a-muted); font-size: .72rem; }

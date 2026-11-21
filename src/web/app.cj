@@ -104,6 +104,8 @@ public class WebApp {
         router.get("/admin/audit", { ctx: Ctx => adminSite.auditPage(ctx) })
         router.get("/admin/tools", { ctx: Ctx => adminSite.toolsPage(ctx) })
         router.get("/admin/tools/export", { ctx: Ctx => adminSite.exportJson(ctx) })
+        router.get("/admin/redirects", { ctx: Ctx => adminSite.redirectsPage(ctx) })
+        router.post("/admin/redirects/save", { ctx: Ctx => adminSite.redirectSave(ctx) })
         router.get("/admin/import", { ctx: Ctx => adminSite.importPage(ctx) })
         router.post("/admin/import", { ctx: Ctx => adminSite.importSubmit(ctx) })
         router.get("/admin/backups", { ctx: Ctx => adminSite.backupsPage(ctx) })
@@ -207,6 +209,16 @@ public class WebApp {
         if (isApi && !services.limiter.allow("api:" + req.remoteIp, services.config.apiRateLimitPerMinute, 60)) {
             return apiError(429, 429, "rate_limited", "请求过于频繁，请稍后再试")
         }
+        if ((req.method == "GET" || req.method == "HEAD") && !isApi &&
+            !req.path.startsWith("/admin") && !req.path.startsWith("/setup")) {
+            match (services.redirects.find(req.path)) {
+                case Some(target) =>
+                    let redirect = HttpResponse().redirect(target, status: 301)
+                    redirect.withSecurityHeaders(req.isSecure())
+                    return redirect
+                case None => ()
+            }
+        }
         var response: HttpResponse
         let params = HashMap<String, String>()
         let matched = router.dispatch(req.method, req.path, params)
@@ -225,7 +237,15 @@ public class WebApp {
                 if (isApi) {
                     response = apiError(404, 404, "not_found", "接口不存在")
                 } else {
-                    response = publicSite.notFound(ctx)
+                    let redirectTarget: ?String = if (req.method == "GET" || req.method == "HEAD") {
+                        services.redirects.find(req.path)
+                    } else {
+                        None
+                    }
+                    match (redirectTarget) {
+                        case Some(target) => response = HttpResponse().redirect(target, status: 301)
+                        case None => response = publicSite.notFound(ctx)
+                    }
                 }
         }
         // Session cookie lifecycle.

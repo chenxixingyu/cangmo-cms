@@ -1,0 +1,60 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <div class="page-intro">
+    <div>
+      <p class="eyebrow">REDIRECT</p>
+      <h2>重定向</h2>
+      <p class="muted">把旧地址 301 到新地址。Slug 变更时系统会自动记录。</p>
+    </div>
+    <div class="page-intro-actions">
+      <a class="btn btn-ghost" href="/admin/tools">返回工具</a>
+      <button type="button" class="btn" id="redirect-create-open">+ 新建重定向</button>
+    </div>
+  </div>
+
+  <section class="panel">
+    <header class="panel-head"><h2>全部规则</h2><span class="muted">{{ items.length }} 条</span></header>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>源路径</th><th>目标路径</th><th>创建时间</th><th>操作</th></tr></thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td><code>{{ item.from }}</code></td>
+            <td><code>{{ item.to }}</code></td>
+            <td class="muted">{{ item.date }}</td>
+            <td class="table-actions">
+              <form method="post" action="/admin/redirects/save" class="inline-form" data-confirm="确定删除这条重定向？">
+                <input type="hidden" name="_csrf" value="{{ csrf }}">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="id" value="{{ item.id }}">
+                <button type="submit" class="link-btn danger">删除</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+          {% if items.length == 0 %}<tr><td colspan="4" class="empty-row">还没有重定向规则。</td></tr>{% endif %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <dialog class="form-dialog" id="redirect-create-dialog">
+    <div class="dialog-head"><h2>新建重定向</h2><button type="button" class="link-btn" data-close-dialog>关闭</button></div>
+    <form method="post" action="/admin/redirects/save" class="dialog-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <input type="hidden" name="action" value="create">
+      <label>源路径<input type="text" name="from" required maxlength="300" placeholder="/old-path"></label>
+      <label>目标路径<input type="text" name="to" required maxlength="300" placeholder="/posts/new-path"></label>
+      <p class="muted small">仅支持站内路径；/admin、/api、/media、/static 不允许作为源。</p>
+      <button class="btn" type="submit">创建</button>
+    </form>
+  </dialog>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

@@ -64,6 +64,84 @@
     });
   });
 
+  // Command palette: quick navigation and common actions.
+  var commandDialog = document.getElementById("command-dialog");
+  var commandInput = document.getElementById("command-input");
+  var commandList = document.getElementById("command-list");
+  var commandOpen = document.getElementById("command-open");
+  if (commandDialog && commandInput && commandList) {
+    var commands = [
+      { label: "仪表盘", url: "/admin", hint: "概览" },
+      { label: "文章", url: "/admin/posts", hint: "内容列表" },
+      { label: "页面", url: "/admin/posts?type=page", hint: "独立页面" },
+      { label: "新建文章", url: "/admin/posts/new", hint: "写文章" },
+      { label: "新建页面", url: "/admin/posts/new?type=page", hint: "创建页面" },
+      { label: "评论", url: "/admin/comments", hint: "审核与回复" },
+      { label: "附件库", url: "/admin/attachments", hint: "图片与文件" },
+      { label: "用户", url: "/admin/users", hint: "成员与角色" },
+      { label: "设置", url: "/admin/settings", hint: "站点信息、外观、评论" },
+      { label: "主题", url: "/admin/themes", hint: "切换主题" },
+      { label: "审计日志", url: "/admin/audit", hint: "操作记录" },
+      { label: "工具", url: "/admin/tools", hint: "运行信息与导出" },
+      { label: "重定向", url: "/admin/redirects", hint: "旧链接 301" },
+      { label: "Markdown 导入", url: "/admin/import", hint: "批量导入" },
+      { label: "备份中心", url: "/admin/backups", hint: "创建与恢复" }
+    ];
+
+    function renderCommands(query) {
+      var needle = (query || "").trim().toLowerCase();
+      commandList.innerHTML = "";
+      var matched = commands.filter(function (item) {
+        return needle.length === 0 || (item.label + " " + item.hint).toLowerCase().includes(needle);
+      });
+      matched.forEach(function (item) {
+        var link = document.createElement("a");
+        link.href = item.url;
+        link.className = "command-item";
+        var label = document.createElement("strong");
+        label.textContent = item.label;
+        var hint = document.createElement("span");
+        hint.textContent = item.hint;
+        link.appendChild(label);
+        link.appendChild(hint);
+        commandList.appendChild(link);
+      });
+      if (matched.length === 0) {
+        var empty = document.createElement("p");
+        empty.className = "muted small";
+        empty.textContent = "没有匹配的页面或操作。";
+        commandList.appendChild(empty);
+      }
+    }
+
+    function openCommand() {
+      renderCommands("");
+      commandInput.value = "";
+      commandDialog.showModal();
+      commandInput.focus();
+    }
+
+    if (commandOpen) {
+      commandOpen.addEventListener("click", openCommand);
+    }
+    commandInput.addEventListener("input", function () { renderCommands(commandInput.value); });
+    commandInput.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        var first = commandList.querySelector(".command-item");
+        if (first) {
+          event.preventDefault();
+          window.location.href = first.getAttribute("href");
+        }
+      }
+    });
+    document.addEventListener("keydown", function (event) {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        if (commandDialog.open) commandDialog.close(); else openCommand();
+      }
+    });
+  }
+
   document.querySelectorAll("dialog").forEach(function (dialog) {
     dialog.addEventListener("click", function (event) {
       if (event.target === dialog) dialog.close();
@@ -154,6 +232,12 @@
         });
     });
   });
+
+  var redirectCreateOpen = document.getElementById("redirect-create-open");
+  var redirectCreateDialog = document.getElementById("redirect-create-dialog");
+  if (redirectCreateOpen && redirectCreateDialog) {
+    redirectCreateOpen.addEventListener("click", function () { redirectCreateDialog.showModal(); });
+  }
 
   // Bulk selection on the comments page.
   var selectAll = document.getElementById("comments-select-all");
@@ -286,8 +370,47 @@
     var revisionDate = document.getElementById("revision-dialog-date");
     var revisionSummary = document.getElementById("revision-dialog-summary");
     var revisionContent = document.getElementById("revision-dialog-content");
+    var revisionDiff = document.getElementById("revision-dialog-diff");
+    var revisionCompare = document.getElementById("revision-compare");
     var revisionError = document.getElementById("revision-dialog-error");
     var revisionUrl = "";
+    var revisionText = "";
+
+    function lineDiff(oldText, newText) {
+      var a = oldText.split("\n");
+      var b = newText.split("\n");
+      if (a.length > 2000 || b.length > 2000) {
+        return ["内容过长，已跳过行级对比。"];
+      }
+      var dp = [];
+      for (var i = 0; i <= a.length; i += 1) {
+        dp.push(new Array(b.length + 1).fill(0));
+      }
+      for (var i = a.length - 1; i >= 0; i -= 1) {
+        for (var j = b.length - 1; j >= 0; j -= 1) {
+          dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+        }
+      }
+      var out = [];
+      var x = 0;
+      var y = 0;
+      while (x < a.length && y < b.length) {
+        if (a[x] === b[y]) {
+          out.push("  " + a[x]);
+          x += 1;
+          y += 1;
+        } else if (dp[x + 1][y] >= dp[x][y + 1]) {
+          out.push("- " + a[x]);
+          x += 1;
+        } else {
+          out.push("+ " + b[y]);
+          y += 1;
+        }
+      }
+      while (x < a.length) { out.push("- " + a[x]); x += 1; }
+      while (y < b.length) { out.push("+ " + b[y]); y += 1; }
+      return out;
+    }
 
     revisionButtons.forEach(function (button) {
       button.addEventListener("click", function () {
@@ -300,7 +423,10 @@
             revisionTitle.textContent = data.item.title || "历史版本";
             revisionDate.textContent = data.item.date || "";
             revisionSummary.textContent = data.item.summary || "";
-            revisionContent.textContent = data.item.content || "";
+            revisionText = data.item.content || "";
+            revisionContent.textContent = revisionText;
+            revisionContent.hidden = false;
+            if (revisionDiff) revisionDiff.hidden = true;
             revisionDialog.showModal();
           })
           .catch(function () { revisionError.textContent = "加载版本失败，请重试"; });
@@ -313,6 +439,21 @@
     revisionDialog.addEventListener("click", function (event) {
       if (event.target === revisionDialog) revisionDialog.close();
     });
+    if (revisionCompare && revisionDiff) {
+      revisionCompare.addEventListener("click", function () {
+        if (revisionDiff.hidden) {
+          var current = document.getElementById("post-content");
+          revisionDiff.textContent = lineDiff(revisionText, current ? current.value : "").join("\n");
+          revisionDiff.hidden = false;
+          revisionContent.hidden = true;
+          revisionCompare.textContent = "查看原文";
+        } else {
+          revisionDiff.hidden = true;
+          revisionContent.hidden = false;
+          revisionCompare.textContent = "对比当前";
+        }
+      });
+    }
     if (revisionRestore) {
       revisionRestore.addEventListener("click", function () {
         if (!revisionUrl) return;
@@ -348,6 +489,7 @@
       pageForm.elements.cover.value = item.cover || "";
       pageForm.elements.category_id.value = item.category_id || "";
       pageForm.elements.tags.value = item.tags || "";
+      pageForm.elements.template.value = item.template || "";
       pageForm.elements.seo_title.value = item.seo_title || "";
       pageForm.elements.seo_description.value = item.seo_description || "";
       pageForm.elements.status.value = item.status || "draft";

@@ -8,6 +8,7 @@ import cangmo.http.*
 import cangmo.json.*
 import cangmo.service.*
 import std.collection.*
+import std.fs.*
 import std.time.*
 
 public class PublicSite {
@@ -100,12 +101,21 @@ public class PublicSite {
         let card = postCard(services, page)
         setField(card, "content_html", JStr(docStr(page, "content_html")))
         setField(card, "headings", match (page.get("headings")) { case Some(value) => value; case None => jarr() })
+        let requested = docStr(page, "template")
+        let safeTemplate = if (requested == "page.html" ||
+                                (requested.startsWith("page-") && requested.endsWith(".html") &&
+                                 !requested.contains("/") && !requested.contains("\\") &&
+                                 exists(services.themeTemplatesDir() + "/" + requested))) {
+            requested
+        } else {
+            "page.html"
+        }
         let data = JsonObject()
         data.set("page_title", JStr(docStr(page, "seo_title", def: docStr(page, "title"))))
         data.set("meta_description", JStr(docStr(page, "seo_description", def: docStr(page, "summary"))))
         data.set("page", card)
         data.set("canonical", JStr(ctx.siteUrl(postUrl(page))))
-        ctx.renderPage("page.html", JObj(data))
+        ctx.renderPage(safeTemplate, JObj(data))
     }
 
     /** Legacy/short page URLs such as /about redirect to the canonical /pages/about. */
@@ -215,15 +225,45 @@ public class PublicSite {
     public func searchPage(ctx: Ctx): HttpResponse {
         let queryText = ctx.query("q").trimAscii()
         let results = if (queryText.size > 0) { services.search.search(queryText, 50) } else { Array<JsonValue>(0, repeat: JNull) }
+        let cards = JsonArray()
+        for (post in results) {
+            let card = postCard(services, post)
+            setField(card, "title_html", JStr(highlightText(docStr(post, "title"), queryText)))
+            setField(card, "summary_html", JStr(highlightText(docStr(post, "summary"), queryText)))
+            cards.add(card)
+        }
         let data = JsonObject()
         data.set("page_title", JStr("搜索：" + queryText))
         data.set("query", JStr(queryText))
-        data.set("results", cardsOf(results))
+        data.set("results", JArr(cards))
         data.set("result_count", JInt(results.size))
         data.set("categories", sidebarCategories())
         data.set("tags", sidebarTags())
         data.set("archives", sidebarArchives())
         ctx.renderPage("search.html", JObj(data))
+    }
+
+    private func highlightText(text: String, query: String): String {
+        let needle = query.trimAscii()
+        if (needle.size == 0 || text.size == 0) {
+            return escapeHtml(text)
+        }
+        let lowerText = text.toAsciiLower()
+        let lowerNeedle = needle.toAsciiLower()
+        let parts = ArrayList<String>()
+        var cursor: Int64 = 0
+        while (cursor < text.size) {
+            let idx = findSub(lowerText[cursor..lowerText.size], lowerNeedle)
+            if (idx < 0) {
+                parts.add(escapeHtml(text[cursor..text.size]))
+                break
+            }
+            let at = cursor + idx
+            parts.add(escapeHtml(text[cursor..at]))
+            parts.add("<mark>" + escapeHtml(text[at..at + lowerNeedle.size]) + "</mark>")
+            cursor = at + lowerNeedle.size
+        }
+        String.join(parts.toArray(), delimiter: "")
     }
 
     public func commentSubmit(ctx: Ctx): HttpResponse {

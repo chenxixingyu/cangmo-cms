@@ -144,6 +144,12 @@
         </div>
         <label>正文<textarea name="content" rows="12" spellcheck="false"></textarea></label>
         <label>封面链接<input type="text" name="cover" placeholder="/media/… 或 https://…"></label>
+        <label>页面模板
+          <select name="template">
+            <option value="">默认模板</option>
+            {% for template in page_templates %}<option value="{{ template }}">{{ template }}</option>{% endfor %}
+          </select>
+        </label>
         <label>摘要<textarea name="summary" rows="2" maxlength="500"></textarea></label>
         <label>分类
           <select name="category_id">

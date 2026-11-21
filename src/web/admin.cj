@@ -150,6 +150,7 @@ public class AdminSite {
         data.set("counts", counts)
         data.set("categories", JArr(categories))
         data.set("all_tags", JArr(allTags))
+        data.set("page_templates", jsonStringList(pageTemplateNames()))
         data.set("pagination", buildPagination(result.page, result.pages, result.total,
                                                "/admin/posts?type=${postType}&status=${status}&search=" + urlEncode(search), 20))
         ctx.renderAdminPage("posts.html", JObj(data))
@@ -180,6 +181,7 @@ public class AdminSite {
         post.set("featured", JBool(false))
         post.set("seo_title", JStr(""))
         post.set("seo_description", JStr(""))
+        post.set("template", JStr(""))
         post.set("scheduled_at", JStr(""))
         post.set("published_at", JStr(""))
         editorResponse(ctx, JObj(post), true, "")
@@ -223,6 +225,7 @@ public class AdminSite {
         input.featured = isChecked(ctx, "featured")
         input.seoTitle = ctx.form("seo_title")
         input.seoDescription = ctx.form("seo_description")
+        input.template = ctx.form("template")
         input.scheduledAt = parseDateTimeInput(ctx.form("scheduled_at"))
         try {
             let savedId = services.posts.save(input, ctx.userDoc(), id, ctx.clientIp())
@@ -248,6 +251,7 @@ public class AdminSite {
             post.set("featured", JBool(input.featured))
             post.set("seo_title", JStr(input.seoTitle))
             post.set("seo_description", JStr(input.seoDescription))
+            post.set("template", JStr(input.template))
             post.set("scheduled_at", JStr(ctx.form("scheduled_at")))
             post.set("published_at", JStr(""))
             return editorResponse(ctx, JObj(post), id.size == 0, e.message)
@@ -377,6 +381,7 @@ public class AdminSite {
         item.set("allow_comments", JBool(docBool(post, "allow_comments", def: true)))
         item.set("scheduled_at", JStr(formatDateTime(docInt(post, "scheduled_at"))))
         item.set("category_id", JStr(docStr(post, "category_id")))
+        item.set("template", JStr(docStr(post, "template")))
         let tagNames = ArrayList<String>()
         for (tagId in docStrings(post, "tag_ids")) {
             match (services.store.get(COL_TAGS, tagId)) {
@@ -435,6 +440,7 @@ public class AdminSite {
         input.featured = docBool(post, "featured")
         input.seoTitle = ctx.form("seo_title")
         input.seoDescription = ctx.form("seo_description")
+        input.template = if (input.postType == "page") { ctx.form("template") } else { docStr(post, "template") }
         input.scheduledAt = parseDateTimeInput(ctx.form("scheduled_at"))
         try {
             services.posts.save(input, ctx.userDoc(), id, ctx.clientIp())
@@ -588,6 +594,60 @@ public class AdminSite {
         ctx.renderAdminPage("import.html", JObj(data))
     }
 
+    public func redirectsPage(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let data = JsonObject()
+        data.set("page_title", JStr("重定向"))
+        data.set("active", JStr("tools"))
+        let items = JsonArray()
+        for (item in services.redirects.list()) {
+            let view = cloneDoc(item)
+            setField(view, "date", JStr(formatDateTime(docInt(item, "created_at"))))
+            items.add(view)
+        }
+        data.set("items", JArr(items))
+        ctx.renderAdminPage("redirects.html", JObj(data))
+    }
+
+    public func redirectSave(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        try {
+            if (ctx.form("action") == "delete") {
+                services.redirects.delete(ctx.form("id"), ctx.userDoc(), ctx.clientIp())
+                ctx.setFlash("success", "重定向已删除")
+            } else {
+                services.redirects.create(ctx.form("from"), ctx.form("to"), ctx.userDoc(), ctx.clientIp())
+                ctx.setFlash("success", "重定向已创建")
+            }
+        } catch (e: AppError) {
+            ctx.setFlash("error", e.message)
+        }
+        ctx.redirect("/admin/redirects", status: 303)
+    }
+
+    private func pageTemplateNames(): Array<String> {
+        let out = ArrayList<String>()
+        let dir = services.themeTemplatesDir()
+        if (exists(dir + "/page.html")) {
+            out.add("page.html")
+        }
+        for (name in listDir(dir)) {
+            if (name == "page.html") {
+                continue
+            }
+            if (name.startsWith("page-") && name.endsWith(".html")) {
+                out.add(name)
+            }
+        }
+        out.toArray()
+    }
+
     private func quickError(status: Int64, message: String): HttpResponse {
         let data = JsonObject()
         data.set("ok", JBool(false))
@@ -612,6 +672,7 @@ public class AdminSite {
             tags.add(tag)
         }
         data.set("all_tags", JArr(tags))
+        data.set("page_templates", jsonStringList(pageTemplateNames()))
         let revisions = JsonArray()
         if (!isNew) {
             for (revision in services.posts.revisions(docStr(post, "id"))) {

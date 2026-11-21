@@ -76,6 +76,14 @@
             <input type="datetime-local" name="scheduled_at" value="{{ post.scheduled_at }}">
           </label>
           {% if post.published_at %}<p class="muted small">首次发布：{{ post.published_at }}</p>{% endif %}
+          {% if post.type == "page" %}
+          <label>页面模板
+            <select name="template">
+              <option value=""{% if not post.template %} selected{% endif %}>默认模板</option>
+              {% for template in page_templates %}<option value="{{ template }}"{% if post.template == template %} selected{% endif %}>{{ template }}</option>{% endfor %}
+            </select>
+          </label>
+          {% endif %}
         </section>
 
         <section class="drawer-section">
@@ -196,10 +204,11 @@
       <p class="muted small" id="revision-dialog-date"></p>
       <p class="revision-dialog-summary" id="revision-dialog-summary"></p>
       <pre class="revision-dialog-content" id="revision-dialog-content"></pre>
+      <pre class="revision-dialog-content revision-dialog-diff" id="revision-dialog-diff" hidden></pre>
       <p class="form-hint" id="revision-dialog-error" role="alert"></p>
     </div>
     <div class="drawer-foot">
-      <button type="button" class="btn btn-ghost" data-close-revision>取消</button>
+      <button type="button" class="btn btn-ghost" id="revision-compare">对比当前</button>
       <button type="button" class="btn" id="revision-restore">恢复为草稿</button>
     </div>
   </dialog>
