@@ -90,6 +90,9 @@ public class WebApp {
         router.post("/admin/attachments/upload", { ctx: Ctx => adminSite.attachmentsUpload(ctx) })
         router.post("/admin/attachments/:id/delete", { ctx: Ctx => adminSite.attachmentsDelete(ctx) })
         router.post("/admin/attachments/:id/rename", { ctx: Ctx => adminSite.attachmentsRename(ctx) })
+        router.post("/admin/attachments/:id/replace", { ctx: Ctx => adminSite.attachmentsReplace(ctx) })
+        router.post("/admin/attachments/bulk", { ctx: Ctx => adminSite.attachmentsBulk(ctx) })
+        router.post("/admin/attachments/:id/variant", { ctx: Ctx => adminSite.attachmentsVariant(ctx) })
         router.get("/admin/attachments/:id/usage", { ctx: Ctx => adminSite.attachmentsUsage(ctx) })
         // Legacy media URLs keep working through redirects/aliases.
         router.get("/admin/media", { ctx: Ctx => adminSite.mediaPage(ctx) })
@@ -97,6 +100,7 @@ public class WebApp {
         router.post("/admin/media/:id/delete", { ctx: Ctx => adminSite.mediaDelete(ctx) })
         router.get("/admin/users", { ctx: Ctx => adminSite.usersPage(ctx) })
         router.post("/admin/users/action", { ctx: Ctx => adminSite.userAction(ctx) })
+        router.post("/admin/users/bulk", { ctx: Ctx => adminSite.userBulk(ctx) })
         router.get("/admin/settings", { ctx: Ctx => adminSite.settingsPage(ctx) })
         router.post("/admin/settings/save", { ctx: Ctx => adminSite.settingsSave(ctx) })
         router.get("/admin/themes", { ctx: Ctx => adminSite.themesPage(ctx) })
@@ -110,6 +114,7 @@ public class WebApp {
         router.post("/admin/import", { ctx: Ctx => adminSite.importSubmit(ctx) })
         router.get("/admin/backups", { ctx: Ctx => adminSite.backupsPage(ctx) })
         router.post("/admin/backups/action", { ctx: Ctx => adminSite.backupAction(ctx) })
+        router.post("/admin/backups/auto", { ctx: Ctx => adminSite.backupAutoSave(ctx) })
         router.get("/admin/backups/download", { ctx: Ctx => adminSite.backupDownload(ctx) })
         // Legacy tool/backup URLs.
         router.post("/admin/tools/action", { ctx: Ctx => adminSite.backupAction(ctx) })

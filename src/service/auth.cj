@@ -304,6 +304,12 @@ public class AuthService {
     // -----------------------------------------------------------------------
 
     public func createApiToken(userId: String, name: String): String {
+        createApiToken(userId, name, scopes: Array<String>(0, repeat: ""), expiresAt: 0,
+                        allowedIps: Array<String>(0, repeat: ""))
+    }
+
+    public func createApiToken(userId: String, name: String, scopes!: Array<String>,
+                               expiresAt!: Int64, allowedIps!: Array<String>): String {
         let raw = "cmo_" + base64UrlEncode(secureRandomBytes(32))
         let id = sha256Hex(raw)
         let doc = JsonObject()
@@ -311,18 +317,38 @@ public class AuthService {
         doc.set("user_id", JStr(userId))
         doc.set("name", JStr(truncateUtf8(name, 100)))
         doc.set("prefix", JStr(raw[0..12]))
+        doc.set("scopes", jsonStringList(scopes))
+        doc.set("expires_at", JInt(expiresAt))
+        doc.set("allowed_ips", jsonStringList(allowedIps))
+        doc.set("last_used_ip", JStr(""))
         doc.set("created_at", JInt(nowSeconds()))
         doc.set("last_used_at", JInt(0))
         store.put(COL_API_TOKENS, id, JObj(doc))
         raw
     }
 
-    public func userByApiToken(raw: String): ?JsonValue {
+    public func validateApiToken(raw: String, ip: String): ?JsonValue {
         if (!raw.startsWith("cmo_") || raw.size < 20 || raw.size > 200) {
             return None
         }
         let id = sha256Hex(raw)
         let doc = match (store.get(COL_API_TOKENS, id)) {
+            case Some(value) => value
+            case None => return None
+        }
+        let expiresAt = docInt(doc, "expires_at")
+        if (expiresAt > 0 && expiresAt <= nowSeconds()) {
+            return None
+        }
+        let allowed = docStrings(doc, "allowed_ips")
+        if (allowed.size > 0 && !allowed.contains(ip)) {
+            return None
+        }
+        Some(doc)
+    }
+
+    public func userByApiToken(raw: String, ip!: String = ""): ?JsonValue {
+        let doc = match (validateApiToken(raw, ip)) {
             case Some(value) => value
             case None => return None
         }
@@ -334,8 +360,10 @@ public class AuthService {
         if (docStr(user, "status") != "active") {
             return None
         }
+        let id = sha256Hex(raw)
         let updated = cloneDoc(doc)
         setField(updated, "last_used_at", JInt(nowSeconds()))
+        setField(updated, "last_used_ip", JStr(ip))
         store.put(COL_API_TOKENS, id, updated)
         Some(user)
     }

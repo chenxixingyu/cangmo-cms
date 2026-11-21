@@ -8,6 +8,7 @@ import cangmo.json.*
 import cangmo.http.*
 import cangmo.store.*
 import std.collection.*
+import std.env.*
 import std.fs.*
 import std.sort.*
 import std.sync.*
@@ -480,6 +481,85 @@ public class MediaService {
         JObj(data)
     }
 
+    public func addVariant(id: String, file: UploadedFile, actor: JsonValue, ip: String): JsonValue {
+        let media = match (get(id)) {
+            case Some(value) => value
+            case None => throw AppError("not_found", "附件不存在")
+        }
+        if (mediaKindOf(media) != "image") {
+            throw AppError("validation", "只有图片可以生成缩略图")
+        }
+        let ext = extensionOf(file.filename)
+        if (ext != "webp" || !magicMatches(file.data, "webp")) {
+            throw AppError("validation", "缩略图必须是 WebP")
+        }
+        if (file.data.size == 0 || file.data.size > config.maxBodyBytes) {
+            throw AppError("validation", "缩略图文件为空或过大")
+        }
+        let path = docStr(media, "path")
+        let lastSlash = match (path.lastIndexOf("/")) {
+            case Some(value) => value
+            case None => -1
+        }
+        let dir = if (lastSlash > 0) { path[0..lastSlash] } else { "" }
+        let storedName = id + "-thumb.webp"
+        let relative = if (dir.size > 0) { dir + "/" + storedName } else { storedName }
+        let fullPath = config.uploadsDir() + "/" + relative
+        try {
+            File.writeTo(fullPath, file.data)
+        } catch (e: Exception) {
+            throw AppError("storage", "缩略图保存失败：${e.message}")
+        }
+        let size = imageSize(file.data, "webp")
+        let updated = cloneDoc(media)
+        setField(updated, "thumb_url", JStr("/media/" + relative))
+        setField(updated, "thumb_width", JInt(size.width))
+        setField(updated, "thumb_height", JInt(size.height))
+        setField(updated, "thumb_size", JInt(file.data.size))
+        setField(updated, "updated_at", JInt(nowSeconds()))
+        store.put(COL_MEDIA, id, updated)
+        audit.log(docStr(actor, "id"), docStr(actor, "username"), "media_variant_created", "media", id, ip, "thumb")
+        updated
+    }
+
+    public func replace(id: String, file: UploadedFile, actor: JsonValue, ip: String): JsonValue {
+        let media = match (get(id)) {
+            case Some(value) => value
+            case None => throw AppError("not_found", "附件不存在")
+        }
+        let path = docStr(media, "path")
+        let oldExt = extensionOf(path)
+        let newExt = extensionOf(file.filename)
+        if (oldExt != newExt) {
+            throw AppError("validation", "替换文件必须保持 ${oldExt} 扩展名")
+        }
+        if (file.data.size == 0 || file.data.size > config.maxBodyBytes) {
+            throw AppError("validation", "文件为空或超过大小限制")
+        }
+        if (!magicMatches(file.data, newExt)) {
+            throw AppError("validation", "文件内容与扩展名不符")
+        }
+        let fullPath = config.uploadsDir() + "/" + path
+        try {
+            File.writeTo(fullPath, file.data)
+        } catch (e: Exception) {
+            throw AppError("storage", "文件替换失败：${e.message}")
+        }
+        let size = imageSize(file.data, newExt)
+        let updated = cloneDoc(media)
+        setField(updated, "size", JInt(file.data.size))
+        setField(updated, "sha256", JStr(hexEncode(sha256(file.data)).toAsciiLower()))
+        setField(updated, "width", JInt(size.width))
+        setField(updated, "height", JInt(size.height))
+        setField(updated, "original_name", JStr(sanitizeDisplayName(file.filename)))
+        setField(updated, "mime", JStr(mimeTypeFor(path)))
+        setField(updated, "updated_at", JInt(nowSeconds()))
+        store.put(COL_MEDIA, id, updated)
+        audit.log(docStr(actor, "id"), docStr(actor, "username"), "media_replaced", "media", id, ip,
+                  docStr(updated, "original_name"))
+        updated
+    }
+
     public func delete(id: String, actor: JsonValue, ip: String, force!: Bool = false): Unit {
         let media = match (get(id)) {
             case Some(value) => value
@@ -719,6 +799,9 @@ public class StatsService {
 public class SearchService {
     private let store: Store
     private let config: Config
+    private var cachedWal: Int64 = -1
+    private var index: HashMap<String, ArrayList<String>> = HashMap<String, ArrayList<String>>()
+    private let indexMutex: Mutex = Mutex()
 
     public init(store: Store, config: Config) {
         this.store = store
@@ -731,52 +814,176 @@ public class SearchService {
             return Array<JsonValue>(0, repeat: JNull)
         }
         let terms = needle.split(" ")
-        let items = ArrayList<JsonValue>()
-        let scores = HashMap<String, Int64>()
+        synchronized(indexMutex) {
+            ensureIndex()
+            let candidates = candidateIds(terms)
+            let items = ArrayList<JsonValue>()
+            let scores = HashMap<String, Int64>()
+            for (post in store.list(COL_POSTS)) {
+                if (docStr(post, "status") != STATUS_PUBLISHED) {
+                    continue
+                }
+                let postId = docStr(post, "id")
+                if (candidates.isSome()) {
+                    match (candidates) {
+                        case Some(ids) =>
+                            if (!ids.contains(postId)) {
+                                continue
+                            }
+                        case None => ()
+                    }
+                }
+                let title = docStr(post, "title").toAsciiLower()
+                let summary = docStr(post, "summary").toAsciiLower()
+                let content = docStr(post, "content").toAsciiLower()
+                let tags = String.join(docStrings(post, "tag_ids"), delimiter: " ").toAsciiLower()
+                var score: Int64 = 0
+                var matchedAll = true
+                for (term in terms) {
+                    if (term.size == 0) {
+                        continue
+                    }
+                    var termScore: Int64 = 0
+                    if (title.contains(term)) { termScore += 20 }
+                    if (summary.contains(term)) { termScore += 8 }
+                    if (tags.contains(term)) { termScore += 10 }
+                    if (content.contains(term)) { termScore += 3 }
+                    if (termScore == 0) {
+                        matchedAll = false
+                        break
+                    }
+                    score += termScore
+                }
+                if (!matchedAll) {
+                    continue
+                }
+                if (score > 0) {
+                    items.add(post)
+                    scores[postId] = score
+                }
+            }
+            sort<JsonValue>(items, by: { a: JsonValue, b: JsonValue =>
+                let av = scores.get(docStr(a, "id")) ?? 0
+                let bv = scores.get(docStr(b, "id")) ?? 0
+                if (av > bv) { Ordering.GT } else if (av < bv) { Ordering.LT } else { Ordering.EQ }
+            })
+            let out = ArrayList<JsonValue>()
+            for (item in items) {
+                if (out.size >= limit) {
+                    break
+                }
+                out.add(item)
+            }
+            out.toArray()
+        }
+    }
+
+    private func ensureIndex(): Unit {
+        let generation = store.pendingWalEntries()
+        if (generation == cachedWal) {
+            return
+        }
+        let fresh = HashMap<String, ArrayList<String>>()
         for (post in store.list(COL_POSTS)) {
             if (docStr(post, "status") != STATUS_PUBLISHED) {
                 continue
             }
-            let title = docStr(post, "title").toAsciiLower()
-            let summary = docStr(post, "summary").toAsciiLower()
-            let content = docStr(post, "content").toAsciiLower()
-            let tags = String.join(docStrings(post, "tag_ids"), delimiter: " ").toAsciiLower()
-            var score: Int64 = 0
-            var matchedAll = true
-            for (term in terms) {
-                if (term.size == 0) {
-                    continue
+            let postId = docStr(post, "id")
+            let text = docStr(post, "title") + "\n" + docStr(post, "summary") + "\n" +
+                       docStr(post, "content") + "\n" +
+                       String.join(docStrings(post, "tag_ids"), delimiter: " ")
+            for (token in tokenize(text)) {
+                let ids = match (fresh.get(token)) {
+                    case Some(value) => value
+                    case None =>
+                        let created = ArrayList<String>()
+                        fresh[token] = created
+                        created
                 }
-                var termScore: Int64 = 0
-                if (title.contains(term)) { termScore += 20 }
-                if (summary.contains(term)) { termScore += 8 }
-                if (tags.contains(term)) { termScore += 10 }
-                if (content.contains(term)) { termScore += 3 }
-                if (termScore == 0) {
-                    matchedAll = false
-                    break
+                if (!ids.contains(postId)) {
+                    ids.add(postId)
                 }
-                score += termScore
-            }
-            if (!matchedAll) {
-                continue
-            }
-            if (score > 0) {
-                items.add(post)
-                scores[docStr(post, "id")] = score
             }
         }
-        sort<JsonValue>(items, by: { a: JsonValue, b: JsonValue =>
-            let av = scores.get(docStr(a, "id")) ?? 0
-            let bv = scores.get(docStr(b, "id")) ?? 0
-            if (av > bv) { Ordering.GT } else if (av < bv) { Ordering.LT } else { Ordering.EQ }
-        })
-        let out = ArrayList<JsonValue>()
-        for (item in items) {
-            if (out.size >= limit) {
-                break
+        index = fresh
+        cachedWal = generation
+    }
+
+    private func candidateIds(terms: Array<String>): ?ArrayList<String> {
+        var result: ?ArrayList<String> = None
+        for (term in terms) {
+            if (term.size == 0) {
+                continue
             }
-            out.add(item)
+            let tokens = tokenize(term)
+            if (tokens.size == 0) {
+                continue
+            }
+            var termIds = ArrayList<String>()
+            for (token in tokens) {
+                let ids = match (index.get(token)) {
+                    case Some(value) => value
+                    case None => return None
+                }
+                for (id in ids) {
+                    if (!termIds.contains(id)) {
+                        termIds.add(id)
+                    }
+                }
+            }
+            result = match (result) {
+                case Some(existing) =>
+                    let intersection = ArrayList<String>()
+                    for (id in existing) {
+                        if (termIds.contains(id)) {
+                            intersection.add(id)
+                        }
+                    }
+                    Some(intersection)
+                case None => Some(termIds)
+            }
+        }
+        result
+    }
+
+    private func tokenize(text: String): Array<String> {
+        let lower = text.toAsciiLower()
+        let bytes = lower.toArray()
+        let out = ArrayList<String>()
+        var word = StringBuilder()
+        var previous = ""
+        var i: Int64 = 0
+        while (i < bytes.size) {
+            let b = bytes[i]
+            let isAscii = b < 0x80
+            if (isAscii) {
+                let isWord = (b >= 0x61 && b <= 0x7A) || (b >= 0x30 && b <= 0x39)
+                if (isWord) {
+                    word.append(Rune(Int64(b)))
+                } else if (word.size > 0) {
+                    out.add(word.toString())
+                    word = StringBuilder()
+                }
+                previous = ""
+                i += 1
+            } else {
+                if (word.size > 0) {
+                    out.add(word.toString())
+                    word = StringBuilder()
+                }
+                let length = if ((b & 0xF0) == 0xE0) { 3 } else if ((b & 0xF8) == 0xF0) { 4 } else { 2 }
+                let end = if (i + length <= bytes.size) { i + length } else { bytes.size }
+                let rune = String.fromUtf8(bytes[i..end])
+                out.add(rune)
+                if (previous.size > 0) {
+                    out.add(previous + rune)
+                }
+                previous = rune
+                i = end
+            }
+        }
+        if (word.size > 0) {
+            out.add(word.toString())
         }
         out.toArray()
     }
@@ -799,13 +1006,24 @@ public class BackupService {
         toJson(store.exportAll(), pretty: pretty)
     }
 
-    public func createBackup(label: String): JsonValue {
+    public func createBackup(label: String, encrypt!: Bool = false): JsonValue {
         ensureDir(config.backupDir())
         let stamp = formatTime(nowSeconds(), "yyyyMMdd-HHmmss")
         let safeLabel = sanitizeFilename(if (label.trimAscii().size > 0) { label } else { "backup" })
         let name = "${safeLabel}-${stamp}-${randomHex(bytes: 3)}.json"
         let path = config.backupDir() + "/" + name
-        writeTextAtomic(path, exportJson(pretty: true))
+        var content = exportJson(pretty: true)
+        if (encrypt) {
+            let passphrase = match (getVariable("CANGMO_BACKUP_PASSPHRASE")) {
+                case Some(value) => value
+                case None => ""
+            }
+            if (passphrase.size < 12) {
+                throw AppError("validation", "启用备份加密前请设置至少 12 位的 CANGMO_BACKUP_PASSPHRASE")
+            }
+            content = encryptBackupText(content, passphrase)
+        }
+        writeTextAtomic(path, content)
         let result = JsonObject()
         result.set("name", JStr(name))
         result.set("size", JInt(fileSize(path)))
@@ -844,7 +1062,18 @@ public class BackupService {
             return None
         }
         try {
-            Some(readTextFile(path))
+            let text = readTextFile(path)
+            if (text.startsWith("CMB1")) {
+                let passphrase = match (getVariable("CANGMO_BACKUP_PASSPHRASE")) {
+                    case Some(value) => value
+                    case None => ""
+                }
+                if (passphrase.size == 0) {
+                    return None
+                }
+                return Some(decryptBackupText(text, passphrase))
+            }
+            Some(text)
         } catch (e: Exception) {
             None
         }

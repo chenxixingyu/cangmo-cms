@@ -1,0 +1,12 @@
+﻿ok: token form exposes scopes
+ok: token scopes are labelled
+ok: backup page exposes encryption
+ok: backup page exposes schedule
+ok: attachment cards expose bulk selection
+ok: attachment bulk count updates
+ok: user rows expose bulk selection
+ok: user bulk count updates
+ok: image variant action is available
+ok: browser-generated WebP thumbnail is used
+ok: no browser exceptions
+v1.2.1 UI audit complete

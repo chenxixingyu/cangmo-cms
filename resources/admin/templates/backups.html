@@ -23,6 +23,19 @@
   </div>
 
   <section class="panel">
+    <header class="panel-head"><h2>自动备份</h2><span class="muted">最近：{{ backup_last }}</span></header>
+    <form method="post" action="/admin/backups/auto" class="auto-backup-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <label class="check-line"><input type="checkbox" name="backup_auto"{% if backup_auto %} checked{% endif %}> 启用自动备份</label>
+      <label class="check-line"><input type="checkbox" name="backup_encrypt"{% if backup_encrypt %} checked{% endif %}> 加密备份</label>
+      <label>间隔（小时）<input type="number" name="backup_interval_hours" min="1" max="720" value="{{ backup_interval }}"></label>
+      <label>保留份数<input type="number" name="backup_keep" min="1" max="100" value="{{ backup_keep }}"></label>
+      <button class="btn" type="submit">保存</button>
+    </form>
+    <p class="muted small">仅清理 auto- 开头的自动备份；手动备份不会被自动删除。</p>
+  </section>
+
+  <section class="panel">
     <header class="panel-head">
       <h2>备份文件</h2>
       <span class="muted">按时间倒序</span>

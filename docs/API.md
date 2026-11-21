@@ -243,6 +243,10 @@ curl "https://example.com/api/v1/posts?page=1&per_page=5"
 | GET | `/admin/attachments/:id/usage` | 查询附件引用 |
 | POST | `/admin/attachments/:id/rename` | 修改附件显示名 |
 | POST | `/admin/attachments/:id/delete` | 删除附件；`force=1` 跳过引用保护 |
+| POST | `/admin/attachments/:id/variant` | 上传浏览器生成的 WebP 缩略图 |
+| POST | `/admin/attachments/bulk` | 批量删除附件 |
+| POST | `/admin/users/bulk` | 批量停用/启用用户 |
+| POST | `/admin/backups/auto` | 自动备份/加密设置 |
 | GET | `/admin/redirects` | 301 重定向管理页 |\n| POST | `/admin/redirects/save` | 新建/删除重定向 |\n| GET | `/admin/import` | Markdown 导入页 |
 | POST | `/admin/import` | 多文件 Markdown 导入 |
 

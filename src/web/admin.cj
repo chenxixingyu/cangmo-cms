@@ -1056,8 +1056,7 @@ public class AdminSite {
         HttpResponse().json(JObj(data))
     }
 
-    public func attachmentsUpload(ctx: Ctx): HttpResponse {
-        match (guard(ctx)) {
+    public func attachmentsUpload(ctx: Ctx): HttpResponse {        match (guard(ctx)) {
             case Some(response) => return response
             case None => ()
         }
@@ -1131,8 +1130,79 @@ public class AdminSite {
         ctx.redirect(if (returnTo.size > 0) { returnTo } else { "/admin/attachments" }, status: 303)
     }
 
-    public func attachmentsRename(ctx: Ctx): HttpResponse {
+    public func attachmentsVariant(ctx: Ctx): HttpResponse {
         match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        if (!ctx.can("media.manage")) {
+            return quickError(403, "无权生成缩略图")
+        }
+        try {
+            ctx.req.parseForm()
+            if (ctx.req.files.size == 0) {
+                return quickError(400, "没有选择缩略图文件")
+            }
+            services.media.addVariant(ctx.param("id"), ctx.req.files[0], ctx.userDoc(), ctx.clientIp())
+            let data = JsonObject()
+            data.set("ok", JBool(true))
+            return HttpResponse().json(JObj(data))
+        } catch (e: AppError) {
+            return quickError(400, e.message)
+        } catch (e: Exception) {
+            return quickError(500, "缩略图生成失败")
+        }
+    }
+
+    public func attachmentsBulk(ctx: Ctx): HttpResponse {        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        if (!ctx.can("media.manage")) {
+            ctx.setFlash("error", "无权批量操作附件")
+            return ctx.redirect("/admin/attachments", status: 303)
+        }
+        let ids = ctx.req.formValues("ids")
+        var deleted: Int64 = 0
+        var skipped: Int64 = 0
+        for (id in ids) {
+            try {
+                services.media.delete(id, ctx.userDoc(), ctx.clientIp(), force: false)
+                deleted += 1
+            } catch (e: AppError) {
+                skipped += 1
+            }
+        }
+        ctx.setFlash("success", "已删除 ${deleted} 个附件" + if (skipped > 0) { "，跳过 ${skipped} 个被引用或无效项" } else { "" })
+        ctx.redirect("/admin/attachments", status: 303)
+    }
+
+    public func attachmentsReplace(ctx: Ctx): HttpResponse {        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        if (!ctx.can("media.manage")) {
+            ctx.setFlash("error", "无权替换附件")
+            return ctx.redirect("/admin/attachments", status: 303)
+        }
+        try {
+            ctx.req.parseForm()
+            if (ctx.req.files.size == 0) {
+                ctx.setFlash("error", "没有选择文件")
+                return ctx.redirect("/admin/attachments", status: 303)
+            }
+            services.media.replace(ctx.param("id"), ctx.req.files[0], ctx.userDoc(), ctx.clientIp())
+            ctx.setFlash("success", "附件文件已替换，访问地址不变")
+        } catch (e: AppError) {
+            ctx.setFlash("error", e.message)
+        } catch (e: Exception) {
+            services.logger.error("attachments", e.message)
+            ctx.setFlash("error", "替换失败")
+        }
+        ctx.redirect("/admin/attachments", status: 303)
+    }
+
+    public func attachmentsRename(ctx: Ctx): HttpResponse {        match (guard(ctx)) {
             case Some(response) => return response
             case None => ()
         }
@@ -1179,6 +1249,7 @@ public class AdminSite {
         setField(view, "size_text", JStr(formatFileSize(docInt(item, "size"))))
         setField(view, "date", JStr(formatDate(docInt(item, "created_at"))))
         setField(view, "date_time", JStr(formatDateTime(docInt(item, "created_at"))))
+        setField(view, "thumb_url", JStr(docStr(item, "thumb_url", def: docStr(item, "url"))))
         if (docInt(item, "width") > 0) {
             setField(view, "dimensions", JStr("${docInt(item, "width")} × ${docInt(item, "height")}"))
         } else {
@@ -1295,6 +1366,29 @@ public class AdminSite {
         } catch (e: AppError) {
             ctx.setFlash("error", e.message)
         }
+        ctx.redirect("/admin/users", status: 303)
+    }
+
+    public func userBulk(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let status = if (ctx.form("action") == "activate") { "active" } else { "suspended" }
+        let ids = ctx.req.formValues("ids")
+        var changed: Int64 = 0
+        for (id in ids) {
+            match (services.auth.userById(id)) {
+                case Some(user) =>
+                    try {
+                        services.auth.adminUpdateUser(id, docStr(user, "role"), status,
+                                                      docStr(user, "display_name"), ctx.clientIp())
+                        changed += 1
+                    } catch (e: AppError) {}
+                case None => ()
+            }
+        }
+        ctx.setFlash("success", "已处理 ${changed} 个用户")
         ctx.redirect("/admin/users", status: 303)
     }
 
@@ -1599,8 +1693,30 @@ public class AdminSite {
         data.set("backup_count", JInt(backups.items.size))
         data.set("total_size", JStr(formatFileSize(totalBytes)))
         data.set("backup_dir", JStr(services.config.backupDir()))
+        data.set("backup_auto", JBool(services.settings.bool("backup_auto", def: false)))
+        data.set("backup_interval", JInt(services.settings.int("backup_interval_hours", def: 24)))
+        data.set("backup_keep", JInt(services.settings.int("backup_keep", def: 7)))
+        data.set("backup_encrypt", JBool(services.settings.bool("backup_encrypt", def: false)))
+        data.set("backup_last", JStr(if (services.settings.int("backup_last_at", def: 0) > 0) {
+            formatDateTime(services.settings.int("backup_last_at", def: 0))
+        } else {
+            "尚未执行"
+        }))
         data.set("counts", services.stats.counts())
         ctx.renderAdminPage("backups.html", JObj(data))
+    }
+
+    public func backupAutoSave(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        services.settings.setBool("backup_auto", ctx.form("backup_auto") == "on")
+        services.settings.setInt("backup_interval_hours", clampInt(ctx.form("backup_interval_hours"), 1, 720, 24))
+        services.settings.setInt("backup_keep", clampInt(ctx.form("backup_keep"), 1, 100, 7))
+        services.settings.setBool("backup_encrypt", ctx.form("backup_encrypt") == "on")
+        ctx.setFlash("success", "自动备份设置已保存")
+        ctx.redirect("/admin/backups", status: 303)
     }
 
     public func backupAction(ctx: Ctx): HttpResponse {
@@ -1611,7 +1727,7 @@ public class AdminSite {
         let action = ctx.form("action")
         try {
             if (action == "create") {
-                let result = services.backup.createBackup(ctx.form("label"))
+                let result = services.backup.createBackup(ctx.form("label"), encrypt: services.settings.bool("backup_encrypt", def: false))
                 services.audit.log(docStr(ctx.userDoc(), "id"), docStr(ctx.userDoc(), "username"),
                                    "backup_created", "backup", docStr(result, "name"), ctx.clientIp(), "")
                 ctx.setFlash("success", "备份已创建：${docStr(result, "name")}")
@@ -1685,6 +1801,9 @@ public class AdminSite {
             let view = cloneDoc(token)
             setField(view, "created", JStr(formatDate(docInt(token, "created_at"))))
             setField(view, "last_used", JStr(formatDateTime(docInt(token, "last_used_at"))))
+            setField(view, "scopes_text", JStr(String.join(docStrings(token, "scopes"), delimiter: ", ")))
+            setField(view, "expires_text", JStr(if (docInt(token, "expires_at") > 0) { formatDate(docInt(token, "expires_at")) } else { "永不过期" }))
+            setField(view, "last_ip", JStr(docStr(token, "last_used_ip")))
             tokens.add(view)
         }
         let data = JsonObject()
@@ -1741,8 +1860,26 @@ public class AdminSite {
             ctx.setFlash("error", "只有管理员可以创建 API 令牌")
             return ctx.redirect("/admin/profile", status: 303)
         }
+        let scopes = ArrayList<String>()
+        for (scope in ctx.req.formValues("scopes")) {
+            scopes.add(scope)
+        }
+        if (scopes.size == 0) {
+            scopes.add("admin")
+        }
+        let days = clampInt(ctx.form("expires_days"), 0, 3650, 0)
+        let expiresAt = if (days > 0) { nowSeconds() + days * 86400 } else { 0 }
+        let ips = ArrayList<String>()
+        for (part in ctx.form("allowed_ips").replace("，", ",").replace("\n", ",").split(",")) {
+            let ip = part.trimAscii()
+            if (ip.size > 0 && ip.size <= 64) {
+                ips.add(ip)
+            }
+        }
         let token = services.auth.createApiToken(docStr(ctx.userDoc(), "id"),
-                                                 requireText(ctx.form("name"), "令牌名称", 1, 80))
+                                                 requireText(ctx.form("name"), "令牌名称", 1, 80),
+                                                 scopes: scopes.toArray(), expiresAt: expiresAt,
+                                                 allowedIps: ips.toArray())
         ctx.setFlash("success", "新令牌（仅显示一次）：${token}")
         ctx.redirect("/admin/profile", status: 303)
     }

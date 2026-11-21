@@ -65,13 +65,25 @@
     </div>
   </form>
 
+  <form id="user-bulk-form" class="bulk-bar" method="post" action="/admin/users/bulk">
+    <input type="hidden" name="_csrf" value="{{ csrf }}">
+    <label class="check-line"><input type="checkbox" id="user-bulk-all"> 全选</label>
+    <span class="muted" id="user-bulk-count">未选择</span>
+    <select name="action" aria-label="批量操作">
+      <option value="suspend">停用</option>
+      <option value="activate">启用</option>
+    </select>
+    <button class="btn btn-ghost" type="submit">应用</button>
+  </form>
+
   <section class="panel">
     <div class="table-wrap">
       <table class="table user-table">
-        <thead><tr><th>用户</th><th>角色与状态</th><th>文章</th><th>最近登录</th><th>操作</th></tr></thead>
+        <thead><tr><th></th><th>用户</th><th>角色与状态</th><th>文章</th><th>最近登录</th><th>操作</th></tr></thead>
         <tbody>
           {% for item in users %}
           <tr>
+            <td><input type="checkbox" class="user-bulk-check" name="ids" value="{{ item.id }}" form="user-bulk-form" aria-label="选择 {{ item.username }}"></td>
             <td>
               <div class="user-cell">
                 {% if item.avatar %}<img class="avatar avatar-img" src="{{ item.avatar }}" alt="">{% else %}<span class="avatar">{{ item.initial }}</span>{% endif %}

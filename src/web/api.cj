@@ -82,6 +82,7 @@ public class ApiSite {
     }
 
     public func createPost(ctx: Ctx): HttpResponse {
+        requireScope(ctx, "posts.write")
         let user = requireUser(ctx)
         let body = jsonBody(ctx)
         let input = postInputFrom(body)
@@ -95,6 +96,7 @@ public class ApiSite {
     }
 
     public func updatePost(ctx: Ctx): HttpResponse {
+        requireScope(ctx, "posts.write")
         let user = requireUser(ctx)
         let id = ctx.param("id")
         let existing = match (services.posts.get(id)) {
@@ -115,6 +117,7 @@ public class ApiSite {
     }
 
     public func deletePost(ctx: Ctx): HttpResponse {
+        requireScope(ctx, "posts.write")
         let user = requireUser(ctx)
         if (!isAdminOrEditor(user)) {
             throw AppError("forbidden", "只有管理员或编辑可以删除")
@@ -136,6 +139,7 @@ public class ApiSite {
     }
 
     public func createComment(ctx: Ctx): HttpResponse {
+        requireScope(ctx, "comments.write")
         let body = jsonBody(ctx)
         let postId = getString(body, "post_id")
         let post = match (services.store.get(COL_POSTS, postId)) {
@@ -165,6 +169,7 @@ public class ApiSite {
     }
 
     public func uploadMedia(ctx: Ctx): HttpResponse {
+        requireScope(ctx, "media.write")
         let user = requireUser(ctx)
         if (!services.auth.can(user, "media.manage")) {
             throw AppError("forbidden", "无权上传附件")
@@ -258,6 +263,24 @@ public class ApiSite {
         }
     }
 
+    private func requireScope(ctx: Ctx, scope: String): Unit {
+        let token = bearerToken(ctx)
+        if (token.size == 0) {
+            return
+        }
+        let doc = match (services.auth.validateApiToken(token, ctx.clientIp())) {
+            case Some(value) => value
+            case None => throw AppError("unauthorized", "令牌无效或已过期")
+        }
+        let scopes = docStrings(doc, "scopes")
+        if (scopes.size == 0) {
+            return
+        }
+        if (!scopes.contains(scope) && !scopes.contains("admin")) {
+            throw AppError("forbidden", "令牌缺少 ${scope} 权限")
+        }
+    }
+
     private func requireUser(ctx: Ctx): JsonValue {
         match (authenticatedUser(ctx)) {
             case Some(user) => user
@@ -268,7 +291,7 @@ public class ApiSite {
     private func authenticatedUser(ctx: Ctx): ?JsonValue {
         let token = bearerToken(ctx)
         if (token.size > 0) {
-            return services.auth.userByApiToken(token)
+            return services.auth.userByApiToken(token, ip: ctx.clientIp())
         }
         match (ctx.user) {
             case Some(user) =>

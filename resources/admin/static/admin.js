@@ -1089,3 +1089,70 @@
     saveDraft();
   });
 })();
+
+  // Attachment bulk selection.
+  var bulkAll = document.getElementById("attachment-bulk-all");
+  var bulkCount = document.getElementById("attachment-bulk-count");
+  var bulkChecks = document.querySelectorAll(".bulk-check");
+  function updateBulkCount() {
+    var checked = 0;
+    bulkChecks.forEach(function (box) { if (box.checked) checked += 1; });
+    if (bulkCount) bulkCount.textContent = checked === 0 ? "未选择" : "已选 " + checked + " 项";
+    if (bulkAll) bulkAll.checked = checked > 0 && checked === bulkChecks.length;
+  }
+  if (bulkAll) {
+    bulkAll.addEventListener("change", function () {
+      bulkChecks.forEach(function (box) { box.checked = bulkAll.checked; });
+      updateBulkCount();
+    });
+  }
+  bulkChecks.forEach(function (box) { box.addEventListener("change", updateBulkCount); });
+  updateBulkCount();
+  // User bulk selection.
+  var userBulkAll = document.getElementById("user-bulk-all");
+  var userBulkCount = document.getElementById("user-bulk-count");
+  var userBulkChecks = document.querySelectorAll(".user-bulk-check");
+  function updateUserBulkCount() {
+    var checked = 0;
+    userBulkChecks.forEach(function (box) { if (box.checked) checked += 1; });
+    if (userBulkCount) userBulkCount.textContent = checked === 0 ? "未选择" : "已选 " + checked + " 项";
+    if (userBulkAll) userBulkAll.checked = checked > 0 && checked === userBulkChecks.length;
+  }
+  if (userBulkAll) {
+    userBulkAll.addEventListener("change", function () {
+      userBulkChecks.forEach(function (box) { box.checked = userBulkAll.checked; });
+      updateUserBulkCount();
+    });
+  }
+  userBulkChecks.forEach(function (box) { box.addEventListener("change", updateUserBulkCount); });
+  updateUserBulkCount();
+  // Generate a client-side WebP thumbnail; browsers without canvas WebP fall back.
+  document.querySelectorAll(".attachment-variant").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var image = new Image();
+      image.onload = function () {
+        var width = Math.min(480, image.naturalWidth || image.width);
+        var height = Math.max(1, Math.round((image.naturalHeight || image.height) * width / (image.naturalWidth || image.width)));
+        var canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(image, 0, 0, width, height);
+        canvas.toBlob(function (blob) {
+          if (!blob) { window.alert("当前浏览器不支持 WebP 缩略图，已保留原图。"); return; }
+          var tokenInput = document.querySelector("#attachment-upload-form [name=_csrf]");
+          var data = new FormData();
+          data.append("file", blob, "thumb.webp");
+          fetch(button.getAttribute("data-variant-url"), {
+            method: "POST",
+            headers: { "X-CSRF-Token": tokenInput ? tokenInput.value : "" },
+            body: data
+          }).then(function (response) {
+            if (!response.ok) throw new Error("variant failed");
+            window.location.reload();
+          }).catch(function () { window.alert("缩略图生成失败，请重试。"); });
+        }, "image/webp", 0.82);
+      };
+      image.onerror = function () { window.alert("图片加载失败，无法生成缩略图。"); };
+      image.src = button.getAttribute("data-url");
+    });
+  });

@@ -46,3 +46,18 @@ func testPasswordPolicy(): Unit {
     @Assert(passwordProblem("short").isSome())
     @Assert(passwordProblem("Cangmo-Strong-2026").isNone())
 }
+
+@Test
+func testBackupCipherRoundTrip(): Unit {
+    let text = "{\"format\":1,\"hello\":\"仓墨\"}"
+    let encrypted = encryptBackupText(text, "test-passphrase-2026")
+    @Assert(encrypted.startsWith("CMB1"))
+    @Expect(decryptBackupText(encrypted, "test-passphrase-2026"), text)
+    var rejected = false
+    try {
+        decryptBackupText(encrypted, "wrong-passphrase-2026")
+    } catch (e: AppError) {
+        rejected = true
+    }
+    @Assert(rejected)
+}

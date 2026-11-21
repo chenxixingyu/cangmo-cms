@@ -1,8 +1,8 @@
-# 仓墨测试与验收（v1.2.0）
+# 仓墨测试与验收（v1.2.1）
 
 > 本地环境：Windows 11 x64 · 仓颉 1.2.1 (cjnative) · Node.js 22.2.0 · Microsoft Edge  
-> 测试对象：v1.2.0。所有集成测试均在**全新数据目录**上执行，原始输出保存在 `docs/reports/`。  
-> Linux：GitHub Actions `ubuntu-latest` 已通过 `cjpm build` + `cjpm test`（run 44945070899）。
+> 测试对象：v1.2.1。所有集成测试均在**全新数据目录**上执行，原始输出保存在 `docs/reports/`。  
+> Linux：GitHub Actions `ubuntu-latest` 已通过 `cjpm build` + `cjpm test`（run 见 GitHub Actions）。
 
 ## 1. 一键运行
 
@@ -31,25 +31,28 @@ node tests\security.mjs
 
 | 套件 | 断言数 | 结果 | 原始输出 |
 | --- | --- | --- | --- |
-| 单元测试 `cjpm test` | 24 | **24 / 24** | [unit-tests-v101.txt](reports/unit-tests-v101.txt) |
+| 单元测试 `cjpm test` | 25 | **25 / 25** | [unit-tests-v101.txt](reports/unit-tests-v101.txt) |
 | 初始化与公共站 `smoke.mjs` | 24 | **24 / 24** | [smoke-v101.txt](reports/smoke-v101.txt) |
 | 后台与内容闭环 `e2e.mjs` | 31 | **31 / 31** | [e2e-v101.txt](reports/e2e-v101.txt) |
 | 扩展功能 `extended.mjs` | 29 | **29 / 29** | [extended-v101.txt](reports/extended-v101.txt) |
 | v1.0.1 验收 `v101.mjs` | 35 | **35 / 35** | [v101-final.txt](reports/v101-final.txt) |
 | v1.1 功能 `v110.mjs` | 32 | **32 / 32** | [v110.txt](reports/v110.txt) |
 | v1.2 功能 `v120.mjs` | 12 | **12 / 12** | [v120.txt](reports/v120.txt) |
+| v1.2.1 令牌 `v121-token.mjs` | 8 | **8 / 8** | [v121-token.txt](reports/v121-token.txt) |
+| v1.2.1 搜索/批量 `v121-search.mjs` | 9 | **9 / 9** | [v121-search.txt](reports/v121-search.txt) |
+| v1.2.1 加密/变体 `v121-crypto.mjs` | 7 | **7 / 7** | [v121-crypto.txt](reports/v121-crypto.txt) |
 | 并发/协议 `load.mjs` | 6 | **6 / 6** | [load-v101.txt](reports/load-v101.txt) |
 | 安全回归 `security.mjs` | 31 | **31 / 31** | [security-v101.txt](reports/security-v101.txt) |
 | 部署自检 `doctor` | 17 模板 | **通过，17/17** | [doctor-v101.txt](reports/doctor-v101.txt) |
-| 静态分析 `cjlint` | 807 条 | 785 建议 + 22 强制风格项 | [cjlint.json](reports/cjlint.json) |
+| 静态分析 `cjlint` | 853 条 | 828 建议 + 25 强制风格项 | [cjlint.json](reports/cjlint.json) |
 
-**合计：24 个单元测试 + 200 项集成/安全断言 = 224 项，全部通过。**
+**合计：25 个单元测试 + 224 项集成/安全断言 = 249 项，全部通过。**
 
 > 本轮功能与兼容说明见 [v1.1.0 发布说明](releases/v1.1.0.md)。
 
-另执行 **11 项 v1.2 浏览器审计**（Edge/CDP）：行级 diff、页面模板选择、重定向对话框、搜索高亮、命令面板与全局 JS 异常，全部通过，见 [ui-v120.txt](reports/ui-v120.txt)。
+另执行 **11 项 v1.2.1 浏览器审计**（Edge/CDP）：Token 范围、自动备份/加密、媒体/用户批量、WebP 缩略图与全局 JS 异常，全部通过，见 [ui-v121.txt](reports/ui-v121.txt)。
 
-### v1.0.1 ~ v1.2.0 新增与回归覆盖
+### v1.0.1 ~ v1.2.1 新增与回归覆盖
 
 - 附件库：页面渲染、旧“媒体库”文案移除、JSON 上传、类型筛选、文件名搜索、选择器数据、删除
 - 编辑器：封面/标签 UI、AJAX 新建分类、带分类/标签/封面的文章保存
@@ -65,6 +68,7 @@ node tests\security.mjs
 - v1.0.9：admin.js 版本缓存、页面根路径 301、列表真实路径、菜单无 JS 回退
 - v1.1.0：版本查看/恢复、附件重命名/引用保护/权限、Markdown 批量导入
 - v1.2.0：行级 diff、页面模板、301 重定向、搜索高亮、命令面板
+- v1.2.1：Token scopes/过期/IP、自动备份/加密、附件替换/变体、媒体/用户批量、倒排索引
 - 恢复后会话失效，必须重新登录
 
 ### 既有覆盖
@@ -96,7 +100,7 @@ node tests\security.mjs
 cjlint -f .\src -o .\docs\reports\cjlint -r json
 ```
 
-结果：**807 条**（`MANDATORY` 22、`SUGGESTIONS` 785）。强制项仍集中在：
+结果：**853 条**（`MANDATORY` 25、`SUGGESTIONS` 828）。强制项仍集中在：
 
 | 类型 | 数量 | 说明 |
 | --- | --- | --- |

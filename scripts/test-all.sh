@@ -12,6 +12,7 @@ PORT="${CANGMO_TEST_PORT:-18090}"
 DATA_DIR="${CANGMO_TEST_DATA:-./data/test-linux}"
 export CANGMO_SETUP_TOKEN="${CANGMO_SETUP_TOKEN:-test-setup-token-123456}"
 export CANGMO_BASE="http://127.0.0.1:${PORT}"
+export CANGMO_BACKUP_PASSPHRASE="${CANGMO_BACKUP_PASSPHRASE:-test-backup-passphrase-2026}"
 
 rm -rf "${DATA_DIR}"
 mkdir -p "${DATA_DIR}"
@@ -29,5 +30,8 @@ node tests/extended.mjs
 node tests/v101.mjs
 node tests/v110.mjs
 node tests/v120.mjs
+node tests/v121-token.mjs
+node tests/v121-search.mjs
+node tests/v121-crypto.mjs
 node tests/load.mjs
 node tests/security.mjs

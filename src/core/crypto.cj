@@ -545,3 +545,79 @@ public func passwordProblem(password: String, username!: String = "", email!: St
 public func hashApiToken(token: String): String {
     sha256Hex("cangmo-api-token:" + token)
 }
+
+// ---------------------------------------------------------------------------
+// Backup encryption: PBKDF2-derived key, HMAC-SHA256 counter stream, HMAC tag.
+// Format: CMB1\n<base64 salt>\n<base64 nonce>\n<base64 ciphertext>\n<base64 tag>
+// ---------------------------------------------------------------------------
+
+func backupCounterBytes(value: Int64): Array<UInt8> {
+    let out = Array<UInt8>(8, repeat: 0)
+    var v = value
+    var i = 7
+    while (i >= 0) {
+        out[i] = UInt8(v & 0xFF)
+        v = v >> 8
+        i -= 1
+    }
+    out
+}
+
+func backupXor(data: Array<UInt8>, key: Array<UInt8>, nonce: Array<UInt8>): Array<UInt8> {
+    let out = Array<UInt8>(data.size, repeat: 0)
+    var offset: Int64 = 0
+    var counter: Int64 = 0
+    while (offset < data.size) {
+        let block = hmacSha256(key, concatBytes(nonce, backupCounterBytes(counter)))
+        var j: Int64 = 0
+        while (j < block.size && offset + j < data.size) {
+            out[offset + j] = data[offset + j] ^ block[j]
+            j += 1
+        }
+        offset += block.size
+        counter += 1
+    }
+    out
+}
+
+public func encryptBackupText(plain: String, passphrase: String): String {
+    let salt = secureRandomBytes(16)
+    let nonce = secureRandomBytes(16)
+    let material = pbkdf2Sha256(passphrase, salt, 120000, 64)
+    let encKey = material[0..32]
+    let macKey = material[32..64]
+    let cipher = backupXor(plain.toArray(), encKey, nonce)
+    let tagged = concatBytes(concatBytes("CMB1".toArray(), salt),
+                             concatBytes(nonce, cipher))
+    let tag = hmacSha256(macKey, tagged)
+    "CMB1\n" + base64Encode(salt) + "\n" + base64Encode(nonce) + "\n" +
+        base64Encode(cipher) + "\n" + base64Encode(tag)
+}
+
+public func decryptBackupText(text: String, passphrase: String): String {
+    let lines = text.split("\n")
+    if (lines.size < 5 || lines[0] != "CMB1") {
+        throw AppError("validation", "备份不是加密格式")
+    }
+    let salt = base64Decode(lines[1].trimAscii())
+    let nonce = base64Decode(lines[2].trimAscii())
+    let cipher = base64Decode(lines[3].trimAscii())
+    let tag = base64Decode(lines[4].trimAscii())
+    let material = pbkdf2Sha256(passphrase, salt, 120000, 64)
+    let encKey = material[0..32]
+    let macKey = material[32..64]
+    let tagged = concatBytes(concatBytes("CMB1".toArray(), salt),
+                             concatBytes(nonce, cipher))
+    let expected = hmacSha256(macKey, tagged)
+    if (tag.size != expected.size) {
+        throw AppError("validation", "备份密码错误或文件已损坏")
+    }
+    var diff: UInt8 = 0
+    for (i in 0..tag.size) {
+        diff = diff | (tag[i] ^ expected[i])
+    }
+    if (diff != 0) {
+        throw AppError("validation", "备份密码错误或文件已损坏")
+    }
+    String.fromUtf8(backupXor(cipher, encKey, nonce))
+}

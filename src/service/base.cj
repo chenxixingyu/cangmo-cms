@@ -157,6 +157,11 @@ public class SettingsService {
         setDefault("setup_completed", JBool(false))
         setDefault("default_category", JStr(""))
         setDefault("api_enabled", JBool(config.enableApi))
+        setDefault("backup_auto", JBool(false))
+        setDefault("backup_interval_hours", JInt(24))
+        setDefault("backup_keep", JInt(7))
+        setDefault("backup_last_at", JInt(0))
+        setDefault("backup_encrypt", JBool(false))
     }
 
     private func setDefault(key: String, value: JsonValue): Unit {

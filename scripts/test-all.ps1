@@ -5,6 +5,7 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $base = if ($env:CANGMO_BASE) { $env:CANGMO_BASE } else { "http://127.0.0.1:18085" }
 $env:CANGMO_BASE = $base
+if (-not $env:CANGMO_BACKUP_PASSPHRASE) { $env:CANGMO_BACKUP_PASSPHRASE = "test-backup-passphrase-2026" }
 $node = (Get-Command node).Source
 
 Write-Host "== unit tests =="
@@ -29,6 +30,15 @@ Write-Host "== v1.1 features =="
 
 Write-Host "== v1.2 features =="
 & $node "$root\tests\v120.mjs"
+
+Write-Host "== v1.2.1 token =="
+& $node "$root\tests\v121-token.mjs"
+
+Write-Host "== v1.2.1 search/bulk =="
+& $node "$root\tests\v121-search.mjs"
+
+Write-Host "== v1.2.1 crypto/variant =="
+& $node "$root\tests\v121-crypto.mjs"
 
 Write-Host "== load =="
 & $node "$root\tests\load.mjs"
