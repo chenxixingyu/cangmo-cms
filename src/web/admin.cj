@@ -1440,6 +1440,30 @@ public class AdminSite {
             services.settings.setBool("show_reading_time", isChecked(ctx, "show_reading_time"))
             services.settings.set("nav", JStr(navJson(ctx.form("nav_text"))))
             services.settings.set("social_links", JStr(socialJson(ctx.form("social_text"))))
+            if (ctx.form("settings_v2_present") == "1") {
+                services.settings.setString("site_logo", safeAssetUrl(ctx.form("site_logo"), "站点 Logo"))
+                services.settings.setString("site_favicon", safeAssetUrl(ctx.form("site_favicon"), "站点图标"))
+                services.settings.setString("footer_copyright", truncateUtf8(ctx.form("footer_copyright").trimAscii(), 200))
+                services.settings.setString("footer_icp", truncateUtf8(ctx.form("footer_icp").trimAscii(), 100))
+                services.settings.setString("home_hero_title", truncateUtf8(ctx.form("home_hero_title").trimAscii(), 120))
+                services.settings.setString("home_hero_subtitle", truncateUtf8(ctx.form("home_hero_subtitle").trimAscii(), 200))
+                services.settings.setString("home_hero_image", safeAssetUrl(ctx.form("home_hero_image"), "首页主图"))
+                services.settings.setString("seo_image", safeAssetUrl(ctx.form("seo_image"), "分享图"))
+                services.settings.setString("seo_twitter", truncateUtf8(ctx.form("seo_twitter").trimAscii(), 50))
+                services.settings.setBool("home_show_featured", isChecked(ctx, "home_show_featured"))
+                services.settings.setBool("show_author", isChecked(ctx, "show_author"))
+                services.settings.setBool("show_date", isChecked(ctx, "show_date"))
+                services.settings.setBool("show_category", isChecked(ctx, "show_category"))
+                services.settings.setBool("show_tags", isChecked(ctx, "show_tags"))
+                services.settings.setInt("excerpt_length", clampInt(ctx.form("excerpt_length"), 40, 300, 120))
+                services.settings.setInt("related_count", clampInt(ctx.form("related_count"), 1, 12, 3))
+                services.settings.setInt("theme_font_size", clampInt(ctx.form("theme_font_size"), 14, 22, 17))
+                services.settings.setInt("theme_width", clampInt(ctx.form("theme_width"), 900, 1400, 1120))
+                services.settings.setInt("theme_radius", clampInt(ctx.form("theme_radius"), 0, 28, 12))
+                services.settings.setString("custom_css", truncateUtf8(ctx.form("custom_css"), 20000))
+                services.settings.setBool("maintenance", isChecked(ctx, "maintenance"))
+                services.settings.setString("maintenance_message", truncateUtf8(ctx.form("maintenance_message").trimAscii(), 200))
+            }
             services.audit.log(docStr(ctx.userDoc(), "id"), docStr(ctx.userDoc(), "username"),
                                "settings_updated", "settings", "", ctx.clientIp(), "")
             ctx.setFlash("success", "设置已保存")
@@ -1449,8 +1473,21 @@ public class AdminSite {
         ctx.redirect("/admin/settings", status: 303)
     }
 
-    private func navText(): String {
-        let sb = StringBuilder()
+    private func safeAssetUrl(value: String, label: String): String {
+        let url = value.trimAscii()
+        if (url.size == 0) {
+            return ""
+        }
+        if (url.startsWith("/") && !url.contains("..") && !url.contains("\\")) {
+            return truncateUtf8(url, 300)
+        }
+        if (isValidWebUrl(url)) {
+            return truncateUtf8(url, 300)
+        }
+        throw AppError("validation", "${label}地址无效")
+    }
+
+    private func navText(): String {        let sb = StringBuilder()
         for (item in services.settings.navItems()) {
             sb.append(docStr(item, "label"))
             sb.append("|")
@@ -1565,6 +1602,7 @@ public class AdminSite {
         let data = JsonObject()
         data.set("page_title", JStr("主题"))
         data.set("active", JStr("themes"))
+        data.set("active_theme", JStr(activeTheme))
         data.set("themes", JArr(themes))
         ctx.renderAdminPage("themes.html", JObj(data))
     }

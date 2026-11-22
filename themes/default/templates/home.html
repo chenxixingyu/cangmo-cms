@@ -2,13 +2,13 @@
 {% include "partials/header.html" %}
 <main id="main" class="wrap layout">
   <div class="content">
-    <section class="hero">
+    <section class="hero"{% if site.hero_image %} style="background-image:linear-gradient(90deg,rgba(0,0,0,.45),rgba(0,0,0,.15)),url('{{ site.hero_image }}')"{% endif %}>
       <p class="hero-kicker">Writing · 记录</p>
-      <h1 class="hero-title">{{ site.title }}</h1>
-      {% if site.subtitle %}<p class="hero-subtitle">{{ site.subtitle }}</p>{% endif %}
+      <h1 class="hero-title">{% if site.hero_title %}{{ site.hero_title }}{% else %}{{ site.title }}{% endif %}</h1>
+      {% if site.hero_subtitle %}<p class="hero-subtitle">{{ site.hero_subtitle }}</p>{% elif site.subtitle %}<p class="hero-subtitle">{{ site.subtitle }}</p>{% endif %}
     </section>
 
-    {% if featured.length > 0 %}
+    {% if site.show_featured and featured.length > 0 %}
     <section class="featured" aria-label="精选文章">
       <h2 class="section-title">精选</h2>
       <div class="featured-grid">

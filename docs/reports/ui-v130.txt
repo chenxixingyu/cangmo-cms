@@ -1,0 +1,11 @@
+﻿ok: settings expose six tabs
+ok: home settings panel opens
+ok: appearance settings expose custom CSS
+ok: settings hash opens reading tab
+ok: theme page shows active theme context
+ok: theme page links to appearance
+ok: public home uses hero setting
+ok: public home uses logo and custom CSS
+ok: custom CSS endpoint serves custom CSS
+ok: no browser exceptions
+v1.3 UI audit complete

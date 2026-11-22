@@ -6,15 +6,16 @@
   {% endif %}
   <div class="card-body">
     <div class="card-meta">
-      <time datetime="{{ post.date_iso }}">{{ post.date }}</time>
-      {% if post.category.name %}<span class="dot">·</span><a href="{{ post.category.url }}">{{ post.category.name }}</a>{% endif %}
+      {% if site.show_date %}<time datetime="{{ post.date_iso }}">{{ post.date }}</time>{% endif %}
+      {% if site.show_category and post.category.name %}{% if site.show_date %}<span class="dot">·</span>{% endif %}<a href="{{ post.category.url }}">{{ post.category.name }}</a>{% endif %}
+      {% if site.show_author %}{% if site.show_date or (site.show_category and post.category.name) %}<span class="dot">·</span>{% endif %}<span>{{ post.author.name }}</span>{% endif %}
       {% if post.pinned %}<span class="badge">置顶</span>{% endif %}
     </div>
     <h2 class="card-title"><a href="{{ post.url }}">{% if post.title_html %}{{{ post.title_html }}}{% else %}{{ post.title }}{% endif %}</a></h2>
     {% if post.summary_html %}<p class="card-summary">{{{ post.summary_html }}}</p>{% elif post.summary %}<p class="card-summary">{{ post.summary }}</p>{% endif %}
     <div class="card-foot">
       <div class="card-tags">
-        {% for tag in post.tags %}<a href="{{ tag.url }}">#{{ tag.name }}</a>{% endfor %}
+        {% if site.show_tags %}{% for tag in post.tags %}<a href="{{ tag.url }}">#{{ tag.name }}</a>{% endfor %}{% endif %}
       </div>
       <span class="reading">{{ post.reading_minutes }} 分钟</span>
     </div>

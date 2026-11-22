@@ -45,3 +45,6 @@ Write-Host "== load =="
 
 Write-Host "== security =="
 & $node "$root\tests\security.mjs"
+
+Write-Host "== v1.3 settings/theme =="
+& $node "$root\tests\v130.mjs"

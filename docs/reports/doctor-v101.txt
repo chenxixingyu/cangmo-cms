@@ -1,8 +1,8 @@
 ﻿== 仓墨自检 ==
-版本：1.2.1
-配置：.\data\doctor-v121\config.json
-数据目录：./data/doctor-v121 ✓
-上传目录：./data/doctor-v121/uploads ✓
+版本：1.3.0
+配置：.\data\doctor-v130\config.json
+数据目录：./data/doctor-v130 ✓
+上传目录：./data/doctor-v130/uploads ✓
 主题：default ✓
 后台模板：✓
 静态资源：✓
@@ -13,7 +13,7 @@
 附件数：0
 附件库：✓
 备份中心：✓
-WAL 待压缩记录：30
+WAL 待压缩记录：51
 PBKDF2 迭代：120000
 后台模板完整度：17/17
 自检通过。

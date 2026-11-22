@@ -7,10 +7,14 @@
   <form method="post" action="/admin/settings/save" class="settings-form">
     <input type="hidden" name="_csrf" value="{{ csrf }}">
     <input type="hidden" name="show_related_posts_present" value="1">
+    <input type="hidden" name="settings_v2_present" value="1">
 
     <div class="settings-tabs" role="tablist" aria-label="设置分类">
-      <button type="button" class="settings-tab active" role="tab" aria-selected="true" data-settings-tab="site">站点信息</button>
+      <button type="button" class="settings-tab active" role="tab" aria-selected="true" data-settings-tab="site">站点</button>
+      <button type="button" class="settings-tab" role="tab" aria-selected="false" data-settings-tab="home">首页</button>
       <button type="button" class="settings-tab" role="tab" aria-selected="false" data-settings-tab="appearance">外观</button>
+      <button type="button" class="settings-tab" role="tab" aria-selected="false" data-settings-tab="reading">阅读</button>
+      <button type="button" class="settings-tab" role="tab" aria-selected="false" data-settings-tab="seo">SEO</button>
       <button type="button" class="settings-tab" role="tab" aria-selected="false" data-settings-tab="comments">评论</button>
     </div>
 
@@ -21,8 +25,23 @@
         <label class="span-2">站点描述<textarea name="site_description" rows="2" maxlength="300">{{ settings.site_description }}</textarea></label>
         <label>关键词<input type="text" name="site_keywords" value="{{ settings.site_keywords }}" maxlength="200"></label>
         <label>站点地址<input type="url" name="site_url" value="{{ settings.site_url }}" maxlength="300"></label>
-        <label class="span-2">页脚文字<input type="text" name="footer_text" value="{{ settings.footer_text }}" maxlength="300"></label>
+        <label>Logo 地址<input type="text" name="site_logo" value="{{ settings.site_logo }}" maxlength="300" placeholder="/media/… 或 https://…"></label>
+        <label>站点图标<input type="text" name="site_favicon" value="{{ settings.site_favicon }}" maxlength="300" placeholder="/media/… 或 https://…"></label>
+        <label>页脚文字<input type="text" name="footer_text" value="{{ settings.footer_text }}" maxlength="300"></label>
+        <label>版权文字<input type="text" name="footer_copyright" value="{{ settings.footer_copyright }}" maxlength="200" placeholder="留空使用默认版权"></label>
+        <label>备案号<input type="text" name="footer_icp" value="{{ settings.footer_icp }}" maxlength="100" placeholder="如：京ICP备…"></label>
         <label>每页文章数<input type="number" name="posts_per_page" value="{{ settings.posts_per_page }}" min="1" max="50"></label>
+        <label class="check-row"><input type="checkbox" name="maintenance" value="on"{% if settings.maintenance %} checked{% endif %}> 维护模式（仅管理员可访问）</label>
+        <label class="span-2">维护提示<input type="text" name="maintenance_message" value="{{ settings.maintenance_message }}" maxlength="200"></label>
+      </div>
+    </section>
+
+    <section class="settings-panel" role="tabpanel" data-settings-panel="home" hidden>
+      <div class="grid-form">
+        <label>首页主标题<input type="text" name="home_hero_title" value="{{ settings.home_hero_title }}" maxlength="120" placeholder="留空使用站点标题"></label>
+        <label>首页副标题<input type="text" name="home_hero_subtitle" value="{{ settings.home_hero_subtitle }}" maxlength="200" placeholder="留空使用站点副标题"></label>
+        <label class="span-2">首页主图<input type="text" name="home_hero_image" value="{{ settings.home_hero_image }}" maxlength="300" placeholder="/media/… 或 https://…"></label>
+        <label class="check-row"><input type="checkbox" name="home_show_featured" value="on"{% if settings.home_show_featured %} checked{% endif %}> 显示精选文章</label>
       </div>
     </section>
 
@@ -36,15 +55,41 @@
             <option value="dark"{% if settings.theme_mode == "dark" %} selected{% endif %}>深色</option>
           </select>
         </label>
-        <label class="check-row"><input type="checkbox" name="show_toc" value="on"{% if settings.show_toc %} checked{% endif %}> 显示文章目录</label>
-        <label class="check-row"><input type="checkbox" name="show_reading_time" value="on"{% if settings.show_reading_time %} checked{% endif %}> 显示阅读时间</label>
-        <label class="check-row"><input type="checkbox" name="show_related_posts" value="on"{% if settings.show_related_posts %} checked{% endif %}> 显示相关文章</label>
+        <label>正文字号<input type="number" name="theme_font_size" value="{{ settings.theme_font_size }}" min="14" max="22"> px</label>
+        <label>内容宽度<input type="number" name="theme_width" value="{{ settings.theme_width }}" min="900" max="1400"> px</label>
+        <label>圆角<input type="number" name="theme_radius" value="{{ settings.theme_radius }}" min="0" max="28"> px</label>
+        <div class="span-2 theme-link-row"><a class="btn btn-ghost" href="/admin/themes">主题管理与预览</a><span class="muted small">外观设置即时生效，无需切换主题。</span></div>
         <label class="span-2">导航菜单（每行：名称|链接）
           <textarea name="nav_text" rows="4" placeholder="首页|/&#10;归档|/archive">{{ nav_text }}</textarea>
         </label>
         <label class="span-2">社交链接（每行：名称|链接）
           <textarea name="social_text" rows="3" placeholder="GitHub|https://github.com/you">{{ social_text }}</textarea>
         </label>
+        <label class="span-2">自定义 CSS（通过 /custom.css 加载）
+          <textarea name="custom_css" rows="6" maxlength="20000" placeholder=".post-title { letter-spacing: .02em; }">{{ settings.custom_css }}</textarea>
+        </label>
+      </div>
+    </section>
+
+    <section class="settings-panel" role="tabpanel" data-settings-panel="reading" hidden>
+      <div class="grid-form">
+        <label class="check-row"><input type="checkbox" name="show_toc" value="on"{% if settings.show_toc %} checked{% endif %}> 显示文章目录</label>
+        <label class="check-row"><input type="checkbox" name="show_reading_time" value="on"{% if settings.show_reading_time %} checked{% endif %}> 显示阅读时间</label>
+        <label class="check-row"><input type="checkbox" name="show_related_posts" value="on"{% if settings.show_related_posts %} checked{% endif %}> 显示相关文章</label>
+        <label class="check-row"><input type="checkbox" name="show_author" value="on"{% if settings.show_author %} checked{% endif %}> 列表显示作者</label>
+        <label class="check-row"><input type="checkbox" name="show_date" value="on"{% if settings.show_date %} checked{% endif %}> 列表显示日期</label>
+        <label class="check-row"><input type="checkbox" name="show_category" value="on"{% if settings.show_category %} checked{% endif %}> 列表显示分类</label>
+        <label class="check-row"><input type="checkbox" name="show_tags" value="on"{% if settings.show_tags %} checked{% endif %}> 列表显示标签</label>
+        <label>摘要长度<input type="number" name="excerpt_length" value="{{ settings.excerpt_length }}" min="40" max="300"> 字</label>
+        <label>相关文章数<input type="number" name="related_count" value="{{ settings.related_count }}" min="1" max="12"></label>
+      </div>
+    </section>
+
+    <section class="settings-panel" role="tabpanel" data-settings-panel="seo" hidden>
+      <div class="grid-form">
+        <label class="span-2">默认分享图<input type="text" name="seo_image" value="{{ settings.seo_image }}" maxlength="300" placeholder="/media/… 或 https://…"></label>
+        <label>Twitter / X 账号<input type="text" name="seo_twitter" value="{{ settings.seo_twitter }}" maxlength="50" placeholder="@yoursite"></label>
+        <p class="muted small span-2">分享图用于 Open Graph 与 Twitter Card；关键词在「站点」中维护。</p>
       </div>
     </section>
 

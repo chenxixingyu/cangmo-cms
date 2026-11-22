@@ -11,7 +11,7 @@
       {% for link in site.social %}<a href="{{ link.url }}" rel="noopener nofollow" target="_blank">{{ link.label }}</a>{% endfor %}
       <a href="/admin/login">管理</a>
     </div>
-    <p class="copyright">© {{ site.year }} {{ site.title }} · 由仓墨构建</p>
+    <p class="copyright">{% if site.footer_copyright %}{{ site.footer_copyright }}{% else %}© {{ site.year }} {{ site.title }} · 由仓墨构建{% endif %}{% if site.footer_icp %} · <a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">{{ site.footer_icp }}</a>{% endif %}</p>
   </div>
 </footer>
 <script src="/static/app.js" defer></script>

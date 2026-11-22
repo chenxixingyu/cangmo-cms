@@ -35,3 +35,4 @@ node tests/v121-search.mjs
 node tests/v121-crypto.mjs
 node tests/load.mjs
 node tests/security.mjs
+node tests/v130.mjs

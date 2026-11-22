@@ -4,6 +4,15 @@
 <div class="admin-main">
 {% include "partials/topbar.html" %}
 <main class="admin-content">
+    <div class="page-intro">
+      <div>
+        <p class="eyebrow">THEME</p>
+        <h2>主题</h2>
+        <p class="muted">当前主题：{{ active_theme }}。外观、字号、宽度与自定义 CSS 在设置中调整。</p>
+      </div>
+      <div class="page-intro-actions"><a class="btn btn-ghost" href="/" target="_blank" rel="noopener">预览站点</a><a class="btn" href="/admin/settings#appearance">外观设置</a></div>
+    </div>
+
   <div class="theme-grid">
     {% for theme in themes %}
     <article class="theme-card {% if theme.active %}active{% endif %}">
@@ -15,6 +24,7 @@
         <div class="theme-head"><h2>{{ theme.title }}</h2>{% if theme.active %}<span class="badge">当前主题</span>{% endif %}</div>
         <p class="muted">{{ theme.description }}</p>
         <small>{{ theme.name }} · v{{ theme.version }} · {{ theme.author }}</small>
+        {% if theme.active %}<a class="btn btn-ghost" href="/admin/settings#appearance">自定义外观</a>{% endif %}
         {% if not theme.active %}
         <form method="post" action="/admin/themes/activate" class="inline-form">
           <input type="hidden" name="_csrf" value="{{ csrf }}">

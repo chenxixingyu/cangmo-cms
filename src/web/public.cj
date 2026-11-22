@@ -383,6 +383,26 @@ public class PublicSite {
         HttpResponse().json(data)
     }
 
+    public func customCss(ctx: Ctx): HttpResponse {
+        let css = services.settings.str("custom_css")
+        if (css.trimAscii().size == 0) {
+            return HttpResponse().html("/* no custom css */", status: 404)
+        }
+        let response = HttpResponse().bytes(css.toArray(), "text/css; charset=utf-8")
+        response.headers.set("cache-control", "public, max-age=300")
+        response
+    }
+
+    public func maintenance(ctx: Ctx): HttpResponse {
+        let data = JsonObject()
+        data.set("page_title", JStr("站点维护中"))
+        data.set("status", JInt(503))
+        data.set("message", JStr(services.settings.str("maintenance_message", def: "站点维护中，请稍后再来。")))
+        let response = HttpResponse().html(ctx.render("error.html", JObj(data)), status: 503)
+        response.headers.set("retry-after", "3600")
+        response
+    }
+
     public func notFound(ctx: Ctx): HttpResponse {
         let data = JsonObject()
         data.set("page_title", JStr("页面不存在"))

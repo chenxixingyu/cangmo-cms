@@ -56,6 +56,7 @@ public class WebApp {
         router.get("/robots.txt", { ctx: Ctx => publicSite.robots(ctx) })
         router.get("/healthz", { ctx: Ctx => publicSite.healthz(ctx) })
         router.get("/manifest.webmanifest", { ctx: Ctx => publicSite.manifest(ctx) })
+        router.get("/custom.css", { ctx: Ctx => publicSite.customCss(ctx) })
 
         // Setup.
         router.get("/setup", { ctx: Ctx => setupPage(ctx) })
@@ -213,6 +214,16 @@ public class WebApp {
         }
         if (isApi && !services.limiter.allow("api:" + req.remoteIp, services.config.apiRateLimitPerMinute, 60)) {
             return apiError(429, 429, "rate_limited", "请求过于频繁，请稍后再试")
+        }
+        if (!isApi && services.settings.bool("maintenance", def: false) &&
+            !req.path.startsWith("/admin") && req.path != "/healthz") {
+            let adminViewer = match (user) {
+                case Some(value) => docStr(value, "role") == ROLE_ADMIN
+                case None => false
+            }
+            if (!adminViewer) {
+                return publicSite.maintenance(ctx)
+            }
         }
         if ((req.method == "GET" || req.method == "HEAD") && !isApi &&
             !req.path.startsWith("/admin") && !req.path.startsWith("/setup")) {

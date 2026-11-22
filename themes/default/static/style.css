@@ -460,3 +460,7 @@ html[data-theme="dark"] .prose pre { background: #0e120f; }
 .page-wide.layout { display: block; max-width: 920px; margin: 0 auto; }
 .page-wide .content { max-width: 100%; }
 mark { background: #f2df9b; color: inherit; padding: 0 2px; border-radius: 2px; }
+/* v1.3 settings/theme */
+.brand-logo { width: 28px; height: 28px; object-fit: contain; border-radius: 6px; flex: none; }
+.hero[style] { background-size: cover; background-position: center; border-radius: var(--radius); padding: 40px 32px; color: #fff; }
+.hero[style] .hero-title, .hero[style] .hero-subtitle, .hero[style] .hero-kicker { color: #fff; }

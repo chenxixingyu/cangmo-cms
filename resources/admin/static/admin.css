@@ -839,3 +839,7 @@ label { display: grid; gap: 5px; font-size: .82rem; color: var(--a-soft); }
 .bulk-bar .check-line { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--a-soft); }
 .attachment-card { position: relative; }
 .attachment-card > .bulk-check { position: absolute; top: 8px; left: 8px; z-index: 2; width: 16px; height: 16px; accent-color: var(--a-accent); }
+/* v1.3 richer settings/theme */
+.theme-link-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
+.settings-panel .grid-form textarea { font-family: "Cascadia Code", Consolas, monospace; font-size: .78rem; }
+@media (max-width: 760px) { .theme-link-row { flex-wrap: wrap; } }

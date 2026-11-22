@@ -570,19 +570,27 @@
   var settingsTabs = document.querySelectorAll("[data-settings-tab]");
   var settingsPanels = document.querySelectorAll("[data-settings-panel]");
   if (settingsTabs.length > 0 && settingsPanels.length > 0) {
+    function activateSettingsTab(key) {
+      settingsTabs.forEach(function (item) {
+        var active = item.getAttribute("data-settings-tab") === key;
+        item.classList.toggle("active", active);
+        item.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      settingsPanels.forEach(function (panel) {
+        panel.hidden = panel.getAttribute("data-settings-panel") !== key;
+      });
+    }
     settingsTabs.forEach(function (tab) {
       tab.addEventListener("click", function () {
         var key = tab.getAttribute("data-settings-tab");
-        settingsTabs.forEach(function (item) {
-          var active = item === tab;
-          item.classList.toggle("active", active);
-          item.setAttribute("aria-selected", active ? "true" : "false");
-        });
-        settingsPanels.forEach(function (panel) {
-          panel.hidden = panel.getAttribute("data-settings-panel") !== key;
-        });
+        activateSettingsTab(key);
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState(null, "", "#" + key);
+        }
       });
     });
+    var initialTab = (window.location.hash || "").replace("#", "");
+    if (initialTab) activateSettingsTab(initialTab);
   }
 
   // ---------------------------------------------------------------------

@@ -1,10 +1,11 @@
 <header class="site-header">
   <div class="wrap header-inner">
     <a class="brand" href="/" aria-label="{{ site.title }} 首页">
+      {% if site.logo %}<img class="brand-logo" src="{{ site.logo }}" alt="" width="28" height="28">{% else %}
       <svg class="brand-mark" width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
         <path d="M6 4h20a2 2 0 0 1 2 2v20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="2"/>
         <path d="M10 10h12M10 16h12M10 22h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
+      </svg>{% endif %}
       <span class="brand-text">{{ site.title }}</span>
     </a>
     <button class="nav-toggle" id="nav-toggle" type="button" aria-label="打开菜单" aria-expanded="false">

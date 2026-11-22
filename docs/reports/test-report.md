@@ -1,9 +1,9 @@
-# 仓墨测试报告（v1.2.1）
+# 仓墨测试报告（v1.3.0）
 
 - 日期：2026-11-22
 - 本地环境：Windows 11 x64 / 仓颉 1.2.1 / Node.js 22.2.0
 - Linux：GitHub Actions Ubuntu（`cjpm build` + `cjpm test`）
-- 结论：**通过**。25 个单元测试 + 224 项集成/安全断言，合计 **249 项**；另 11 项 v1.2.1 浏览器审计通过；静态分析无高危项。
+- 结论：**通过**。25 个单元测试 + 236 项集成/安全断言，合计 **261 项**；另 10 项 v1.3 浏览器审计通过；静态分析无高危项。
 
 | 套件 | 结果 | 文件 |
 | --- | --- | --- |
@@ -17,9 +17,10 @@
 | v1.2.1 令牌 | 8/8 | [v121-token.txt](v121-token.txt) |
 | v1.2.1 搜索/批量 | 9/9 | [v121-search.txt](v121-search.txt) |
 | v1.2.1 加密/变体 | 7/7 | [v121-crypto.txt](v121-crypto.txt) |
+| v1.3 设置/主题 | 12/12 | [v130.txt](v130.txt) |
 | 并发/协议 | 6/6 | [load-v101.txt](load-v101.txt) |
 | 安全回归 | 31/31 | [security-v101.txt](security-v101.txt) |
 | 部署自检 | 通过（17/17 模板） | [doctor-v101.txt](doctor-v101.txt) |
-| cjlint | 853 条（828 建议 / 25 强制风格） | [cjlint.json](cjlint.json) |
+| cjlint | 853 条（830 建议 / 23 强制风格） | [cjlint.json](cjlint.json) |
 
 详细覆盖、修复项与已知边界见 [../TESTING.md](../TESTING.md)。
