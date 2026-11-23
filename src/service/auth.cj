@@ -343,6 +343,78 @@ public class AuthService {
         count
     }
 
+    public func adminEmails(): Array<String> {
+        let out = ArrayList<String>()
+        for (user in store.list(COL_USERS)) {
+            if (docStr(user, "role") == ROLE_ADMIN && docStr(user, "status") == "active") {
+                let email = docStr(user, "email").trimAscii()
+                if (email.size > 0 && !out.contains(email)) {
+                    out.add(email)
+                }
+            }
+        }
+        out.toArray()
+    }
+
+    public func requestPasswordReset(email: String, baseUrl: String): String {
+        let value = email.trimAscii().toAsciiLower()
+        if (value.size == 0) {
+            return ""
+        }
+        let user = match (findUserByLogin(value)) {
+            case Some(value) => value
+            case None => return ""
+        }
+        if (docStr(user, "email").toAsciiLower() != value) {
+            return ""
+        }
+        let raw = "reset_" + randomToken(bytes: 24)
+        let id = sha256Hex(raw)
+        let doc = JsonObject()
+        doc.set("id", JStr(id))
+        doc.set("user_id", JStr(docStr(user, "id")))
+        doc.set("created_at", JInt(nowSeconds()))
+        doc.set("expires_at", JInt(nowSeconds() + 1800))
+        doc.set("used", JBool(false))
+        store.put(COL_PASSWORD_RESETS, id, JObj(doc))
+        raw
+    }
+
+    public func resetPasswordByToken(token: String, newPassword: String): Unit {
+        if (!token.startsWith("reset_") || token.size < 20 || token.size > 200) {
+            throw AppError("validation", "重置链接无效或已过期")
+        }
+        let id = sha256Hex(token)
+        let doc = match (store.get(COL_PASSWORD_RESETS, id)) {
+            case Some(value) => value
+            case None => throw AppError("validation", "重置链接无效或已过期")
+        }
+        if (docBool(doc, "used", def: false) || docInt(doc, "expires_at") <= nowSeconds()) {
+            throw AppError("validation", "重置链接无效或已过期")
+        }
+        let user = match (userById(docStr(doc, "user_id"))) {
+            case Some(value) => value
+            case None => throw AppError("validation", "用户不存在")
+        }
+        match (passwordProblem(newPassword, username: docStr(user, "username"), email: docStr(user, "email"))) {
+            case Some(problem) => throw AppError("validation", problem)
+            case None => ()
+        }
+        let updated = cloneDoc(user)
+        setField(updated, "password_hash", JStr(hashPassword(newPassword, iterations: config.pbkdf2Iterations)))
+        setField(updated, "failed_logins", JInt(0))
+        setField(updated, "locked_until", JInt(0))
+        setField(updated, "updated_at", JInt(nowSeconds()))
+        store.put(COL_USERS, docStr(user, "id"), updated)
+        let done = cloneDoc(doc)
+        setField(done, "used", JBool(true))
+        setField(done, "used_at", JInt(nowSeconds()))
+        store.put(COL_PASSWORD_RESETS, id, done)
+        revokeUserSessions(docStr(user, "id"), "")
+        audit.log(docStr(user, "id"), docStr(user, "username"), "password_reset", "user",
+                  docStr(user, "id"), "", "reset via emailed token")
+    }
+
     // -----------------------------------------------------------------------
     // TOTP
     // -----------------------------------------------------------------------

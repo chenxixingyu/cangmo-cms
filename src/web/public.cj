@@ -300,10 +300,11 @@ public class PublicSite {
             return ctx.redirect(target + "#comments", status: 303)
         }
         try {
-            services.comments.create(post, ctx.form("parent_id"), ctx.form("name"), ctx.form("email"),
-                                     ctx.form("url"), ctx.form("content"), ctx.clientIp(),
-                                     ctx.req.header("user-agent"))
+            let commentId = services.comments.create(post, ctx.form("parent_id"), ctx.form("name"), ctx.form("email"),
+                                                     ctx.form("url"), ctx.form("content"), ctx.clientIp(),
+                                                     ctx.req.header("user-agent"))
             let moderation = services.settings.bool("comment_moderation", def: true)
+            services.mail.notifyComment(post, commentId, ctx.form("name"), ctx.form("content"), moderation)
             if (moderation) {
                 ctx.setFlash("success", "评论已提交，审核通过后会显示")
             } else {

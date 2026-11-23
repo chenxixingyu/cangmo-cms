@@ -69,6 +69,94 @@ public class AdminSite {
         ctx.redirect(if (next.size > 0) { next } else { "/admin" }, status: 303)
     }
 
+    public func forgotPage(ctx: Ctx): HttpResponse {
+        let data = JsonObject()
+        data.set("page_title", JStr("找回密码"))
+        data.set("error", JStr(""))
+        ctx.renderAdminPage("forgot.html", JObj(data))
+    }
+
+    public func forgotSubmit(ctx: Ctx): HttpResponse {
+        let email = ctx.form("email").trimAscii()
+        let token = services.auth.requestPasswordReset(email, ctx.siteUrl("/"))
+        if (token.size > 0) {
+            let link = ctx.siteUrl("/admin/reset?token=" + urlEncode(token))
+            services.mail.notifyPasswordReset(email, link)
+        }
+        let data = JsonObject()
+        data.set("page_title", JStr("找回密码"))
+        data.set("error", JStr(""))
+        data.set("sent", JBool(true))
+        ctx.renderAdminPage("forgot.html", JObj(data))
+    }
+
+    public func resetPage(ctx: Ctx): HttpResponse {
+        let data = JsonObject()
+        data.set("page_title", JStr("重置密码"))
+        data.set("token", JStr(ctx.query("token")))
+        data.set("error", JStr(""))
+        ctx.renderAdminPage("reset.html", JObj(data))
+    }
+
+    public func resetSubmit(ctx: Ctx): HttpResponse {
+        let token = ctx.form("token")
+        let password = ctx.form("password")
+        if (password != ctx.form("confirm")) {
+            let data = JsonObject()
+            data.set("page_title", JStr("重置密码"))
+            data.set("token", JStr(token))
+            data.set("error", JStr("两次输入的密码不一致"))
+            return ctx.renderAdminPage("reset.html", JObj(data), status: 400)
+        }
+        try {
+            services.auth.resetPasswordByToken(token, password)
+            ctx.setFlash("success", "密码已重置，请使用新密码登录")
+            return ctx.redirect("/admin/login", status: 303)
+        } catch (e: AppError) {
+            let data = JsonObject()
+            data.set("page_title", JStr("重置密码"))
+            data.set("token", JStr(token))
+            data.set("error", JStr(e.message))
+            return ctx.renderAdminPage("reset.html", JObj(data), status: 400)
+        }
+    }
+
+    public func mailPage(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let rows = JsonArray()
+        for (item in services.mail.list()) {
+            let view = cloneDoc(item)
+            setField(view, "date", JStr(formatDateTime(docInt(item, "created_at"))))
+            setField(view, "size_text", JStr(formatFileSize(docInt(item, "size"))))
+            rows.add(view)
+        }
+        let data = JsonObject()
+        data.set("page_title", JStr("发件箱"))
+        data.set("active", JStr("tools"))
+        data.set("rows", JArr(rows))
+        data.set("outbox", JStr(services.mail.outboxDir()))
+        ctx.renderAdminPage("mail.html", JObj(data))
+    }
+
+    public func mailView(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let text = match (services.mail.read(ctx.query("name"))) {
+            case Some(value) => value
+            case None => return errorPage(ctx, 404, "邮件不存在")
+        }
+        let data = JsonObject()
+        data.set("page_title", JStr("邮件内容"))
+        data.set("active", JStr("tools"))
+        data.set("text", JStr(text))
+        ctx.renderAdminPage("mail-view.html", JObj(data))
+    }
+
     public func twoFactorPage(ctx: Ctx): HttpResponse {
         if (!ctx.loggedIn()) {
             return ctx.redirect("/admin/login", status: 303)

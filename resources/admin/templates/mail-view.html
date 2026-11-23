@@ -1,0 +1,12 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <div class="page-intro"><div><p class="eyebrow">MAIL</p><h2>邮件内容</h2></div><div class="page-intro-actions"><a class="btn btn-ghost" href="/admin/mail">返回发件箱</a></div></div>
+  <section class="panel"><pre class="mail-body">{{ text }}</pre></section>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

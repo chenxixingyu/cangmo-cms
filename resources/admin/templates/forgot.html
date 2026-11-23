@@ -1,0 +1,17 @@
+{% include "partials/head.html" %}
+<main class="auth-wrap">
+  <section class="auth-card">
+    <div class="auth-brand"><div><strong>仓墨</strong><span>{{ site.title }} 管理后台</span></div></div>
+    <h1>找回密码</h1>
+    <p class="auth-sub">输入账户邮箱，我们会生成一个 30 分钟有效的重置链接。</p>
+    {% if sent %}<div class="alert alert-success">如果该邮箱存在，重置链接已生成。请检查发件箱或联系管理员。</div>{% endif %}
+    {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+    <form method="post" action="/admin/forgot" class="auth-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <label>邮箱<input type="email" name="email" required autofocus autocomplete="email"></label>
+      <button class="btn btn-block" type="submit">生成重置链接</button>
+    </form>
+    <p class="auth-foot"><a href="/admin/login">← 返回登录</a></p>
+  </section>
+</main>
+{% include "partials/foot.html" %}

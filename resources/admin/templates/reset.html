@@ -1,0 +1,18 @@
+{% include "partials/head.html" %}
+<main class="auth-wrap">
+  <section class="auth-card">
+    <div class="auth-brand"><div><strong>仓墨</strong><span>{{ site.title }} 管理后台</span></div></div>
+    <h1>重置密码</h1>
+    <p class="auth-sub">设置新密码后，所有旧登录会话会被撤销。</p>
+    {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+    <form method="post" action="/admin/reset" class="auth-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <input type="hidden" name="token" value="{{ token }}">
+      <label>新密码<input type="password" name="password" required minlength="10" autocomplete="new-password"></label>
+      <label>确认新密码<input type="password" name="confirm" required minlength="10" autocomplete="new-password"></label>
+      <button class="btn btn-block" type="submit">重置密码</button>
+    </form>
+    <p class="auth-foot"><a href="/admin/login">← 返回登录</a></p>
+  </section>
+</main>
+{% include "partials/foot.html" %}

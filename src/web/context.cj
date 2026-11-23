@@ -22,6 +22,7 @@ public class Services {
     public let audit: AuditService
     public let limiter: RateLimiter
     public let auth: AuthService
+    public let mail: MailService
     public let posts: PostService
     public let taxonomy: TaxonomyService
     public let comments: CommentService
@@ -46,6 +47,7 @@ public class Services {
         this.audit = AuditService(store)
         this.limiter = RateLimiter()
         this.auth = AuthService(store, config, settings, audit, limiter)
+        this.mail = MailService(config, auth, settings)
         this.posts = PostService(store, config, settings, audit)
         this.taxonomy = TaxonomyService(store, audit)
         this.comments = CommentService(store, config, settings, audit, limiter)
