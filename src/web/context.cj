@@ -35,6 +35,7 @@ public class Services {
     public let webhooks: WebhookService
     public let http: HttpClient
     public let plugins: PluginService
+    public let oauth: OAuthProviderService
     public let events: EventBus
     public var templates: TemplateEngine
     public var themeEngines: HashMap<String, TemplateEngine> = HashMap<String, TemplateEngine>()
@@ -66,6 +67,7 @@ public class Services {
         this.http = HttpClient(tempDir: config.dataDir + "/tmp")
         this.webhooks = WebhookService(store, audit, http)
         this.plugins = PluginService(store, audit, http)
+        this.oauth = OAuthProviderService(store, audit, http)
         this.events = EventBus(webhooks, plugins)
         this.templates = TemplateEngine(config.themesDir + "/" + config.theme + "/templates", devMode: config.devMode)
         this.adminTemplates = TemplateEngine(config.adminTemplatesDir(), devMode: config.devMode)

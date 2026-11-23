@@ -18,21 +18,57 @@ public class HttpClient {
     }
 
     public func getText(url: String): ?String {
-        if (tempDir.size == 0) {
-            return None
-        }
-        ensureDir(tempDir)
-        let path = tempDir + "/http-" + randomHex(bytes: 8) + ".tmp"
+        getText(url, HashMap<String, String>())
+    }
+
+    public func getText(url: String, headers: HashMap<String, String>): ?String {
         let args = ArrayList<String>()
         args.add("-sS")
         args.add("-L")
         args.add("--max-time")
         args.add("10")
-        args.add("-o")
-        args.add(path)
+        for ((name, value) in headers) {
+            if (name.size > 0 && value.size > 0 && !name.contains("\n") && !value.contains("\n")) {
+                args.add("-H")
+                args.add(name + ": " + value)
+            }
+        }
         args.add(url)
+        curlBody(args)
+    }
+
+    public func postFormText(url: String, form: HashMap<String, String>): ?String {
+        let args = ArrayList<String>()
+        args.add("-sS")
+        args.add("-L")
+        args.add("--max-time")
+        args.add("10")
+        args.add("-X")
+        args.add("POST")
+        args.add("-H")
+        args.add("content-type: application/x-www-form-urlencoded")
+        for ((name, value) in form) {
+            args.add("--data-urlencode")
+            args.add(name + "=" + value)
+        }
+        args.add(url)
+        curlBody(args)
+    }
+
+    private func curlBody(args: ArrayList<String>): ?String {
+        if (tempDir.size == 0) {
+            return None
+        }
+        ensureDir(tempDir)
+        let path = tempDir + "/http-" + randomHex(bytes: 8) + ".tmp"
+        let full = ArrayList<String>()
+        for (arg in args) {
+            full.add(arg)
+        }
+        full.add("-o")
+        full.add(path)
         let code = try {
-            execute("curl", args.toArray())
+            execute("curl", full.toArray())
         } catch (e: Exception) {
             -1
         }

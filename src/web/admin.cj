@@ -38,7 +38,19 @@ public class AdminSite {
         data.set("page_title", JStr("登录"))
         data.set("error", JStr(""))
         data.set("next", JStr(safeNext(ctx.query("next"))))
+        data.set("oauth_providers", oauthLoginList())
         ctx.renderAdminPage("login.html", JObj(data))
+    }
+
+    private func oauthLoginList(): JsonValue {
+        let arr = JsonArray()
+        for (provider in services.oauth.list()) {
+            let item = JsonObject()
+            item.set("id", JStr(docStr(provider, "id")))
+            item.set("name", JStr(docStr(provider, "name")))
+            arr.add(JObj(item))
+        }
+        JArr(arr)
     }
 
     public func loginSubmit(ctx: Ctx): HttpResponse {
@@ -960,6 +972,125 @@ public class AdminSite {
             ctx.setFlash("error", e.message)
         }
         ctx.redirect("/admin/plugins", status: 303)
+    }
+
+    public func oauthPage(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let rows = JsonArray()
+        for (provider in services.oauth.list()) {
+            let view = cloneDoc(provider)
+            let secret = docStr(provider, "client_secret")
+            setField(view, "secret_hint", JStr(if (secret.size > 0) { "已配置" } else { "未配置" }))
+            rows.add(view)
+        }
+        let data = JsonObject()
+        data.set("page_title", JStr("OAuth"))
+        data.set("active", JStr("tools"))
+        data.set("providers", JArr(rows))
+        ctx.renderAdminPage("oauth.html", JObj(data))
+    }
+
+    public func oauthProviderSave(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        try {
+            if (ctx.form("action") == "delete") {
+                services.oauth.delete(ctx.form("id"), ctx.userDoc(), ctx.clientIp())
+                ctx.setFlash("success", "Provider 已删除")
+            } else {
+                services.oauth.create(ctx.form("name"), ctx.form("client_id"), ctx.form("client_secret"),
+                                      ctx.form("authorize_url"), ctx.form("token_url"), ctx.form("userinfo_url"),
+                                      ctx.form("scopes"), ctx.userDoc(), ctx.clientIp())
+                ctx.setFlash("success", "Provider 已创建")
+            }
+        } catch (e: AppError) {
+            ctx.setFlash("error", e.message)
+        }
+        ctx.redirect("/admin/oauth", status: 303)
+    }
+
+    public func oauthStart(ctx: Ctx): HttpResponse {
+        let provider = match (services.oauth.get(ctx.param("id"))) {
+            case Some(value) => value
+            case None => return ctx.redirect("/admin/login", status: 303)
+        }
+        let state = randomToken(bytes: 18)
+        let redirectUri = services.settings.str("site_url", def: services.config.siteUrl) +
+            "/auth/oauth/" + docStr(provider, "id") + "/callback"
+        let response = ctx.redirect(services.oauth.authorizeUrl(provider, redirectUri, state), status: 302)
+        addOAuthCookie(response, "cangmo_oauth_state", state)
+        addOAuthCookie(response, "cangmo_oauth_provider", docStr(provider, "id"))
+        addOAuthCookie(response, "cangmo_oauth_next", safeNext(ctx.query("next")))
+        response
+    }
+
+    public func oauthCallback(ctx: Ctx): HttpResponse {
+        let code = ctx.query("code")
+        let state = ctx.query("state")
+        if (code.size == 0 || state.size == 0 ||
+            !secureEqualsText(state, ctx.req.cookieValue("cangmo_oauth_state"))) {
+            ctx.setFlash("error", "OAuth 状态校验失败")
+            return ctx.redirect("/admin/login", status: 303)
+        }
+        let provider = match (services.oauth.get(ctx.req.cookieValue("cangmo_oauth_provider"))) {
+            case Some(value) => value
+            case None => return ctx.redirect("/admin/login", status: 303)
+        }
+        let redirectUri = services.settings.str("site_url", def: services.config.siteUrl) +
+            "/auth/oauth/" + docStr(provider, "id") + "/callback"
+        let token = match (services.oauth.exchange(provider, code, redirectUri)) {
+            case Some(value) => value
+            case None =>
+                ctx.setFlash("error", "OAuth 令牌交换失败")
+                return ctx.redirect("/admin/login", status: 303)
+        }
+        let accessToken = docStr(token, "access_token")
+        if (accessToken.size == 0) {
+            ctx.setFlash("error", "OAuth 未返回 access_token")
+            return ctx.redirect("/admin/login", status: 303)
+        }
+        let info = match (services.oauth.userInfo(provider, accessToken)) {
+            case Some(value) => value
+            case None =>
+                ctx.setFlash("error", "OAuth 用户信息获取失败")
+                return ctx.redirect("/admin/login", status: 303)
+        }
+        var loginName = docStr(info, "email").trimAscii()
+        if (loginName.size == 0) {
+            loginName = docStr(info, "preferred_username").trimAscii()
+        }
+        let user = match (services.auth.findUserByLogin(loginName)) {
+            case Some(value) => value
+            case None =>
+                ctx.setFlash("error", "OAuth 账户未绑定本站用户")
+                return ctx.redirect("/admin/login", status: 303)
+        }
+        services.auth.destroySession(ctx.session)
+        let session = services.auth.createSession(docStr(user, "id"), ctx.clientIp(), ctx.req.header("user-agent"))
+        ctx.session = session
+        ctx.sessionChanged = true
+        ctx.user = user
+        services.audit.log(docStr(user, "id"), docStr(user, "username"), "oauth_login", "user",
+                           docStr(user, "id"), ctx.clientIp(), docStr(provider, "name"))
+        let response = ctx.redirect(safeNext(ctx.req.cookieValue("cangmo_oauth_next")), status: 303)
+        response.deleteCookie("cangmo_oauth_state")
+        response.deleteCookie("cangmo_oauth_provider")
+        response.deleteCookie("cangmo_oauth_next")
+        response
+    }
+
+    private func addOAuthCookie(response: HttpResponse, name: String, value: String): Unit {
+        let cookie = HttpCookie(name, value)
+        cookie.maxAge = 600
+        cookie.path = "/"
+        cookie.httpOnly = true
+        cookie.sameSite = "Lax"
+        response.cookies.add(cookie)
     }
 
     public func sitesPage(ctx: Ctx): HttpResponse {

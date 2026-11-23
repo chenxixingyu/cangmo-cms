@@ -1,0 +1,46 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <div class="page-intro"><div><p class="eyebrow">OAUTH</p><h2>OAuth / OIDC</h2><p class="muted">登录时跳转 Provider，回调按邮箱匹配本站用户；需 HTTPS 与可访问的 Provider。</p></div><div class="page-intro-actions"><a class="btn btn-ghost" href="/admin/tools">返回工具</a></div></div>
+  <section class="panel">
+    <header class="panel-head"><h2>添加 Provider</h2><span class="muted">授权码模式</span></header>
+    <form method="post" action="/admin/oauth/save" class="grid-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <input type="hidden" name="action" value="create">
+      <label>名称<input type="text" name="name" required maxlength="80"></label>
+      <label>Client ID<input type="text" name="client_id" required maxlength="200"></label>
+      <label>Client Secret<input type="password" name="client_secret" maxlength="300"></label>
+      <label>Scopes<input type="text" name="scopes" maxlength="200" placeholder="openid email profile"></label>
+      <label class="span-2">Authorize URL<input type="url" name="authorize_url" required maxlength="500"></label>
+      <label class="span-2">Token URL<input type="url" name="token_url" required maxlength="500"></label>
+      <label class="span-2">UserInfo URL<input type="url" name="userinfo_url" required maxlength="500"></label>
+      <div class="span-2"><button class="btn" type="submit">保存 Provider</button></div>
+    </form>
+  </section>
+  <div class="panel"><div class="table-wrap"><table class="table">
+    <thead><tr><th>名称</th><th>Client ID</th><th>密钥</th><th>Authorize</th><th>操作</th></tr></thead>
+    <tbody>
+      {% for provider in providers %}
+      <tr>
+        <td><strong>{{ provider.name }}</strong><div class="muted small"><code>{{ provider.id }}</code></div></td>
+        <td class="muted small">{{ provider.client_id }}</td>
+        <td class="muted small">{{ provider.secret_hint }}</td>
+        <td class="muted small"><code>{{ provider.authorize_url }}</code></td>
+        <td class="table-actions">
+          <form method="post" action="/admin/oauth/save" class="inline-form" data-confirm="确定删除这个 Provider？">
+            <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ provider.id }}">
+            <button class="link-btn danger" type="submit">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if providers.length == 0 %}<tr><td colspan="5" class="empty-row">还没有 Provider。</td></tr>{% endif %}
+    </tbody>
+  </table></div></div>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

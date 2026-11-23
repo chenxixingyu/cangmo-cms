@@ -19,6 +19,12 @@
       </label>
       <button class="btn btn-block" type="submit">登录</button>
     </form>
+    {% if oauth_providers.length > 0 %}
+    <div class="auth-divider">或使用</div>
+    <div class="oauth-login-list">
+      {% for provider in oauth_providers %}<a class="btn btn-ghost btn-block" href="/auth/oauth/{{ provider.id }}/start?next={{ next }}">{{ provider.name }}</a>{% endfor %}
+    </div>
+    {% endif %}
     <p class="auth-foot"><a href="/admin/forgot">忘记密码</a> · <a href="/">返回站点</a></p>
   </section>
 </main>
