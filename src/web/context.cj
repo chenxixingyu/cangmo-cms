@@ -111,7 +111,14 @@ public class Ctx {
         this.session = session
         this.user = user
         this.newSession = newSession
-        this.siteId = services.sites.resolveHost(req.header("host"))
+        let hostSite = services.sites.resolveHost(req.header("host"))
+        let selectedSite = req.cookieValue("cangmo_site")
+        this.siteId = if (req.path.startsWith("/admin") && selectedSite.size > 0 &&
+                          services.sites.get(selectedSite).isSome()) {
+            selectedSite
+        } else {
+            hostSite
+        }
     }
 
     public func loggedIn(): Bool {

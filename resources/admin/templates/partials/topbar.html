@@ -4,6 +4,13 @@
   </button>
   <h1>{{ page_title }}</h1>
   <div class="topbar-actions">
+    <form method="post" action="/admin/site/switch" class="site-switch">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <input type="hidden" name="return_to" value="/admin">
+      <select name="site_id" aria-label="切换站点" onchange="this.form.submit()">
+        {% for item in admin_sites %}<option value="{{ item.id }}"{% if item.selected %} selected{% endif %}>{{ item.name }}</option>{% endfor %}
+      </select>
+    </form>
     <button class="topbar-command" id="command-open" type="button" aria-haspopup="dialog">
       <span>搜索或跳转</span><kbd>Ctrl K</kbd>
     </button>

@@ -865,6 +865,26 @@ public class AdminSite {
         ctx.redirect("/admin/webhooks", status: 303)
     }
 
+    public func siteSwitch(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let siteId = ctx.form("site_id")
+        if (services.sites.get(siteId).isNone()) {
+            ctx.setFlash("error", "站点不存在")
+            return ctx.redirect("/admin", status: 303)
+        }
+        let cookie = HttpCookie("cangmo_site", siteId)
+        cookie.maxAge = 30 * 24 * 3600
+        cookie.path = "/"
+        cookie.httpOnly = true
+        cookie.sameSite = "Lax"
+        let response = ctx.redirect(safeNext(ctx.form("return_to")), status: 303)
+        response.cookies.add(cookie)
+        response
+    }
+
     public func sitesPage(ctx: Ctx): HttpResponse {
         match (requireAdmin(ctx)) {
             case Some(response) => return response
