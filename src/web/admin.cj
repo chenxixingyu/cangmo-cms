@@ -1933,7 +1933,7 @@ public class AdminSite {
             case Some(response) => return response
             case None => ()
         }
-        let activeTheme = services.settings.str("theme", def: services.config.theme)
+        let activeTheme = services.sites.theme(ctx.siteId)
         let themes = JsonArray()
         let dirs = listDir(services.config.themesDir)
         for (name in dirs) {
@@ -2021,7 +2021,7 @@ public class AdminSite {
             case Some(response) => return response
             case None => ()
         }
-        let theme = services.settings.str("theme", def: services.config.theme)
+        let theme = services.sites.theme(ctx.siteId)
         let view = themeOptionsView(theme)
         match (view) {
             case JArr(options) =>
@@ -2083,7 +2083,7 @@ public class AdminSite {
             installThemeFiles(pkg, "templates", target + "/templates")
             installThemeFiles(pkg, "static", target + "/static")
             if (ctx.form("activate") == "on") {
-                services.settings.setString("theme", name)
+                services.sites.setTheme(ctx.siteId, name)
                 services.reloadTheme()
             }
             ctx.setFlash("success", "主题 ${name} 已安装")
@@ -2175,7 +2175,7 @@ public class AdminSite {
             ctx.setFlash("error", "主题不存在")
             return ctx.redirect("/admin/themes", status: 303)
         }
-        services.settings.setString("theme", name)
+        services.sites.setTheme(ctx.siteId, name)
         services.reloadTheme()
         services.audit.log(docStr(ctx.userDoc(), "id"), docStr(ctx.userDoc(), "username"),
                            "theme_activated", "theme", name, ctx.clientIp(), "")

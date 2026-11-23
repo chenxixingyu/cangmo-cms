@@ -484,20 +484,20 @@ public class WebApp {
         var filePath: ?String = None
         var cacheSeconds: Int64 = 3600
         if (req.path.startsWith("/static/")) {
-            filePath = safeAssetPath(services.themeAssetDir(), req.path[8..req.path.size])
+            filePath = safeAssetPath(services.themeAssetDir(services.siteTheme(services.sites.resolveHost(req.header("host")))), req.path[8..req.path.size])
         } else if (req.path.startsWith("/admin/static/")) {
             filePath = safeAssetPath(services.config.adminStaticDir(), req.path[14..req.path.size])
         } else if (req.path.startsWith("/media/")) {
             filePath = services.media.pathForUrl(req.path)
             cacheSeconds = 2592000
         } else if (req.path == "/favicon.ico") {
-            let icon = services.themeAssetDir() + "/icon.svg"
+            let icon = services.themeAssetDir(services.siteTheme(services.sites.resolveHost(req.header("host")))) + "/icon.svg"
             if (exists(icon)) {
                 return serveFile(icon, req, 86400, "image/svg+xml")
             }
             return HttpResponse().empty(204)
         } else if (req.path == "/sw.js") {
-            let worker = services.themeAssetDir() + "/sw.js"
+            let worker = services.themeAssetDir(services.siteTheme(services.sites.resolveHost(req.header("host")))) + "/sw.js"
             if (exists(worker)) {
                 return serveFile(worker, req, 0, "application/javascript; charset=utf-8")
             }

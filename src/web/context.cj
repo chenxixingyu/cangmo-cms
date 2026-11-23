@@ -36,6 +36,7 @@ public class Services {
     public let http: HttpClient
     public let events: EventBus
     public var templates: TemplateEngine
+    public var themeEngines: HashMap<String, TemplateEngine> = HashMap<String, TemplateEngine>()
     public let adminTemplates: TemplateEngine
     public let setupToken: String
 
@@ -82,7 +83,25 @@ public class Services {
     }
 
     public func reloadTheme(): Unit {
+        themeEngines.clear()
         templates = TemplateEngine(themeTemplatesDir(), devMode: config.devMode)
+    }
+
+    public func siteTheme(siteId: String): String {
+        sites.theme(siteId)
+    }
+
+    public func themeEngine(theme: String): TemplateEngine {
+        if (let Some(engine) <- themeEngines.get(theme)) {
+            return engine
+        }
+        let engine = TemplateEngine(config.themesDir + "/" + theme + "/templates", devMode: config.devMode)
+        themeEngines[theme] = engine
+        engine
+    }
+
+    public func themeAssetDir(theme: String): String {
+        config.themesDir + "/" + theme + "/static"
     }
 
     public func themeAssetDir(): String {
@@ -100,6 +119,7 @@ public class Ctx {
     public var session: SessionData
     public var user: ?JsonValue
     public let siteId: String
+    public let siteTheme: String
     public var params: HashMap<String, String> = HashMap<String, String>()
     public var newSession: Bool = false
     public var sessionChanged: Bool = false
@@ -119,6 +139,7 @@ public class Ctx {
         } else {
             hostSite
         }
+        this.siteTheme = services.siteTheme(this.siteId)
     }
 
     public func loggedIn(): Bool {
@@ -210,7 +231,7 @@ public class Ctx {
         let data = baseData()
         mergeObject(data, pageData)
         try {
-            return services.templates.render(templateName, data)
+            return services.themeEngine(siteTheme).render(templateName, data)
         } catch (e: Exception) {
             throw AppError("template", "公共模板 ${templateName}: ${e.message}")
         }
@@ -250,7 +271,7 @@ public class Ctx {
         site.set("seo_image", JStr(services.settings.str("seo_image", def: "")))
         site.set("twitter", JStr(services.settings.str("seo_twitter", def: "")))
         site.set("custom_css", JBool(services.settings.str("custom_css", def: "").trimAscii().size > 0))
-        let activeTheme = services.settings.str("theme", def: services.config.theme)
+        let activeTheme = siteTheme
         site.set("font_size", JInt(services.settings.int("theme_option_${activeTheme}_font_size",
                                                          def: services.settings.int("theme_font_size", def: 17))))
         site.set("width", JInt(services.settings.int("theme_option_${activeTheme}_width",

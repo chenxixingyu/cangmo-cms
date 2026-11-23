@@ -48,6 +48,25 @@ public class SiteService {
         store.get(COL_SITES, id)
     }
 
+    public func theme(siteId: String): String {
+        match (store.get(COL_SITES, siteId)) {
+            case Some(site) =>
+                let value = docStr(site, "theme")
+                if (value.size > 0) { value } else { settings.str("theme", def: config.theme) }
+            case None => settings.str("theme", def: config.theme)
+        }
+    }
+
+    public func setTheme(siteId: String, theme: String): Unit {
+        match (store.get(COL_SITES, siteId)) {
+            case Some(site) =>
+                let updated = cloneDoc(site)
+                setField(updated, "theme", JStr(theme))
+                store.put(COL_SITES, siteId, updated)
+            case None => throw AppError("not_found", "站点不存在")
+        }
+    }
+
     public func defaultSite(): JsonValue {
         match (store.get(COL_SITES, DEFAULT_SITE_ID)) {
             case Some(value) => value
