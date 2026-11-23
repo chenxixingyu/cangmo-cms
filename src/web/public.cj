@@ -147,6 +147,41 @@ public class PublicSite {
         }
     }
 
+    public func newsletterPage(ctx: Ctx): HttpResponse {
+        let data = JsonObject()
+        data.set("page_title", JStr("Newsletter"))
+        data.set("newsletter_message", JStr(""))
+        ctx.html(ctx.render("newsletter.html", JObj(data)))
+    }
+
+    public func newsletterSubscribe(ctx: Ctx): HttpResponse {
+        let data = JsonObject()
+        data.set("page_title", JStr("Newsletter"))
+        try {
+            services.newsletter.subscribe(ctx.form("email"), ctx.form("name"), ctx.siteId)
+            data.set("newsletter_message", JStr("确认邮件已发送，请查收发件箱。"))
+        } catch (e: AppError) {
+            data.set("newsletter_message", JStr(e.message))
+        }
+        ctx.html(ctx.render("newsletter.html", JObj(data)))
+    }
+
+    public func newsletterConfirm(ctx: Ctx): HttpResponse {
+        let data = JsonObject()
+        data.set("page_title", JStr("Newsletter"))
+        let ok = services.newsletter.confirm(ctx.query("token"))
+        data.set("newsletter_message", JStr(if (ok) { "订阅已确认。" } else { "确认链接无效或已使用。" }))
+        ctx.html(ctx.render("newsletter.html", JObj(data)))
+    }
+
+    public func newsletterUnsubscribe(ctx: Ctx): HttpResponse {
+        let data = JsonObject()
+        data.set("page_title", JStr("Newsletter"))
+        let ok = services.newsletter.unsubscribe(ctx.query("token"))
+        data.set("newsletter_message", JStr(if (ok) { "已退订。" } else { "退订链接无效。" }))
+        ctx.html(ctx.render("newsletter.html", JObj(data)))
+    }
+
     public func categoryPage(ctx: Ctx): HttpResponse {
         let slug = ctx.param("slug")
         let category = match (services.taxonomy.categoryBySlug(slug, siteId: ctx.siteId)) {

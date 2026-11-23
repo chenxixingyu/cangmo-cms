@@ -1093,6 +1093,52 @@ public class AdminSite {
         response.cookies.add(cookie)
     }
 
+    public func newsletterPage(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let subscribers = JsonArray()
+        for (item in services.newsletter.subscribers(ctx.siteId)) {
+            let view = cloneDoc(item)
+            setField(view, "created", JStr(formatDateTime(docInt(item, "created_at"))))
+            subscribers.add(view)
+        }
+        let campaigns = JsonArray()
+        for (item in services.newsletter.campaigns(ctx.siteId)) {
+            let view = cloneDoc(item)
+            setField(view, "created", JStr(formatDateTime(docInt(item, "created_at"))))
+            campaigns.add(view)
+        }
+        let data = JsonObject()
+        data.set("page_title", JStr("Newsletter"))
+        data.set("active", JStr("tools"))
+        data.set("subscribers", JArr(subscribers))
+        data.set("campaigns", JArr(campaigns))
+        ctx.renderAdminPage("newsletter.html", JObj(data))
+    }
+
+    public func newsletterAction(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        try {
+            let action = ctx.form("action")
+            if (action == "send") {
+                let sent = services.newsletter.sendCampaign(ctx.form("id"), ctx.userDoc(), ctx.clientIp())
+                ctx.setFlash("success", "Newsletter 已投递到发件箱：${sent} 位订阅者")
+            } else {
+                services.newsletter.createCampaign(ctx.form("subject"), ctx.form("body"),
+                                                  ctx.siteId, ctx.userDoc(), ctx.clientIp())
+                ctx.setFlash("success", "Newsletter 草稿已创建")
+            }
+        } catch (e: AppError) {
+            ctx.setFlash("error", e.message)
+        }
+        ctx.redirect("/admin/newsletter", status: 303)
+    }
+
     public func sitesPage(ctx: Ctx): HttpResponse {
         match (requireAdmin(ctx)) {
             case Some(response) => return response
