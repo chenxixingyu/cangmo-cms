@@ -16,6 +16,66 @@ public class ApiSite {
         this.services = services
     }
 
+    public func openapi(ctx: Ctx): HttpResponse {
+        let spec = JsonObject()
+        spec.set("openapi", JStr("3.0.3"))
+        let info = JsonObject()
+        info.set("title", JStr("仓墨 API"))
+        info.set("version", JStr(APP_VERSION))
+        info.set("description", JStr("仓墨博客 REST API；写操作使用 Bearer Token，可配置 scopes。"))
+        spec.set("info", JObj(info))
+        let servers = JsonArray()
+        let server = JsonObject()
+        server.set("url", JStr("/api/v1"))
+        servers.add(JObj(server))
+        spec.set("servers", JArr(servers))
+        let schemes = JsonObject()
+        let bearer = JsonObject()
+        bearer.set("type", JStr("http"))
+        bearer.set("scheme", JStr("bearer"))
+        schemes.set("bearerAuth", JObj(bearer))
+        spec.set("components", jsonObjectOf([("securitySchemes", JObj(schemes))]))
+        let paths = JsonObject()
+        paths.set("/site", jsonObjectOf([("get", operation("站点信息", "site.read"))]))
+        paths.set("/posts", jsonObjectOf([
+            ("get", operation("文章列表", "posts.read")),
+            ("post", operation("创建文章", "posts.write"))
+        ]))
+        paths.set("/posts/{slug}", jsonObjectOf([("get", operation("文章详情", "posts.read"))]))
+        paths.set("/comments", jsonObjectOf([
+            ("get", operation("评论列表", "comments.read")),
+            ("post", operation("发表评论", "comments.write"))
+        ]))
+        paths.set("/attachments", jsonObjectOf([
+            ("get", operation("附件列表", "media.read")),
+            ("post", operation("上传附件", "media.write"))
+        ]))
+        paths.set("/categories", jsonObjectOf([("get", operation("分类列表", "posts.read"))]))
+        paths.set("/tags", jsonObjectOf([("get", operation("标签列表", "posts.read"))]))
+        paths.set("/stats", jsonObjectOf([("get", operation("站点统计", "admin"))]))
+        spec.set("paths", JObj(paths))
+        HttpResponse().json(JObj(spec))
+    }
+
+    private func operation(summary: String, scope: String): JsonValue {
+        let item = JsonObject()
+        item.set("summary", JStr(summary))
+        let responses = JsonObject()
+        let ok = JsonObject()
+        ok.set("description", JStr("成功"))
+        responses.set("200", JObj(ok))
+        item.set("responses", JObj(responses))
+        if (scope != "site.read") {
+            let security = JsonArray()
+            let requirement = JsonObject()
+            requirement.set("bearerAuth", JArr(JsonArray()))
+            security.add(JObj(requirement))
+            item.set("security", JArr(security))
+            item.set("x-cangmo-scope", JStr(scope))
+        }
+        JObj(item)
+    }
+
     public func site(ctx: Ctx): HttpResponse {
         let data = jsonObjectOf([
             ("name", jstr(services.settings.str("site_title"))),

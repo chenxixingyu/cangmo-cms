@@ -22,6 +22,7 @@
         <span>JPG / PNG / GIF / WebP / AVIF / PDF / MP4 / WebM / MP3 · 单文件 25MB · 最多 10 个</span>
       </label>
       <div class="upload-side">
+        <label>文件夹<input type="text" name="folder" maxlength="60" placeholder="可空，如：文章封面"></label>
         <button class="btn" type="submit">开始上传</button>
       </div>
     </form>
@@ -39,8 +40,12 @@
     <form class="list-search" method="get" action="/admin/attachments" role="search">
       <input type="hidden" name="kind" value="{{ kind }}">
       <input type="search" name="q" value="{{ search }}" placeholder="搜索文件名或类型…" aria-label="搜索附件">
+      <select name="folder" aria-label="文件夹">
+        <option value="">全部文件夹</option>
+        {% for name in folders %}<option value="{{ name }}"{% if folder == name %} selected{% endif %}>{{ name }}</option>{% endfor %}
+      </select>
       <button type="submit" class="btn btn-ghost">搜索</button>
-      {% if search %}<a class="link-btn" href="/admin/attachments?kind={{ kind }}">清除</a>{% endif %}
+      {% if search or folder %}<a class="link-btn" href="/admin/attachments?kind={{ kind }}">清除</a>{% endif %}
     </form>
   </div>
 
@@ -72,7 +77,7 @@
       </button>
       <div class="attachment-info">
         <strong title="{{ item.original_name }}">{{ item.original_name }}</strong>
-        <small>{{ item.size_text }}{% if item.dimensions %} · {{ item.dimensions }}{% endif %} · {{ item.date }}</small>
+        <small>{{ item.size_text }}{% if item.dimensions %} · {{ item.dimensions }}{% endif %} · {{ item.date }}{% if item.folder %} · {{ item.folder }}{% endif %}</small>
         <div class="attachment-actions">
           <details class="row-menu attachment-row-menu">
             <summary>操作 ▾</summary>

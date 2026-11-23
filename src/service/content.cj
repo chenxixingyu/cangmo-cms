@@ -295,11 +295,12 @@ public class MediaService {
         this.audit = audit
     }
 
-    public func upload(file: UploadedFile, userId: String, ip: String): JsonValue {
+    public func upload(file: UploadedFile, userId: String, ip: String, folder!: String = ""): JsonValue {
         if (file.data.size == 0 || file.data.size > config.maxBodyBytes) {
             throw AppError("validation", "文件为空或超过大小限制")
         }
         let original = sanitizeDisplayName(file.filename)
+        let cleanFolder = sanitizeMediaFolder(folder)
         let ext = extensionOf(original)
         let allowed = ["jpg", "jpeg", "png", "gif", "webp", "avif", "pdf", "mp4", "webm", "mp3"]
         if (!allowed.contains(ext)) {
@@ -331,6 +332,7 @@ public class MediaService {
         doc.set("url", JStr("/media/" + relativeDir + "/" + storedName))
         doc.set("filename", JStr(storedName))
         doc.set("original_name", JStr(original))
+        doc.set("folder", JStr(cleanFolder))
         doc.set("mime", JStr(mimeTypeFor(storedName)))
         doc.set("size", JInt(file.data.size))
         doc.set("width", JInt(size.width))
@@ -343,7 +345,7 @@ public class MediaService {
         JObj(doc)
     }
 
-    public func list(page: Int64, pageSize: Int64, kind!: String = "all", query!: String = ""): PageResult {
+    public func list(page: Int64, pageSize: Int64, kind!: String = "all", query!: String = "", folder!: String = ""): PageResult {
         let needle = query.trimAscii().toAsciiLower()
         let items = ArrayList<JsonValue>()
         for (item in store.list(COL_MEDIA)) {
@@ -1116,4 +1118,15 @@ func isSafeBackupName(name: String): Bool {
         return false
     }
     name.endsWith(".json")
+}
+
+func sanitizeMediaFolder(folder: String): String {
+    let value = folder.trimAscii()
+    if (value.size == 0) {
+        return ""
+    }
+    if (value.size > 60 || value.contains("/") || value.contains("\\") || value.contains("..")) {
+        throw AppError("validation", "文件夹名称无效")
+    }
+    value
 }

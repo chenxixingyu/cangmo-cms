@@ -144,6 +144,7 @@ public class WebApp {
 
         // API v1.
         router.get("/api/v1/site", { ctx: Ctx => apiSite.site(ctx) })
+        router.get("/api/v1/openapi.json", { ctx: Ctx => apiSite.openapi(ctx) })
         router.get("/api/v1/posts", { ctx: Ctx => apiSite.posts(ctx) })
         router.get("/api/v1/posts/:slug", { ctx: Ctx => apiSite.postBySlug(ctx) })
         router.post("/api/v1/posts", { ctx: Ctx => apiSite.createPost(ctx) })

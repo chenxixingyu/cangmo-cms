@@ -1235,7 +1235,7 @@ public class AdminSite {
             let uploaded = JsonArray()
             while (index < ctx.req.files.size && count < 10) {
                 let file = ctx.req.files[index]
-                let saved = services.media.upload(file, docStr(ctx.userDoc(), "id"), ctx.clientIp())
+                let saved = services.media.upload(file, docStr(ctx.userDoc(), "id"), ctx.clientIp(), folder: ctx.form("folder"))
                 uploaded.add(attachmentView(saved))
                 count += 1
                 index += 1
