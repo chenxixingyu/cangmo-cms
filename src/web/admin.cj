@@ -771,6 +771,41 @@ public class AdminSite {
         ctx.renderAdminPage("search-stats.html", JObj(data))
     }
 
+    public func jobsPage(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let rows = JsonArray()
+        for (job in services.webhooks.jobs()) {
+            let view = cloneDoc(job)
+            setField(view, "created", JStr(formatDateTime(docInt(job, "created_at"))))
+            setField(view, "next", JStr(formatDateTime(docInt(job, "next_at"))))
+            rows.add(view)
+        }
+        let data = JsonObject()
+        data.set("page_title", JStr("任务队列"))
+        data.set("active", JStr("tools"))
+        data.set("rows", JArr(rows))
+        ctx.renderAdminPage("jobs.html", JObj(data))
+    }
+
+    public func jobAction(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let id = ctx.form("id")
+        if (ctx.form("action") == "retry") {
+            services.webhooks.retryJob(id)
+            ctx.setFlash("success", "任务已重新排队")
+        } else {
+            services.webhooks.cancelJob(id)
+            ctx.setFlash("success", "任务已取消")
+        }
+        ctx.redirect("/admin/jobs", status: 303)
+    }
+
     public func webhooksPage(ctx: Ctx): HttpResponse {
         match (requireAdmin(ctx)) {
             case Some(response) => return response

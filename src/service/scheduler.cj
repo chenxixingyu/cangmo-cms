@@ -19,10 +19,12 @@ public class Scheduler {
     private let logger: Logger
     private let backup: BackupService
     private let settings: SettingsService
+    private let webhooks: WebhookService
     private var running: Bool = false
 
     public init(posts: PostService, stats: StatsService, auth: AuthService, limiter: RateLimiter,
-                store: Store, logger: Logger, backup: BackupService, settings: SettingsService) {
+                store: Store, logger: Logger, backup: BackupService, settings: SettingsService,
+                webhooks: WebhookService) {
         this.posts = posts
         this.stats = stats
         this.auth = auth
@@ -31,6 +33,7 @@ public class Scheduler {
         this.logger = logger
         this.backup = backup
         this.settings = settings
+        this.webhooks = webhooks
     }
 
     public func start(): Unit {
@@ -63,6 +66,7 @@ public class Scheduler {
                     store.compact()
                 }
                 maybeAutoBackup()
+                webhooks.processRetries()
             } catch (e: Exception) {
                 logger.error("scheduler", "background task failed: ${e.message}")
             }

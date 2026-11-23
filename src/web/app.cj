@@ -129,6 +129,8 @@ public class WebApp {
         router.get("/admin/search-stats", { ctx: Ctx => adminSite.searchStatsPage(ctx) })
         router.get("/admin/webhooks", { ctx: Ctx => adminSite.webhooksPage(ctx) })
         router.post("/admin/webhooks/save", { ctx: Ctx => adminSite.webhookSave(ctx) })
+        router.get("/admin/jobs", { ctx: Ctx => adminSite.jobsPage(ctx) })
+        router.post("/admin/jobs/action", { ctx: Ctx => adminSite.jobAction(ctx) })
         router.post("/admin/redirects/save", { ctx: Ctx => adminSite.redirectSave(ctx) })
         router.get("/admin/import", { ctx: Ctx => adminSite.importPage(ctx) })
         router.post("/admin/import", { ctx: Ctx => adminSite.importSubmit(ctx) })

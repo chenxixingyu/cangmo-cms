@@ -122,7 +122,8 @@ func serveCommand(args: Array<String>): Int64 {
         return 1
     }
     let scheduler = Scheduler(services.posts, services.stats, services.auth, services.limiter,
-                              services.store, services.logger, services.backup, services.settings)
+                              services.store, services.logger, services.backup, services.settings,
+                              services.webhooks)
     scheduler.start()
     let server = HttpServer(config, { req: HttpRequest => app.handle(req) }, services.logger)
     services.logger.info("startup", "数据目录：${config.dataDir}")

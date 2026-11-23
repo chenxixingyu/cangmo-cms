@@ -1,0 +1,31 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <div class="page-intro"><div><p class="eyebrow">JOBS</p><h2>任务队列</h2><p class="muted">Webhook 失败后进入重试队列，最多 3 次，间隔递增。</p></div><div class="page-intro-actions"><a class="btn btn-ghost" href="/admin/tools">返回工具</a></div></div>
+  <div class="panel"><div class="table-wrap"><table class="table">
+    <thead><tr><th>创建</th><th>类型</th><th>事件</th><th>状态</th><th>尝试</th><th>下次</th><th>操作</th></tr></thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td class="muted">{{ row.created }}</td>
+        <td>{{ row.kind }}</td>
+        <td class="muted">{{ row.event }}</td>
+        <td><span class="status">{{ row.status }}</span></td>
+        <td>{{ row.attempts }}</td>
+        <td class="muted">{{ row.next }}</td>
+        <td class="table-actions">
+          <form method="post" action="/admin/jobs/action" class="inline-form"><input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="action" value="retry"><input type="hidden" name="id" value="{{ row.id }}"><button class="link-btn" type="submit">重试</button></form>
+          <form method="post" action="/admin/jobs/action" class="inline-form"><input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="action" value="cancel"><input type="hidden" name="id" value="{{ row.id }}"><button class="link-btn danger" type="submit">取消</button></form>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if rows.length == 0 %}<tr><td colspan="7" class="empty-row">没有任务。</td></tr>{% endif %}
+    </tbody>
+  </table></div></div>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}
