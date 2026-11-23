@@ -398,9 +398,17 @@ public class AdminSite {
         try {
             if (action == "publish") {
                 services.posts.publish(id, ctx.userDoc(), ctx.clientIp())
+                match (services.posts.get(id)) {
+                    case Some(post) => services.events.publish("post.published", postCard(services, post))
+                    case None => ()
+                }
                 ctx.setFlash("success", "内容已发布")
             } else if (action == "approve") {
                 services.posts.publish(id, ctx.userDoc(), ctx.clientIp())
+                match (services.posts.get(id)) {
+                    case Some(post) => services.events.publish("post.published", postCard(services, post))
+                    case None => ()
+                }
                 ctx.setFlash("success", "内容已通过审核并发布")
             } else if (action == "reject") {
                 services.posts.reject(id, ctx.userDoc(), ctx.clientIp())
