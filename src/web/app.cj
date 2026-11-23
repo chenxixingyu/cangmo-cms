@@ -57,6 +57,7 @@ public class WebApp {
         router.get("/healthz", { ctx: Ctx => publicSite.healthz(ctx) })
         router.get("/manifest.webmanifest", { ctx: Ctx => publicSite.manifest(ctx) })
         router.get("/custom.css", { ctx: Ctx => publicSite.customCss(ctx) })
+        router.get("/metrics", { ctx: Ctx => publicSite.metrics(ctx) })
 
         // Setup.
         router.get("/setup", { ctx: Ctx => setupPage(ctx) })

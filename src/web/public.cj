@@ -8,6 +8,7 @@ import cangmo.http.*
 import cangmo.json.*
 import cangmo.service.*
 import std.collection.*
+import std.env.*
 import std.fs.*
 import std.time.*
 
@@ -400,6 +401,29 @@ public class PublicSite {
             ]))
         ])
         HttpResponse().json(data)
+    }
+
+    public func metrics(ctx: Ctx): HttpResponse {
+        let expected = match (getVariable("CANGMO_METRICS_TOKEN")) {
+            case Some(value) => value
+            case None => ""
+        }
+        let supplied = ctx.req.header("x-cangmo-metrics-token")
+        if (expected.size < 8 || supplied != expected) {
+            return notFound(ctx)
+        }
+        let counts = services.stats.counts()
+        let sb = StringBuilder()
+        sb.append("cangmo_up 1\n")
+        sb.append("cangmo_posts_total " + docInt(counts, "posts").toString() + "\n")
+        sb.append("cangmo_pages_total " + docInt(counts, "pages").toString() + "\n")
+        sb.append("cangmo_comments_total " + docInt(counts, "comments").toString() + "\n")
+        sb.append("cangmo_media_total " + docInt(counts, "media").toString() + "\n")
+        sb.append("cangmo_users_total " + docInt(counts, "users").toString() + "\n")
+        sb.append("cangmo_wal_pending " + services.store.pendingWalEntries().toString() + "\n")
+        let response = HttpResponse().bytes(sb.toString().toArray(), "text/plain; version=0.0.4; charset=utf-8")
+        response.headers.set("cache-control", "no-store")
+        response
     }
 
     public func customCss(ctx: Ctx): HttpResponse {

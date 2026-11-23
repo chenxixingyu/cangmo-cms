@@ -1,0 +1,23 @@
+[Unit]
+Description=Cangmo blog/CMS
+After=network.target
+
+[Service]
+Type=simple
+User=cangmo
+Group=cangmo
+WorkingDirectory=/opt/cangmo
+ExecStart=/opt/cangmo/cangmo serve --config /var/lib/cangmo/config.json --port 8080 --data /var/lib/cangmo
+Restart=on-failure
+RestartSec=5
+Environment=CANGMO_HOST=0.0.0.0
+Environment=CANGMO_PORT=8080
+Environment=CANGMO_DATA_DIR=/var/lib/cangmo
+# Environment=CANGMO_BACKUP_PASSPHRASE=change-me
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/cangmo
+
+[Install]
+WantedBy=multi-user.target
