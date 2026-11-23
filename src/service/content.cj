@@ -81,6 +81,7 @@ public class CommentService {
         let doc = JsonObject()
         doc.set("id", JStr(id))
         doc.set("post_id", JStr(docStr(post, "id")))
+        doc.set("site_id", JStr(docStr(post, "site_id", def: DEFAULT_SITE_ID)))
         doc.set("parent_id", JStr(parent))
         doc.set("author_name", JStr(author))
         doc.set("author_email", JStr(mail))
@@ -107,10 +108,13 @@ public class CommentService {
     }
 
     public func adminList(status: String, page: Int64, pageSize: Int64,
-                          query!: String = "", postId!: String = ""): PageResult {
+                          query!: String = "", postId!: String = "", siteId!: String = ""): PageResult {
         let needle = query.trimAscii().toAsciiLower()
         let items = ArrayList<JsonValue>()
         for (comment in store.list(COL_COMMENTS)) {
+            if (siteId.size > 0 && docStr(comment, "site_id", def: DEFAULT_SITE_ID) != siteId) {
+                continue
+            }
             if (status != "all" && docStr(comment, "status") != status) {
                 continue
             }
@@ -140,7 +144,7 @@ public class CommentService {
         pageResult(out, total, page, pageSize)
     }
 
-    public func statusCounts(): JsonValue {
+    public func statusCounts(siteId!: String = ""): JsonValue {
         let data = JsonObject()
         var pending: Int64 = 0
         var approved: Int64 = 0
@@ -225,7 +229,7 @@ public class CommentService {
         store.count(COL_COMMENTS)
     }
 
-    public func recent(limit: Int64): Array<JsonValue> {
+    public func recent(limit: Int64, siteId!: String = ""): Array<JsonValue> {
         let items = ArrayList<JsonValue>()
         for (comment in store.list(COL_COMMENTS)) {
             items.add(comment)
@@ -295,7 +299,7 @@ public class MediaService {
         this.audit = audit
     }
 
-    public func upload(file: UploadedFile, userId: String, ip: String, folder!: String = "", dedupe!: Bool = false): JsonValue {
+    public func upload(file: UploadedFile, userId: String, ip: String, folder!: String = "", dedupe!: Bool = false, siteId!: String = ""): JsonValue {
         if (file.data.size == 0 || file.data.size > config.maxBodyBytes) {
             throw AppError("validation", "文件为空或超过大小限制")
         }
@@ -344,6 +348,7 @@ public class MediaService {
         doc.set("filename", JStr(storedName))
         doc.set("original_name", JStr(original))
         doc.set("folder", JStr(cleanFolder))
+        doc.set("site_id", JStr(if (siteId.size > 0) { siteId } else { DEFAULT_SITE_ID }))
         doc.set("mime", JStr(mimeTypeFor(storedName)))
         doc.set("size", JInt(file.data.size))
         doc.set("width", JInt(size.width))
@@ -356,10 +361,13 @@ public class MediaService {
         JObj(doc)
     }
 
-    public func list(page: Int64, pageSize: Int64, kind!: String = "all", query!: String = "", folder!: String = ""): PageResult {
+    public func list(page: Int64, pageSize: Int64, kind!: String = "all", query!: String = "", folder!: String = "", siteId!: String = ""): PageResult {
         let needle = query.trimAscii().toAsciiLower()
         let items = ArrayList<JsonValue>()
         for (item in store.list(COL_MEDIA)) {
+            if (siteId.size > 0 && docStr(item, "site_id", def: DEFAULT_SITE_ID) != siteId) {
+                continue
+            }
             if (kind != "all" && mediaKindOf(item) != kind) {
                 continue
             }
@@ -386,7 +394,7 @@ public class MediaService {
         pageResult(out, total, page, pageSize)
     }
 
-    public func counts(): JsonValue {
+    public func counts(siteId!: String = ""): JsonValue {
         let data = JsonObject()
         var all: Int64 = 0
         var images: Int64 = 0
@@ -760,7 +768,7 @@ public class StatsService {
         total
     }
 
-    public func counts(): JsonValue {
+    public func counts(siteId!: String = ""): JsonValue {
         let data = JsonObject()
         var posts: Int64 = 0
         var pages: Int64 = 0

@@ -211,7 +211,7 @@ public class AdminSite {
             rows.add(adminPostRow(services, post))
         }
         data.set("recent_posts", JArr(rows))
-        let comments = services.comments.recent(6)
+        let comments = services.comments.recent(6, siteId: ctx.siteId)
         let commentRows = JsonArray()
         for (comment in comments) {
             let post = services.posts.get(docStr(comment, "post_id"))
@@ -1236,7 +1236,7 @@ public class AdminSite {
         let search = ctx.query("q").trimAscii()
         let postId = ctx.query("post").trimAscii()
         let page = ctx.pageNumber()
-        let result = services.comments.adminList(status, page, 30, query: search, postId: postId)
+        let result = services.comments.adminList(status, page, 30, query: search, postId: postId, siteId: ctx.siteId)
         let rows = JsonArray()
         for (comment in result.items) {
             let post = services.posts.get(docStr(comment, "post_id"))
@@ -1263,7 +1263,7 @@ public class AdminSite {
         data.set("search", JStr(search))
         data.set("post_filter", JStr(postId))
         data.set("rows", JArr(rows))
-        data.set("counts", services.comments.statusCounts())
+        data.set("counts", services.comments.statusCounts(siteId: ctx.siteId))
         data.set("post_options", JArr(postOptions))
         data.set("pagination", buildPagination(result.page, result.pages, result.total,
             "/admin/comments?status=${status}&q=" + urlEncode(search) + "&post=" + urlEncode(postId), 30))
@@ -1355,12 +1355,12 @@ public class AdminSite {
         }
         let kind = normalizeAttachmentKind(ctx.query("kind", def: "all"))
         let search = ctx.query("q").trimAscii()
-        let result = services.media.list(ctx.pageNumber(), 36, kind: kind, query: search)
+        let result = services.media.list(ctx.pageNumber(), 36, kind: kind, query: search, siteId: ctx.siteId)
         let items = JsonArray()
         for (item in result.items) {
             items.add(attachmentView(item))
         }
-        let counts = services.media.counts()
+        let counts = services.media.counts(siteId: ctx.siteId)
         let data = JsonObject()
         data.set("page_title", JStr("附件库"))
         data.set("active", JStr("attachments"))
@@ -1383,7 +1383,7 @@ public class AdminSite {
         let kind = normalizeAttachmentKind(ctx.query("kind", def: "image"))
         let search = ctx.query("q").trimAscii()
         let page = ctx.pageNumber()
-        let result = services.media.list(page, 24, kind: kind, query: search)
+        let result = services.media.list(page, 24, kind: kind, query: search, siteId: ctx.siteId)
         let items = JsonArray()
         for (item in result.items) {
             items.add(attachmentView(item))
@@ -1424,7 +1424,7 @@ public class AdminSite {
             let uploaded = JsonArray()
             while (index < ctx.req.files.size && count < 10) {
                 let file = ctx.req.files[index]
-                let saved = services.media.upload(file, docStr(ctx.userDoc(), "id"), ctx.clientIp(), folder: ctx.form("folder"), dedupe: true)
+                let saved = services.media.upload(file, docStr(ctx.userDoc(), "id"), ctx.clientIp(), folder: ctx.form("folder"), dedupe: true, siteId: ctx.siteId)
                 uploaded.add(attachmentView(saved))
                 count += 1
                 index += 1
