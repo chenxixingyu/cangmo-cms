@@ -263,10 +263,10 @@ public class AdminSite {
         let categories = JsonArray()
         let allTags = JsonArray()
         if (postType == "page") {
-            for (category in services.taxonomy.listCategories()) {
+            for (category in services.taxonomy.listCategories(siteId: ctx.siteId)) {
                 categories.add(category)
             }
-            for (tag in services.taxonomy.listTags()) {
+            for (tag in services.taxonomy.listTags(siteId: ctx.siteId)) {
                 allTags.add(tag)
             }
         }
@@ -1000,12 +1000,12 @@ public class AdminSite {
         data.set("is_new", JBool(isNew))
         data.set("error", JStr(error))
         let categories = JsonArray()
-        for (category in services.taxonomy.listCategories()) {
+        for (category in services.taxonomy.listCategories(siteId: ctx.siteId)) {
             categories.add(category)
         }
         data.set("categories", JArr(categories))
         let tags = JsonArray()
-        for (tag in services.taxonomy.listTags()) {
+        for (tag in services.taxonomy.listTags(siteId: ctx.siteId)) {
             tags.add(tag)
         }
         data.set("all_tags", JArr(tags))
@@ -1120,7 +1120,7 @@ public class AdminSite {
         data.set("page_title", JStr("分类"))
         data.set("active", JStr("categories"))
         let categories = JsonArray()
-        for (category in services.taxonomy.listCategories()) {
+        for (category in services.taxonomy.listCategories(siteId: ctx.siteId)) {
             let item = cloneDoc(category)
             var count: Int64 = 0
             for (post in services.store.list(COL_POSTS)) {
@@ -1143,11 +1143,11 @@ public class AdminSite {
         let action = ctx.form("action")
         try {
             if (action == "create") {
-                services.taxonomy.createCategory(ctx.form("name"), ctx.form("slug"), ctx.form("description"), ctx.clientIp())
+                services.taxonomy.createCategory(ctx.form("name"), ctx.form("slug"), ctx.form("description"), ctx.clientIp(), siteId: ctx.siteId)
                 ctx.setFlash("success", "分类已创建")
             } else if (action == "update") {
                 services.taxonomy.updateCategory(ctx.form("id"), ctx.form("name"), ctx.form("slug"),
-                                                 ctx.form("description"), ctx.clientIp())
+                                                 ctx.form("description"), ctx.clientIp(), siteId: ctx.siteId)
                 ctx.setFlash("success", "分类已更新")
             } else if (action == "delete") {
                 services.taxonomy.deleteCategory(ctx.form("id"), ctx.clientIp())
@@ -1175,7 +1175,7 @@ public class AdminSite {
             let parsed = tryParseJson(body) ?? jobj()
             let name = getString(parsed, "name")
             let slug = getString(parsed, "slug")
-            let id = services.taxonomy.createCategory(name, slug, "", ctx.clientIp())
+            let id = services.taxonomy.createCategory(name, slug, "", ctx.clientIp(), siteId: ctx.siteId)
             let category = match (services.taxonomy.getCategory(id)) {
                 case Some(value) => value
                 case None => jobj()
@@ -1202,7 +1202,7 @@ public class AdminSite {
         data.set("page_title", JStr("标签"))
         data.set("active", JStr("tags"))
         let tags = JsonArray()
-        for (tag in services.taxonomy.listTags()) {
+        for (tag in services.taxonomy.listTags(siteId: ctx.siteId)) {
             tags.add(tag)
         }
         data.set("tags", JArr(tags))

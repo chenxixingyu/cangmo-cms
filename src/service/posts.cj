@@ -140,7 +140,16 @@ public class PostService {
         if (!isPage && categoryId.size > 0 && store.get(COL_CATEGORIES, categoryId).isNone()) {
             throw AppError("validation", "分类不存在")
         }
-        let tagIds = if (isPage) { Array<String>(0, repeat: "") } else { resolveTags(input.tagNames) }
+        let postSiteId = if (input.siteId.size > 0) {
+            input.siteId
+        } else {
+            let existingSite = match (existing) {
+                case Some(value) => docStr(value, "site_id")
+                case None => ""
+            }
+            if (existingSite.size > 0) { existingSite } else { DEFAULT_SITE_ID }
+        }
+        let tagIds = if (isPage) { Array<String>(0, repeat: "") } else { resolveTags(input.tagNames, siteId: postSiteId) }
         let cover = input.cover.trimAscii()
         if (cover.size > 0 && !cover.startsWith("/media/") && !isValidWebUrl(cover)) {
             throw AppError("validation", "封面地址需为附件库链接或 http(s) 地址")
@@ -173,12 +182,6 @@ public class PostService {
         setField(postDoc, "content_html", JStr(rendered.html))
         setField(postDoc, "headings", headingsJson(rendered.headings))
         setField(postDoc, "status", JStr(status))
-        let postSiteId = if (input.siteId.size > 0) {
-            input.siteId
-        } else {
-            let existingSite = docStr(postDoc, "site_id")
-            if (existingSite.size > 0) { existingSite } else { DEFAULT_SITE_ID }
-        }
         setField(postDoc, "site_id", JStr(postSiteId))
         setField(postDoc, "author_id", JStr(if (id.size > 0) { docStr(postDoc, "author_id") } else { actorId }))
         setField(postDoc, "category_id", JStr(categoryId))
@@ -509,14 +512,14 @@ public class PostService {
         JArr(arr)
     }
 
-    private func resolveTags(names: Array<String>): Array<String> {
+    private func resolveTags(names: Array<String>, siteId!: String = ""): Array<String> {
         let ids = ArrayList<String>()
         for (name in names) {
             let trimmed = name.trimAscii()
             if (trimmed.size == 0 || trimmed.size > 40) {
                 continue
             }
-            let id = ensureTag(trimmed)
+            let id = ensureTag(trimmed, siteId: siteId)
             if (!ids.contains(id)) {
                 ids.add(id)
             }
@@ -524,9 +527,12 @@ public class PostService {
         ids.toArray()
     }
 
-    public func ensureTag(name: String): String {
+    public func ensureTag(name: String, siteId!: String = ""): String {
         let needle = name.trimAscii()
         for (tag in store.list(COL_TAGS)) {
+            if (siteId.size > 0 && docStr(tag, "site_id", def: DEFAULT_SITE_ID) != siteId) {
+                continue
+            }
             if (docStr(tag, "name").toAsciiLower() == needle.toAsciiLower()) {
                 return docStr(tag, "id")
             }
@@ -534,6 +540,7 @@ public class PostService {
         let id = newId("tag")
         let doc = JsonObject()
         doc.set("id", JStr(id))
+        doc.set("site_id", JStr(if (siteId.size > 0) { siteId } else { DEFAULT_SITE_ID }))
         doc.set("name", JStr(needle))
         doc.set("slug", JStr(uniqueTaxonomySlug(needle, COL_TAGS, "")))
         doc.set("created_at", JInt(nowSeconds()))
@@ -865,9 +872,12 @@ public class TaxonomyService {
         this.audit = audit
     }
 
-    public func listCategories(): Array<JsonValue> {
+    public func listCategories(siteId!: String = ""): Array<JsonValue> {
         let items = ArrayList<JsonValue>()
         for (category in store.list(COL_CATEGORIES)) {
+            if (siteId.size > 0 && docStr(category, "site_id", def: DEFAULT_SITE_ID) != siteId) {
+                continue
+            }
             items.add(category)
         }
         sort<JsonValue>(items, by: { a: JsonValue, b: JsonValue =>
@@ -882,8 +892,11 @@ public class TaxonomyService {
         store.get(COL_CATEGORIES, id)
     }
 
-    public func categoryBySlug(slug: String): ?JsonValue {
+    public func categoryBySlug(slug: String, siteId!: String = ""): ?JsonValue {
         for (category in store.list(COL_CATEGORIES)) {
+            if (siteId.size > 0 && docStr(category, "site_id", def: DEFAULT_SITE_ID) != siteId) {
+                continue
+            }
             if (docStr(category, "slug") == slug) {
                 return Some(category)
             }
@@ -891,7 +904,7 @@ public class TaxonomyService {
         None
     }
 
-    public func createCategory(name: String, slug: String, description: String, ip: String): String {
+    public func createCategory(name: String, slug: String, description: String, ip: String, siteId!: String = ""): String {
         let trimmed = name.trimAscii()
         if (trimmed.size == 0 || trimmed.size > 60) {
             throw AppError("validation", "分类名称需在 1-60 字之间")
@@ -900,6 +913,7 @@ public class TaxonomyService {
         let id = newId("cat")
         let doc = JsonObject()
         doc.set("id", JStr(id))
+        doc.set("site_id", JStr(if (siteId.size > 0) { siteId } else { DEFAULT_SITE_ID }))
         doc.set("name", JStr(trimmed))
         doc.set("slug", JStr(finalSlug))
         doc.set("description", JStr(truncateUtf8(description.trimAscii(), 300)))
@@ -910,7 +924,7 @@ public class TaxonomyService {
         id
     }
 
-    public func updateCategory(id: String, name: String, slug: String, description: String, ip: String): Unit {
+    public func updateCategory(id: String, name: String, slug: String, description: String, ip: String, siteId!: String = ""): Unit {
         let category = match (store.get(COL_CATEGORIES, id)) {
             case Some(value) => value
             case None => throw AppError("not_found", "分类不存在")
@@ -951,9 +965,12 @@ public class TaxonomyService {
         audit.log("", "", "category_deleted", "category", id, ip, "")
     }
 
-    public func listTags(): Array<JsonValue> {
+    public func listTags(siteId!: String = ""): Array<JsonValue> {
         let items = ArrayList<JsonValue>()
         for (tag in store.list(COL_TAGS)) {
+            if (siteId.size > 0 && docStr(tag, "site_id", def: DEFAULT_SITE_ID) != siteId) {
+                continue
+            }
             let doc = cloneDoc(tag)
             var count: Int64 = 0
             for (post in store.list(COL_POSTS)) {
@@ -973,8 +990,11 @@ public class TaxonomyService {
         items.toArray()
     }
 
-    public func tagBySlug(slug: String): ?JsonValue {
+    public func tagBySlug(slug: String, siteId!: String = ""): ?JsonValue {
         for (tag in store.list(COL_TAGS)) {
+            if (siteId.size > 0 && docStr(tag, "site_id", def: DEFAULT_SITE_ID) != siteId) {
+                continue
+            }
             if (docStr(tag, "slug") == slug) {
                 return Some(tag)
             }

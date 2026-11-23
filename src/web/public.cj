@@ -47,8 +47,8 @@ public class PublicSite {
         data.set("posts", jsonArrayFrom(cards.toArray()))
         data.set("featured", jsonArrayFrom(featured.toArray()))
         data.set("pagination", buildPagination(result.page, result.pages, result.total, "/", pageSize))
-        data.set("categories", sidebarCategories())
-        data.set("tags", sidebarTags())
+        data.set("categories", sidebarCategories(ctx.siteId))
+        data.set("tags", sidebarTags(ctx.siteId))
         data.set("archives", sidebarArchives())
         data.set("meta_description", JStr(services.settings.str("site_description")))
         ctx.renderPage("home.html", JObj(data))
@@ -87,8 +87,8 @@ public class PublicSite {
         data.set("related", jsonArrayFrom(related.toArray()))
         data.set("prev_post", prevPost)
         data.set("next_post", nextPost)
-        data.set("categories", sidebarCategories())
-        data.set("tags", sidebarTags())
+        data.set("categories", sidebarCategories(ctx.siteId))
+        data.set("tags", sidebarTags(ctx.siteId))
         data.set("archives", sidebarArchives())
         data.set("canonical", JStr(ctx.siteUrl(postUrl(post))))
         ctx.renderPage("post.html", JObj(data))
@@ -149,7 +149,7 @@ public class PublicSite {
 
     public func categoryPage(ctx: Ctx): HttpResponse {
         let slug = ctx.param("slug")
-        let category = match (services.taxonomy.categoryBySlug(slug)) {
+        let category = match (services.taxonomy.categoryBySlug(slug, siteId: ctx.siteId)) {
             case Some(value) => value
             case None => return notFound(ctx)
         }
@@ -166,8 +166,8 @@ public class PublicSite {
         data.set("posts", cardsOf(result.items))
         data.set("pagination", buildPagination(result.page, result.pages, result.total,
                                                "/categories/" + docStr(category, "slug"), pageSize))
-        data.set("categories", sidebarCategories())
-        data.set("tags", sidebarTags())
+        data.set("categories", sidebarCategories(ctx.siteId))
+        data.set("tags", sidebarTags(ctx.siteId))
         data.set("archives", sidebarArchives())
         data.set("page_title", JStr(docStr(category, "name")))
         data.set("canonical", JStr(ctx.siteUrl("/categories/" + slug)))
@@ -176,7 +176,7 @@ public class PublicSite {
 
     public func tagPage(ctx: Ctx): HttpResponse {
         let slug = ctx.param("slug")
-        let tag = match (services.taxonomy.tagBySlug(slug)) {
+        let tag = match (services.taxonomy.tagBySlug(slug, siteId: ctx.siteId)) {
             case Some(value) => value
             case None => return notFound(ctx)
         }
@@ -193,8 +193,8 @@ public class PublicSite {
         data.set("posts", cardsOf(result.items))
         data.set("pagination", buildPagination(result.page, result.pages, result.total,
                                                "/tags/" + docStr(tag, "slug"), pageSize))
-        data.set("categories", sidebarCategories())
-        data.set("tags", sidebarTags())
+        data.set("categories", sidebarCategories(ctx.siteId))
+        data.set("tags", sidebarTags(ctx.siteId))
         data.set("archives", sidebarArchives())
         data.set("page_title", JStr(docStr(tag, "name")))
         data.set("canonical", JStr(ctx.siteUrl("/tags/" + slug)))
@@ -236,8 +236,8 @@ public class PublicSite {
         data.set("posts", cardsOf(selected.toArray()))
         data.set("list_title", JStr(if (prefix.size > 0) { "归档：" + prefix } else { "全部文章" }))
         data.set("list_kind", JStr("archive"))
-        data.set("categories", sidebarCategories())
-        data.set("tags", sidebarTags())
+        data.set("categories", sidebarCategories(ctx.siteId))
+        data.set("tags", sidebarTags(ctx.siteId))
         data.set("archives", sidebarArchives())
         ctx.renderPage("archive.html", JObj(data))
     }
@@ -257,8 +257,8 @@ public class PublicSite {
         data.set("query", JStr(queryText))
         data.set("results", JArr(cards))
         data.set("result_count", JInt(results.size))
-        data.set("categories", sidebarCategories())
-        data.set("tags", sidebarTags())
+        data.set("categories", sidebarCategories(ctx.siteId))
+        data.set("tags", sidebarTags(ctx.siteId))
         data.set("archives", sidebarArchives())
         ctx.renderPage("search.html", JObj(data))
     }
@@ -368,10 +368,10 @@ public class PublicSite {
         for (page in services.posts.publishedPages(siteId: ctx.siteId)) {
             add(postUrl(page), docInt(page, "updated_at"))
         }
-        for (category in services.taxonomy.listCategories()) {
+        for (category in services.taxonomy.listCategories(siteId: ctx.siteId)) {
             add(categoryUrl(category), docInt(category, "created_at"))
         }
-        for (tag in services.taxonomy.listTags()) {
+        for (tag in services.taxonomy.listTags(siteId: ctx.siteId)) {
             add(tagUrl(tag), docInt(tag, "created_at"))
         }
         let data = JsonObject()
@@ -483,9 +483,9 @@ public class PublicSite {
         JArr(arr)
     }
 
-    private func sidebarCategories(): JsonValue {
+    private func sidebarCategories(siteId: String): JsonValue {
         let arr = JsonArray()
-        for (category in services.taxonomy.listCategories()) {
+        for (category in services.taxonomy.listCategories(siteId: siteId)) {
             let item = JsonObject()
             item.set("name", JStr(docStr(category, "name")))
             item.set("slug", JStr(docStr(category, "slug")))
@@ -503,9 +503,9 @@ public class PublicSite {
         JArr(arr)
     }
 
-    private func sidebarTags(): JsonValue {
+    private func sidebarTags(siteId: String): JsonValue {
         let arr = JsonArray()
-        for (tag in services.taxonomy.listTags()) {
+        for (tag in services.taxonomy.listTags(siteId: siteId)) {
             let item = JsonObject()
             item.set("name", JStr(docStr(tag, "name")))
             item.set("url", JStr(tagUrl(tag)))

@@ -249,7 +249,7 @@ public class ApiSite {
     public func categories(ctx: Ctx): HttpResponse {
         requireScope(ctx, "posts.read")
         let items = JsonArray()
-        for (category in services.taxonomy.listCategories()) {
+        for (category in services.taxonomy.listCategories(siteId: ctx.siteId)) {
             items.add(category)
         }
         HttpResponse().json(jsonObjectOf([("data", JArr(items))]))
@@ -258,7 +258,7 @@ public class ApiSite {
     public func tags(ctx: Ctx): HttpResponse {
         requireScope(ctx, "posts.read")
         let items = JsonArray()
-        for (tag in services.taxonomy.listTags()) {
+        for (tag in services.taxonomy.listTags(siteId: ctx.siteId)) {
             items.add(tag)
         }
         HttpResponse().json(jsonObjectOf([("data", JArr(items))]))
