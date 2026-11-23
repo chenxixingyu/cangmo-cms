@@ -1075,6 +1075,145 @@ public class BackupService {
         JObj(result)
     }
 
+    public func createIncremental(label: String): JsonValue {
+        ensureDir(config.backupDir())
+        let existing = list()
+        if (existing.size == 0) {
+            return createBackup(label)
+        }
+        let baseName = docStr(existing[0], "name")
+        let base = resolveSnapshot(baseName, 0)
+        let current = store.exportAll()
+        let stamp = formatTime(nowSeconds(), "yyyyMMdd-HHmmss")
+        let safeLabel = sanitizeFilename(if (label.trimAscii().size > 0) { label } else { "incremental" })
+        let name = "inc-${safeLabel}-${stamp}-${randomHex(bytes: 3)}.json"
+        let path = config.backupDir() + "/" + name
+        let doc = JsonObject()
+        doc.set("format", JInt(1))
+        doc.set("incremental", JBool(true))
+        doc.set("base", JStr(baseName))
+        doc.set("created_at", JInt(nowSeconds()))
+        let (changed, deleted) = buildBackupDiff(base, current)
+        doc.set("changed", JObj(changed))
+        doc.set("deleted", JObj(deleted))
+        writeTextAtomic(path, toJson(JObj(doc), pretty: true))
+        let result = JsonObject()
+        result.set("name", JStr(name))
+        result.set("size", JInt(fileSize(path)))
+        result.set("created_at", JInt(nowSeconds()))
+        result.set("incremental", JBool(true))
+        JObj(result)
+    }
+
+    private func resolveSnapshot(name: String, depth: Int64): JsonValue {
+        if (depth > 20) {
+            throw AppError("validation", "增量备份链过深")
+        }
+        let text = match (readBackup(name)) {
+            case Some(value) => value
+            case None => throw AppError("validation", "备份不存在或无法解密")
+        }
+        let parsed = try { parseJson(text) } catch (e: Exception) {
+            throw AppError("validation", "备份不是有效 JSON")
+        }
+        if (!getBool(parsed, "incremental")) {
+            return parsed
+        }
+        let base = resolveSnapshot(getString(parsed, "base"), depth + 1)
+        applyBackupDiff(base, parsed)
+    }
+
+    private func applyBackupDiff(base: JsonValue, diff: JsonValue): JsonValue {
+        let merged = try { parseJson(toJson(base)) } catch (e: Exception) {
+            throw AppError("validation", "备份链损坏")
+        }
+        let collections = match (getObject(merged, "collections")) {
+            case Some(value) => value
+            case None => throw AppError("validation", "备份缺少 collections")
+        }
+        if (let Some(changed) <- getObject(diff, "changed")) {
+            for ((name, value) in changed.fields) {
+                let target = match (collections.get(name)) {
+                    case Some(JObj(existing)) => existing
+                    case _ =>
+                        let created = JsonObject()
+                        collections.set(name, JObj(created))
+                        created
+                }
+                if (let JObj(docs) <- value) {
+                    for ((id, doc) in docs.fields) {
+                        target.set(id, doc)
+                    }
+                }
+            }
+        }
+        if (let Some(deleted) <- getObject(diff, "deleted")) {
+            for ((name, value) in deleted.fields) {
+                if (let Some(JObj(existing)) <- collections.get(name)) {
+                    if (let JArr(ids) <- value) {
+                        for (id in ids.items) {
+                            if (let JStr(key) <- id) {
+                                existing.remove(key)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        merged
+    }
+
+    private func buildBackupDiff(base: JsonValue, current: JsonValue): (changed: JsonObject, deleted: JsonObject) {
+        let changed = JsonObject()
+        let deleted = JsonObject()
+        let baseCollections = getObject(base, "collections") ?? JsonObject()
+        let currentCollections = getObject(current, "collections") ?? JsonObject()
+        for ((name, value) in currentCollections.fields) {
+            let baseDocs = match (baseCollections.get(name)) {
+                case Some(JObj(docs)) => docs
+                case _ => JsonObject()
+            }
+            let currentDocs = match (value) {
+                case JObj(docs) => docs
+                case _ => continue
+            }
+            let changedDocs = JsonObject()
+            for ((id, doc) in currentDocs.fields) {
+                let old = baseDocs.get(id)
+                let same = match (old) {
+                    case Some(previous) => toJson(previous, pretty: false) == toJson(doc, pretty: false)
+                    case None => false
+                }
+                if (!same) {
+                    changedDocs.set(id, doc)
+                }
+            }
+            if (changedDocs.size() > 0) {
+                changed.set(name, JObj(changedDocs))
+            }
+        }
+        for ((name, value) in baseCollections.fields) {
+            let baseDocs = match (value) {
+                case JObj(docs) => docs
+                case _ => continue
+            }
+            let currentDocs = match (currentCollections.get(name)) {
+                case Some(JObj(docs)) => docs
+                case _ => JsonObject()
+            }
+            let removed = JsonArray()
+            for ((id, _) in baseDocs.fields) {
+                if (!currentDocs.has(id)) {
+                    removed.add(JStr(id))
+                }
+            }
+            if (removed.items.size > 0) {
+                deleted.set(name, JArr(removed))
+            }
+        }
+        (changed, deleted)
+    }
+
     public func list(): Array<JsonValue> {
         let items = ArrayList<JsonValue>()
         ensureDir(config.backupDir())
@@ -1091,6 +1230,8 @@ public class BackupService {
                 modified = FileInfo(path).lastModificationTime.toUnixTimeStamp().toSeconds()
             } catch (e: Exception) {}
             item.set("created_at", JInt(modified))
+            let incremental = try { readTextFile(path).contains("\"incremental\"") } catch (e: Exception) { false }
+            item.set("incremental", JBool(incremental))
             items.add(JObj(item))
         }
         sortDocsDesc(items, "created_at")
@@ -1133,10 +1274,16 @@ public class BackupService {
         if (format != 1) {
             throw AppError("validation", "不支持的备份格式")
         }
-        if (getObject(parsed, "collections").isNone()) {
+        let effective = if (getBool(parsed, "incremental")) {
+            let base = resolveSnapshot(getString(parsed, "base"), 0)
+            applyBackupDiff(base, parsed)
+        } else {
+            parsed
+        }
+        if (getObject(effective, "collections").isNone()) {
             throw AppError("validation", "备份缺少 collections 字段")
         }
-        let count = store.replaceAll(parsed)
+        let count = store.replaceAll(effective)
         // Restored sessions must not resurrect old browser sessions.
         for (id in store.listIds(COL_SESSIONS)) {
             store.delete(COL_SESSIONS, id)

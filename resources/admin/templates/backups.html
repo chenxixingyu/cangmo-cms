@@ -12,6 +12,12 @@
     </div>
     <div class="page-intro-actions">
       <button type="button" class="btn" id="backup-create-open">新建备份</button>
+      <form method="post" action="/admin/backups/action" class="inline-form">
+        <input type="hidden" name="_csrf" value="{{ csrf }}">
+        <input type="hidden" name="action" value="create_incremental">
+        <input type="hidden" name="label" value="manual">
+        <button class="btn btn-ghost" type="submit">新建增量备份</button>
+      </form>
       <button type="button" class="btn btn-ghost" id="backup-restore-open">从文件恢复</button>
     </div>
   </div>
@@ -46,7 +52,7 @@
         <tbody>
           {% for backup in backups %}
           <tr>
-            <td><code>{{ backup.name }}</code></td>
+            <td><code>{{ backup.name }}</code>{% if backup.incremental %} <span class="badge">增量</span>{% endif %}</td>
             <td class="muted">{{ backup.size_text }}</td>
             <td class="muted">{{ backup.date }}</td>
             <td class="table-actions">

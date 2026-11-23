@@ -2319,6 +2319,11 @@ public class AdminSite {
                 services.audit.log(docStr(ctx.userDoc(), "id"), docStr(ctx.userDoc(), "username"),
                                    "backup_created", "backup", docStr(result, "name"), ctx.clientIp(), "")
                 ctx.setFlash("success", "备份已创建：${docStr(result, "name")}")
+            } else if (action == "create_incremental") {
+                let result = services.backup.createIncremental(ctx.form("label"))
+                services.audit.log(docStr(ctx.userDoc(), "id"), docStr(ctx.userDoc(), "username"),
+                                   "backup_created", "backup", docStr(result, "name"), ctx.clientIp(), "incremental")
+                ctx.setFlash("success", "增量备份已创建：${docStr(result, "name")}")
             } else if (action == "delete") {
                 services.backup.deleteBackup(ctx.form("name"))
                 ctx.setFlash("success", "备份已删除")
