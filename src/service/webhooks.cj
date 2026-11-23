@@ -97,7 +97,7 @@ public class WebhookService {
         var processed: Int64 = 0
         let due = ArrayList<JsonValue>()
         for (job in store.list(COL_JOBS)) {
-            if (docStr(job, "status") == "pending" && docInt(job, "next_at") <= nowSeconds()) {
+            if (docStr(job, "kind", def: "webhook") == "webhook" && docStr(job, "status") == "pending" && docInt(job, "next_at") <= nowSeconds()) {
                 due.add(job)
             }
         }

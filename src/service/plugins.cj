@@ -126,8 +126,67 @@ public class PluginService {
             store.put(COL_PLUGINS, docStr(plugin, "id"), updated)
             if (code == 0) {
                 delivered += 1
+            } else {
+                enqueue(docStr(plugin, "endpoint"), event, body, secret, docStr(plugin, "id"))
             }
         }
         delivered
+    }
+
+    public func processRetries(): Int64 {
+        var processed: Int64 = 0
+        let due = ArrayList<JsonValue>()
+        for (job in store.list(COL_JOBS)) {
+            if (docStr(job, "kind") == "plugin" && docStr(job, "status") == "pending" &&
+                docInt(job, "next_at") <= nowSeconds()) {
+                due.add(job)
+            }
+        }
+        for (job in due) {
+            let attempts = docInt(job, "attempts") + 1
+            let code = deliver(docStr(job, "url"), docStr(job, "event"), docStr(job, "body"),
+                               docStr(job, "secret"))
+            let updated = cloneDoc(job)
+            setField(updated, "attempts", JInt(attempts))
+            setField(updated, "last_status", JInt(code))
+            setField(updated, "last_at", JInt(nowSeconds()))
+            if (code == 0) {
+                setField(updated, "status", JStr("done"))
+            } else if (attempts >= 3) {
+                setField(updated, "status", JStr("failed"))
+            } else {
+                setField(updated, "next_at", JInt(nowSeconds() + 60 * attempts))
+            }
+            store.put(COL_JOBS, docStr(job, "id"), updated)
+            processed += 1
+        }
+        processed
+    }
+
+    private func enqueue(url: String, event: String, body: String, secret: String, pluginId: String): Unit {
+        let id = newId("job")
+        let job = JsonObject()
+        job.set("id", JStr(id))
+        job.set("kind", JStr("plugin"))
+        job.set("url", JStr(url))
+        job.set("event", JStr(event))
+        job.set("body", JStr(truncateUtf8(body, 8000)))
+        job.set("secret", JStr(secret))
+        job.set("plugin_id", JStr(pluginId))
+        job.set("status", JStr("pending"))
+        job.set("attempts", JInt(0))
+        job.set("created_at", JInt(nowSeconds()))
+        job.set("next_at", JInt(nowSeconds() + 60))
+        job.set("last_status", JInt(0))
+        store.put(COL_JOBS, id, JObj(job))
+    }
+
+    private func deliver(url: String, event: String, body: String, secret: String): Int64 {
+        let headers = HashMap<String, String>()
+        headers["x-cangmo-event"] = event
+        if (secret.size > 0) {
+            headers["x-cangmo-signature"] = hmacSha256Hex(secret, body)
+        }
+        http.postJson(url, body, headers)
     }
 }
