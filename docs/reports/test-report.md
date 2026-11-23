@@ -1,13 +1,13 @@
-# 仓墨测试报告（v1.3.0）
+# 仓墨测试报告（v1.6.0）
 
-- 日期：2026-11-22
+- 日期：2026-11-24
 - 本地环境：Windows 11 x64 / 仓颉 1.2.1 / Node.js 22.2.0
 - Linux：GitHub Actions Ubuntu（`cjpm build` + `cjpm test`）
-- 结论：**通过**。25 个单元测试 + 236 项集成/安全断言，合计 **261 项**；另 10 项 v1.3 浏览器审计通过；静态分析无高危项。
+- 结论：**通过**。26 个单元测试 + 236 项基线 + 51 项定向，合计 **313 项**；另 10 项 v1.3 浏览器审计通过；静态分析无高危项。
 
 | 套件 | 结果 | 文件 |
 | --- | --- | --- |
-| 单元测试 | 25/25 | [unit-tests-v101.txt](unit-tests-v101.txt) |
+| 单元测试 | 26/26 | [unit-tests-v101.txt](unit-tests-v101.txt) |
 | 初始化与公共站 | 24/24 | [smoke-v101.txt](smoke-v101.txt) |
 | 后台与内容闭环 | 31/31 | [e2e-v101.txt](e2e-v101.txt) |
 | 扩展功能 | 29/29 | [extended-v101.txt](extended-v101.txt) |
@@ -21,6 +21,6 @@
 | 并发/协议 | 6/6 | [load-v101.txt](load-v101.txt) |
 | 安全回归 | 31/31 | [security-v101.txt](security-v101.txt) |
 | 部署自检 | 通过（17/17 模板） | [doctor-v101.txt](doctor-v101.txt) |
-| cjlint | 853 条（830 建议 / 23 强制风格） | [cjlint.json](cjlint.json) |
+| cjlint | 947 条（921 建议 / 26 强制风格） | [cjlint.json](cjlint.json) |
 
 详细覆盖、修复项与已知边界见 [../TESTING.md](../TESTING.md)。

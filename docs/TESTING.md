@@ -1,7 +1,7 @@
-# 仓墨测试与验收（v1.3.0）
+# 仓墨测试与验收（v1.6.0）
 
 > 本地环境：Windows 11 x64 · 仓颉 1.2.1 (cjnative) · Node.js 22.2.0 · Microsoft Edge  
-> 测试对象：v1.3.0。所有集成测试均在**全新数据目录**上执行，原始输出保存在 `docs/reports/`。  
+> 测试对象：v1.6.0。所有集成测试均在**全新数据目录**上执行，原始输出保存在 `docs/reports/`。  
 > Linux：GitHub Actions `ubuntu-latest` 已通过 `cjpm build` + `cjpm test`（run 45069772344）。
 
 ## 1. 一键运行
@@ -31,7 +31,7 @@ node tests\security.mjs
 
 | 套件 | 断言数 | 结果 | 原始输出 |
 | --- | --- | --- | --- |
-| 单元测试 `cjpm test` | 25 | **25 / 25** | [unit-tests-v101.txt](reports/unit-tests-v101.txt) |
+| 单元测试 `cjpm test` | 26 | **26 / 26** | [unit-tests-v101.txt](reports/unit-tests-v101.txt) |
 | 初始化与公共站 `smoke.mjs` | 24 | **24 / 24** | [smoke-v101.txt](reports/smoke-v101.txt) |
 | 后台与内容闭环 `e2e.mjs` | 31 | **31 / 31** | [e2e-v101.txt](reports/e2e-v101.txt) |
 | 扩展功能 `extended.mjs` | 29 | **29 / 29** | [extended-v101.txt](reports/extended-v101.txt) |
@@ -42,18 +42,31 @@ node tests\security.mjs
 | v1.2.1 搜索/批量 `v121-search.mjs` | 9 | **9 / 9** | [v121-search.txt](reports/v121-search.txt) |
 | v1.2.1 加密/变体 `v121-crypto.mjs` | 7 | **7 / 7** | [v121-crypto.txt](reports/v121-crypto.txt) |
 | v1.3 设置/主题 `v130.mjs` | 12 | **12 / 12** | [v130.txt](reports/v130.txt) |
+| v1.4 API/预览 | 5 | **5 / 5** | [v140-api.txt](reports/v140-api.txt) |
+| v1.4 审计/会话 | 7 | **7 / 7** | [v140-audit.txt](reports/v140-audit.txt) |
+| v1.4 邮件/重置 | 8 | **8 / 8** | [v140-mail.txt](reports/v140-mail.txt) |
+| v1.4 TOTP | 9 | **9 / 9** | [v140-totp.txt](reports/v140-totp.txt) |
+| v1.5 OpenAPI/文件夹 | 3 | **3 / 3** | [v150-openapi.txt](reports/v150-openapi.txt) |
+| v1.5 主题选项/去重 | 3 | **3 / 3** | [v150-theme.txt](reports/v150-theme.txt) |
+| v1.5 日历 | 1 | **1 / 1** | [v150-calendar.txt](reports/v150-calendar.txt) |
+| v1.5 审核流 | 3 | **3 / 3** | [v150-review.txt](reports/v150-review.txt) |
+| v1.5 主题安装 | 4 | **4 / 4** | [v150-install.txt](reports/v150-install.txt) |
+| v1.6 指标 | 2 | **2 / 2** | [v160-metrics.txt](reports/v160-metrics.txt) |
+| v1.6 搜索分析 | 1 | **1 / 1** | [v160-search.txt](reports/v160-search.txt) |
+| v1.6 任务队列 | 1 | **1 / 1** | [v160-jobs.txt](reports/v160-jobs.txt) |
+| v1.6 增量备份 | 4 | **4 / 4** | [v160-inc.txt](reports/v160-inc.txt) |
 | 并发/协议 `load.mjs` | 6 | **6 / 6** | [load-v101.txt](reports/load-v101.txt) |
 | 安全回归 `security.mjs` | 31 | **31 / 31** | [security-v101.txt](reports/security-v101.txt) |
 | 部署自检 `doctor` | 17 模板 | **通过，17/17** | [doctor-v101.txt](reports/doctor-v101.txt) |
-| 静态分析 `cjlint` | 853 条 | 830 建议 + 23 强制风格项 | [cjlint.json](reports/cjlint.json) |
+| 静态分析 `cjlint` | 947 条 | 921 建议 + 26 强制风格项 | [cjlint.json](reports/cjlint.json) |
 
-**合计：25 个单元测试 + 236 项集成/安全断言 = 261 项，全部通过。**
+**合计：26 个单元测试 + 236 项基线 + 51 项定向 = 313 项，全部通过。**
 
 > 本轮功能与兼容说明见 [v1.1.0 发布说明](releases/v1.1.0.md)。
 
 另执行 **10 项 v1.3 浏览器审计**（Edge/CDP）：六个设置标签、hash 定位、主题入口、首页主标题、Logo、自定义 CSS 与全局 JS 异常，全部通过，见 [ui-v130.txt](reports/ui-v130.txt)。
 
-### v1.0.1 ~ v1.3.0 新增与回归覆盖
+### v1.0.1 ~ v1.6.0 新增与回归覆盖
 
 - 附件库：页面渲染、旧“媒体库”文案移除、JSON 上传、类型筛选、文件名搜索、选择器数据、删除
 - 编辑器：封面/标签 UI、AJAX 新建分类、带分类/标签/封面的文章保存
@@ -102,7 +115,7 @@ node tests\security.mjs
 cjlint -f .\src -o .\docs\reports\cjlint -r json
 ```
 
-结果：**853 条**（`MANDATORY` 23、`SUGGESTIONS` 830）。强制项仍集中在：
+结果：**947 条**（`MANDATORY` 26、`SUGGESTIONS` 921）。强制项仍集中在：
 
 | 类型 | 数量 | 说明 |
 | --- | --- | --- |

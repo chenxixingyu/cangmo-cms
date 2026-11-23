@@ -312,7 +312,8 @@ public class MediaService {
         let digest = hexEncode(sha256(file.data)).toAsciiLower()
         if (dedupe) {
             for (item in store.list(COL_MEDIA)) {
-                if (docStr(item, "sha256") == digest && docInt(item, "size") == file.data.size) {
+                if (docStr(item, "sha256") == digest && docInt(item, "size") == file.data.size &&
+                    docStr(item, "original_name") == original) {
                     let existing = cloneDoc(item)
                     setField(existing, "duplicate", JBool(true))
                     return existing
