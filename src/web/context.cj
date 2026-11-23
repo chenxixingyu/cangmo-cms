@@ -63,7 +63,7 @@ public class Services {
         this.search = SearchService(store, config)
         this.backup = BackupService(store, config)
         this.redirects = RedirectService(store, audit)
-        this.http = HttpClient()
+        this.http = HttpClient(tempDir: config.dataDir + "/tmp")
         this.webhooks = WebhookService(store, audit, http)
         this.plugins = PluginService(store, audit, http)
         this.events = EventBus(webhooks, plugins)

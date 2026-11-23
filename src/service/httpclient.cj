@@ -7,10 +7,52 @@ package cangmo.service
 import cangmo.core.*
 import cangmo.json.*
 import std.collection.*
+import std.fs.*
 import std.process.*
 
 public class HttpClient {
-    public func postJson(url: String, body: String, headers: HashMap<String, String>): Int64 {
+    private let tempDir: String
+
+    public init(tempDir!: String = "") {
+        this.tempDir = tempDir
+    }
+
+    public func getText(url: String): ?String {
+        if (tempDir.size == 0) {
+            return None
+        }
+        ensureDir(tempDir)
+        let path = tempDir + "/http-" + randomHex(bytes: 8) + ".tmp"
+        let args = ArrayList<String>()
+        args.add("-sS")
+        args.add("-L")
+        args.add("--max-time")
+        args.add("10")
+        args.add("-o")
+        args.add(path)
+        args.add(url)
+        let code = try {
+            execute("curl", args.toArray())
+        } catch (e: Exception) {
+            -1
+        }
+        if (code != 0 || !exists(path)) {
+            if (exists(path)) {
+                remove(path, recursive: false)
+            }
+            return None
+        }
+        let text = try {
+            readTextFile(path)
+        } catch (e: Exception) {
+            ""
+        }
+        remove(path, recursive: false)
+        if (text.size == 0) { None } else { Some(text) }
+    }
+
+    public func postJson(modelUrl: String, body: String, headers: HashMap<String, String>): Int64 {
+        let url = modelUrl
         let args = ArrayList<String>()
         args.add("-sS")
         args.add("--max-time")

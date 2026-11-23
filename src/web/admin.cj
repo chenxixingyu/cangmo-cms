@@ -2139,30 +2139,7 @@ public class AdminSite {
             if (file.data.size == 0 || file.data.size > 2 * 1024 * 1024) {
                 throw AppError("validation", "主题包需小于 2MB")
             }
-            let pkg = parseJson(String.fromUtf8(file.data))
-            let name = docStr(pkg, "name").trimAscii()
-            if (!isSafeName(name) || name.startsWith(".")) {
-                throw AppError("validation", "主题名称无效")
-            }
-            let target = services.config.themesDir + "/" + name
-            let backupRoot = services.config.themesDir + "/.backup"
-            if (isDirectory(target)) {
-                ensureDir(backupRoot)
-                rename(target, to: backupRoot + "/" + name + "-" + formatTime(nowSeconds(), "yyyyMMdd-HHmmss"), overwrite: true)
-            }
-            ensureDir(target + "/templates")
-            ensureDir(target + "/static")
-            let manifest = match (pkg.get("manifest")) {
-                case Some(value) => value
-                case None => throw AppError("validation", "主题包缺少 manifest")
-            }
-            writeTextAtomic(target + "/theme.json", toJson(manifest, pretty: true))
-            installThemeFiles(pkg, "templates", target + "/templates")
-            installThemeFiles(pkg, "static", target + "/static")
-            if (ctx.form("activate") == "on") {
-                services.sites.setTheme(ctx.siteId, name)
-                services.reloadTheme()
-            }
+            let name = installThemeText(ctx, String.fromUtf8(file.data), ctx.form("activate") == "on", "")
             ctx.setFlash("success", "主题 ${name} 已安装")
         } catch (e: AppError) {
             ctx.setFlash("error", e.message)
@@ -2171,6 +2148,122 @@ public class AdminSite {
             ctx.setFlash("error", "主题安装失败：${e.message}")
         }
         ctx.redirect("/admin/themes", status: 303)
+    }
+
+    private func installThemeText(ctx: Ctx, text: String, activate: Bool, expectedSha: String): String {
+        if (expectedSha.size > 0 && sha256Hex(text) != expectedSha.trimAscii().toAsciiLower()) {
+            throw AppError("validation", "主题包 sha256 校验失败")
+        }
+        let pkg = parseJson(text)
+        let name = docStr(pkg, "name").trimAscii()
+        if (!isSafeName(name) || name.startsWith(".")) {
+            throw AppError("validation", "主题名称无效")
+        }
+        let target = services.config.themesDir + "/" + name
+        let backupRoot = services.config.themesDir + "/.backup"
+        if (isDirectory(target)) {
+            ensureDir(backupRoot)
+            rename(target, to: backupRoot + "/" + name + "-" + formatTime(nowSeconds(), "yyyyMMdd-HHmmss"), overwrite: true)
+        }
+        ensureDir(target + "/templates")
+        ensureDir(target + "/static")
+        let manifest = match (pkg.get("manifest")) {
+            case Some(value) => value
+            case None => throw AppError("validation", "主题包缺少 manifest")
+        }
+        writeTextAtomic(target + "/theme.json", toJson(manifest, pretty: true))
+        installThemeFiles(pkg, "templates", target + "/templates")
+        installThemeFiles(pkg, "static", target + "/static")
+        if (activate) {
+            services.sites.setTheme(ctx.siteId, name)
+            services.reloadTheme()
+        }
+        name
+    }
+
+    public func themeMarketPage(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let source = services.settings.str("theme_market_url", def: "")
+        let rows = JsonArray()
+        var error = ""
+        if (source.size > 0) {
+            match (services.http.getText(source)) {
+                case Some(text) =>
+                    match (tryParseJson(text)) {
+                        case Some(index) =>
+                            let items = match (index.get("themes")) {
+                                case Some(JArr(values)) => values
+                                case _ => match (index) {
+                                    case JArr(values) => values
+                                    case _ => JsonArray()
+                                }
+                            }
+                            var count: Int64 = 0
+                            for (entry in items.items) {
+                                if (count >= 30) { break }
+                                let item = JsonObject()
+                                item.set("name", JStr(docStr(entry, "name")))
+                                item.set("version", JStr(docStr(entry, "version")))
+                                item.set("author", JStr(docStr(entry, "author")))
+                                item.set("description", JStr(docStr(entry, "description")))
+                                item.set("package_url", JStr(docStr(entry, "package_url")))
+                                item.set("sha256", JStr(docStr(entry, "sha256")))
+                                rows.add(JObj(item))
+                                count += 1
+                            }
+                        case None => error = "市场索引不是有效 JSON"
+                    }
+                case None => error = "无法下载市场索引"
+            }
+        }
+        let data = JsonObject()
+        data.set("page_title", JStr("主题市场"))
+        data.set("active", JStr("themes"))
+        data.set("source", JStr(source))
+        data.set("themes", JArr(rows))
+        data.set("market_error", JStr(error))
+        ctx.renderAdminPage("themes-market.html", JObj(data))
+    }
+
+    public func themeMarketSource(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        services.settings.setString("theme_market_url", truncateUtf8(ctx.form("source").trimAscii(), 500))
+        ctx.setFlash("success", "市场源已保存")
+        ctx.redirect("/admin/themes/market", status: 303)
+    }
+
+    public func themeMarketInstall(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        try {
+            let url = ctx.form("package_url").trimAscii()
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                throw AppError("validation", "主题包地址无效")
+            }
+            let text = match (services.http.getText(url)) {
+                case Some(value) => value
+                case None => throw AppError("validation", "无法下载主题包")
+            }
+            if (text.size > 2 * 1024 * 1024) {
+                throw AppError("validation", "主题包超过 2MB")
+            }
+            let name = installThemeText(ctx, text, true, ctx.form("sha256"))
+            ctx.setFlash("success", "主题 ${name} 已安装并启用")
+        } catch (e: AppError) {
+            ctx.setFlash("error", e.message)
+        } catch (e: Exception) {
+            services.logger.error("theme", e.message)
+            ctx.setFlash("error", "主题安装失败：${e.message}")
+        }
+        ctx.redirect("/admin/themes/market", status: 303)
     }
 
     private func installThemeFiles(pkg: JsonValue, key: String, targetDir: String): Unit {

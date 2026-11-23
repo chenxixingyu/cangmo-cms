@@ -189,6 +189,7 @@ public class SettingsService {
         setDefault("theme_font_size", JInt(17))
         setDefault("theme_width", JInt(1120))
         setDefault("theme_radius", JInt(12))
+        setDefault("theme_market_url", JStr(""))
         setDefault("custom_css", JStr(""))
         setDefault("maintenance", JBool(false))
         setDefault("maintenance_message", JStr("站点维护中，请稍后再来。"))
