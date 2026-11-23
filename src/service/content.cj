@@ -295,7 +295,7 @@ public class MediaService {
         this.audit = audit
     }
 
-    public func upload(file: UploadedFile, userId: String, ip: String, folder!: String = ""): JsonValue {
+    public func upload(file: UploadedFile, userId: String, ip: String, folder!: String = "", dedupe!: Bool = false): JsonValue {
         if (file.data.size == 0 || file.data.size > config.maxBodyBytes) {
             throw AppError("validation", "文件为空或超过大小限制")
         }
@@ -308,6 +308,16 @@ public class MediaService {
         }
         if (!magicMatches(file.data, ext)) {
             throw AppError("validation", "文件内容与扩展名不符")
+        }
+        let digest = hexEncode(sha256(file.data)).toAsciiLower()
+        if (dedupe) {
+            for (item in store.list(COL_MEDIA)) {
+                if (docStr(item, "sha256") == digest && docInt(item, "size") == file.data.size) {
+                    let existing = cloneDoc(item)
+                    setField(existing, "duplicate", JBool(true))
+                    return existing
+                }
+            }
         }
         let id = newId("media")
         let now = nowSeconds()
@@ -339,7 +349,7 @@ public class MediaService {
         doc.set("height", JInt(size.height))
         doc.set("created_at", JInt(now))
         doc.set("uploaded_by", JStr(userId))
-        doc.set("sha256", JStr(hexEncode(sha256(file.data)).toAsciiLower()))
+        doc.set("sha256", JStr(digest))
         store.put(COL_MEDIA, id, JObj(doc))
         audit.log(userId, "", "media_uploaded", "media", id, ip, original)
         JObj(doc)

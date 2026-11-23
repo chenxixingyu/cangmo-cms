@@ -1,0 +1,36 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <div class="page-intro">
+    <div><p class="eyebrow">CALENDAR</p><h2>内容日历</h2><p class="muted">按月份查看定时发布的内容。</p></div>
+    <form class="list-search" method="get" action="/admin/calendar">
+      <input type="month" name="month" value="{{ month }}" aria-label="月份">
+      <button class="btn btn-ghost" type="submit">查看</button>
+    </form>
+  </div>
+  <div class="panel">
+    <header class="panel-head"><h2>{{ month }}</h2><span class="muted">{{ items.length }} 篇待发布</span></header>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>日期</th><th>标题</th><th>类型</th><th></th></tr></thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td class="muted">{{ item.time }}</td>
+            <td>{{ item.title }}</td>
+            <td class="muted">{% if item.type == "page" %}页面{% else %}文章{% endif %}</td>
+            <td><a href="/admin/posts/{{ item.id }}/edit">编辑</a></td>
+          </tr>
+          {% endfor %}
+          {% if items.length == 0 %}<tr><td colspan="4" class="empty-row">这个月没有定时内容。</td></tr>{% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

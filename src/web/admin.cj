@@ -746,6 +746,40 @@ public class AdminSite {
         ctx.renderAdminPage("import.html", JObj(data))
     }
 
+    public func calendarPage(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let month = if (ctx.query("month").trimAscii().size > 0) { ctx.query("month") } else {
+            formatTime(nowSeconds(), "yyyy-MM")
+        }
+        let items = ArrayList<JsonValue>()
+        for (post in services.store.list(COL_POSTS)) {
+            if (docStr(post, "status") != STATUS_SCHEDULED) {
+                continue
+            }
+            let date = formatDate(docInt(post, "scheduled_at"))
+            if (!date.startsWith(month + "-")) {
+                continue
+            }
+            let view = JsonObject()
+            view.set("id", JStr(docStr(post, "id")))
+            view.set("title", JStr(docStr(post, "title")))
+            view.set("date", JStr(date))
+            view.set("time", JStr(formatDateTime(docInt(post, "scheduled_at"))))
+            view.set("type", JStr(docStr(post, "type")))
+            items.add(JObj(view))
+        }
+        sortDocsAsc(items, "time")
+        let data = JsonObject()
+        data.set("page_title", JStr("内容日历"))
+        data.set("active", JStr("tools"))
+        data.set("month", JStr(month))
+        data.set("items", jsonArrayFrom(items.toArray()))
+        ctx.renderAdminPage("calendar.html", JObj(data))
+    }
+
     public func redirectsPage(ctx: Ctx): HttpResponse {
         match (requireAdmin(ctx)) {
             case Some(response) => return response
@@ -1235,7 +1269,7 @@ public class AdminSite {
             let uploaded = JsonArray()
             while (index < ctx.req.files.size && count < 10) {
                 let file = ctx.req.files[index]
-                let saved = services.media.upload(file, docStr(ctx.userDoc(), "id"), ctx.clientIp(), folder: ctx.form("folder"))
+                let saved = services.media.upload(file, docStr(ctx.userDoc(), "id"), ctx.clientIp(), folder: ctx.form("folder"), dedupe: true)
                 uploaded.add(attachmentView(saved))
                 count += 1
                 index += 1
@@ -1756,11 +1790,80 @@ public class AdminSite {
         data.set("active", JStr("themes"))
         data.set("active_theme", JStr(activeTheme))
         data.set("themes", JArr(themes))
+        data.set("theme_options", themeOptionsView(activeTheme))
         ctx.renderAdminPage("themes.html", JObj(data))
     }
 
-    public func themeActivate(ctx: Ctx): HttpResponse {
+    private func themeOptionsView(theme: String): JsonValue {
+        let out = JsonArray()
+        let path = services.config.themesDir + "/" + theme + "/theme.json"
+        if (!exists(path)) {
+            return JArr(out)
+        }
+        let manifest = match (tryParseJson(readTextFile(path))) {
+            case Some(value) => value
+            case None => return JArr(out)
+        }
+        let options = match (manifest.get("options")) {
+            case Some(JArr(items)) => items
+            case _ => return JArr(out)
+        }
+        for (item in options.items) {
+            let key = docStr(item, "key")
+            if (key.size == 0) {
+                continue
+            }
+            let view = JsonObject()
+            view.set("key", JStr(key))
+            view.set("label", JStr(docStr(item, "label", def: key)))
+            view.set("type", JStr(docStr(item, "type", def: "text")))
+            view.set("min", JInt(docInt(item, "min", def: 0)))
+            view.set("max", JInt(docInt(item, "max", def: 9999)))
+            let defaultText = match (item.get("default")) {
+                case Some(JStr(value)) => value
+                case Some(JInt(value)) => value.toString()
+                case Some(JBool(value)) => if (value) { "on" } else { "" }
+                case _ => ""
+            }
+            view.set("value", JStr(services.settings.str("theme_option_${theme}_${key}", def: defaultText)))
+            out.add(JObj(view))
+        }
+        JArr(out)
+    }
+
+    public func themeOptionsSave(ctx: Ctx): HttpResponse {
         match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let theme = services.settings.str("theme", def: services.config.theme)
+        let view = themeOptionsView(theme)
+        match (view) {
+            case JArr(options) =>
+                for (item in options.items) {
+                    let key = docStr(item, "key")
+                    let kind = docStr(item, "type")
+                    let value = ctx.form("option_" + key)
+                    let settingKey = "theme_option_${theme}_${key}"
+                    if (kind == "color") {
+                        services.settings.setString(settingKey, safeColor(value))
+                    } else if (kind == "number") {
+                        services.settings.setInt(settingKey, clampInt(value, docInt(item, "min", def: 0),
+                                                                     docInt(item, "max", def: 9999), docInt(item, "min", def: 0)))
+                    } else {
+                        services.settings.setString(settingKey, truncateUtf8(value.trimAscii(), 200))
+                    }
+                }
+            case _ => ()
+        }
+        services.reloadTheme()
+        services.audit.log(docStr(ctx.userDoc(), "id"), docStr(ctx.userDoc(), "username"),
+                           "theme_options_saved", "theme", theme, ctx.clientIp(), "")
+        ctx.setFlash("success", "主题选项已保存")
+        ctx.redirect("/admin/themes", status: 303)
+    }
+
+    public func themeActivate(ctx: Ctx): HttpResponse {        match (requireAdmin(ctx)) {
             case Some(response) => return response
             case None => ()
         }

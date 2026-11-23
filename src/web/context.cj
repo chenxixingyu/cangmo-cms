@@ -232,10 +232,15 @@ public class Ctx {
         site.set("seo_image", JStr(services.settings.str("seo_image", def: "")))
         site.set("twitter", JStr(services.settings.str("seo_twitter", def: "")))
         site.set("custom_css", JBool(services.settings.str("custom_css", def: "").trimAscii().size > 0))
-        site.set("font_size", JInt(services.settings.int("theme_font_size", def: 17)))
-        site.set("width", JInt(services.settings.int("theme_width", def: 1120)))
-        site.set("radius", JInt(services.settings.int("theme_radius", def: 12)))
-        site.set("accent", JStr(services.settings.str("theme_accent", def: "#2f6f4e")))
+        let activeTheme = services.settings.str("theme", def: services.config.theme)
+        site.set("font_size", JInt(services.settings.int("theme_option_${activeTheme}_font_size",
+                                                         def: services.settings.int("theme_font_size", def: 17))))
+        site.set("width", JInt(services.settings.int("theme_option_${activeTheme}_width",
+                                                     def: services.settings.int("theme_width", def: 1120))))
+        site.set("radius", JInt(services.settings.int("theme_option_${activeTheme}_radius",
+                                                      def: services.settings.int("theme_radius", def: 12))))
+        site.set("accent", JStr(services.settings.str("theme_option_${activeTheme}_accent",
+                                                     def: services.settings.str("theme_accent", def: "#2f6f4e"))))
         site.set("mode", JStr(services.settings.str("theme_mode", def: "auto")))
         site.set("locale", JStr(services.config.locale))
         site.set("year", JStr(formatTime(nowSeconds(), "yyyy")))

@@ -847,3 +847,4 @@ label { display: grid; gap: 5px; font-size: .82rem; color: var(--a-soft); }
 .audit-filter input { min-width: 120px; }
 .audit-filter input[name=text] { flex: 1 1 180px; }
 .totp-secret, .totp-uri { word-break: break-all; font-size: .78rem; }
+.theme-options-form { padding: 4px 14px 14px; }

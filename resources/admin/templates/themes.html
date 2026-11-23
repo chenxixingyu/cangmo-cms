@@ -13,6 +13,27 @@
       <div class="page-intro-actions"><a class="btn btn-ghost" href="/" target="_blank" rel="noopener">预览站点</a><a class="btn" href="/admin/settings#appearance">外观设置</a></div>
     </div>
 
+  {% if theme_options.length > 0 %}
+  <section class="panel">
+    <header class="panel-head"><h2>主题选项</h2><span class="muted">仅影响当前主题</span></header>
+    <form method="post" action="/admin/themes/options" class="grid-form theme-options-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      {% for option in theme_options %}
+      <label>{{ option.label }}
+        {% if option.type == "color" %}
+        <input type="color" name="option_{{ option.key }}" value="{{ option.value }}">
+        {% elif option.type == "number" %}
+        <input type="number" name="option_{{ option.key }}" value="{{ option.value }}" min="{{ option.min }}" max="{{ option.max }}">
+        {% else %}
+        <input type="text" name="option_{{ option.key }}" value="{{ option.value }}" maxlength="200">
+        {% endif %}
+      </label>
+      {% endfor %}
+      <div class="span-2"><button class="btn" type="submit">保存主题选项</button></div>
+    </form>
+  </section>
+  {% endif %}
+
   <div class="theme-grid">
     {% for theme in themes %}
     <article class="theme-card {% if theme.active %}active{% endif %}">

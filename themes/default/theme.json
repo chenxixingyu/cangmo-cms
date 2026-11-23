@@ -1,6 +1,12 @@
 {
   "name": "仓墨默认主题",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "Cangmo Project",
-  "description": "仓墨默认主题：纸张质感的阅读体验，深色模式，响应式布局，无第三方资源。"
+  "description": "仓墨默认主题：纸张质感的阅读体验，深色模式，响应式布局，无第三方资源。",
+  "options": [
+    {"key": "accent", "label": "主题色", "type": "color", "default": "#2f6f4e"},
+    {"key": "font_size", "label": "正文字号（px）", "type": "number", "default": 17, "min": 14, "max": 22},
+    {"key": "width", "label": "内容宽度（px）", "type": "number", "default": 1120, "min": 900, "max": 1400},
+    {"key": "radius", "label": "圆角（px）", "type": "number", "default": 12, "min": 0, "max": 28}
+  ]
 }
