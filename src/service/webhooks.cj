@@ -7,15 +7,16 @@ import cangmo.core.*
 import cangmo.json.*
 import cangmo.store.*
 import std.collection.*
-import std.process.*
 
 public class WebhookService {
     private let store: Store
     private let audit: AuditService
+    private let http: HttpClient
 
-    public init(store: Store, audit: AuditService) {
+    public init(store: Store, audit: AuditService, http: HttpClient) {
         this.store = store
         this.audit = audit
+        this.http = http
     }
 
     public func list(): Array<JsonValue> {
@@ -167,27 +168,11 @@ public class WebhookService {
     }
 
     private func deliver(url: String, event: String, body: String, secret: String): Int64 {
-        let args = ArrayList<String>()
-        args.add("-sS")
-        args.add("--max-time")
-        args.add("8")
-        args.add("-X")
-        args.add("POST")
-        args.add("-H")
-        args.add("content-type: application/json")
-        args.add("-H")
-        args.add("x-cangmo-event: " + event)
+        let headers = HashMap<String, String>()
+        headers["x-cangmo-event"] = event
         if (secret.size > 0) {
-            args.add("-H")
-            args.add("x-cangmo-signature: " + hmacSha256Hex(secret, body))
+            headers["x-cangmo-signature"] = hmacSha256Hex(secret, body)
         }
-        args.add("--data-binary")
-        args.add(body)
-        args.add(url)
-        try {
-            execute("curl", args.toArray())
-        } catch (e: Exception) {
-            -1
-        }
+        http.postJson(url, body, headers)
     }
 }

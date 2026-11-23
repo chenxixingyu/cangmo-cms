@@ -32,6 +32,8 @@ public class Services {
     public let backup: BackupService
     public let redirects: RedirectService
     public let webhooks: WebhookService
+    public let http: HttpClient
+    public let events: EventBus
     public var templates: TemplateEngine
     public let adminTemplates: TemplateEngine
     public let setupToken: String
@@ -57,7 +59,9 @@ public class Services {
         this.search = SearchService(store, config)
         this.backup = BackupService(store, config)
         this.redirects = RedirectService(store, audit)
-        this.webhooks = WebhookService(store, audit)
+        this.http = HttpClient()
+        this.webhooks = WebhookService(store, audit, http)
+        this.events = EventBus(webhooks)
         this.templates = TemplateEngine(config.themesDir + "/" + config.theme + "/templates", devMode: config.devMode)
         this.adminTemplates = TemplateEngine(config.adminTemplatesDir(), devMode: config.devMode)
         let envToken = getVariable("CANGMO_SETUP_TOKEN") ?? ""

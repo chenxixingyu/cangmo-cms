@@ -311,7 +311,7 @@ public class PublicSite {
             event.set("post_id", JStr(docStr(post, "id")))
             event.set("author", JStr(ctx.form("name")))
             event.set("content", JStr(ctx.form("content")))
-            services.webhooks.dispatch("comment.created", JObj(event))
+            services.events.publish("comment.created", JObj(event))
             if (moderation) {
                 ctx.setFlash("success", "评论已提交，审核通过后会显示")
             } else {
