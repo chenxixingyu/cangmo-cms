@@ -1164,3 +1164,27 @@
       image.src = button.getAttribute("data-url");
     });
   });
+  var shareButton = document.getElementById("preview-share");
+  var shareDialog = document.getElementById("preview-share-dialog");
+  var shareUrl = document.getElementById("preview-share-url");
+  if (shareButton && shareDialog && shareUrl) {
+    shareButton.addEventListener("click", function () {
+      fetch(shareButton.getAttribute("data-share-url"), {
+        method: "POST",
+        headers: { "X-CSRF-Token": csrf, "Accept": "application/json" }
+      }).then(function (response) {
+        return response.json().then(function (data) {
+          if (!response.ok || !data.ok) throw new Error(data.error || "生成失败");
+          shareUrl.value = data.url;
+          shareDialog.showModal();
+        });
+      }).catch(function () { window.alert("生成预览链接失败，请保存后重试。"); });
+    });
+  }
+  var shareCopy = document.getElementById("preview-share-copy");
+  if (shareCopy && shareUrl) {
+    shareCopy.addEventListener("click", function () {
+      if (navigator.clipboard) navigator.clipboard.writeText(shareUrl.value);
+      shareUrl.select();
+    });
+  }

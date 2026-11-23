@@ -65,6 +65,8 @@ public class WebApp {
         // Admin.
         router.get("/admin/login", { ctx: Ctx => adminSite.loginPage(ctx) })
         router.post("/admin/login", { ctx: Ctx => adminSite.loginSubmit(ctx) })
+        router.get("/admin/2fa", { ctx: Ctx => adminSite.twoFactorPage(ctx) })
+        router.post("/admin/2fa", { ctx: Ctx => adminSite.twoFactorSubmit(ctx) })
         router.post("/admin/logout", { ctx: Ctx => adminSite.logout(ctx) })
         router.get("/admin", { ctx: Ctx => adminSite.dashboard(ctx) })
         router.get("/admin/posts", { ctx: Ctx => adminSite.postsList(ctx) })
@@ -78,6 +80,8 @@ public class WebApp {
         router.post("/admin/posts/:id/quick", { ctx: Ctx => adminSite.postQuickSave(ctx) })
         router.get("/admin/posts/:id/revisions/:rev", { ctx: Ctx => adminSite.postRevisionData(ctx) })
         router.post("/admin/posts/:id/revisions/:rev/restore", { ctx: Ctx => adminSite.postRevisionRestore(ctx) })
+        router.post("/admin/posts/:id/preview-share", { ctx: Ctx => adminSite.postPreviewShare(ctx) })
+        router.get("/preview/:token", { ctx: Ctx => publicSite.previewPage(ctx) })
         router.get("/admin/categories", { ctx: Ctx => adminSite.categoriesPage(ctx) })
         router.post("/admin/categories/save", { ctx: Ctx => adminSite.categorySave(ctx) })
         router.post("/admin/categories/quick", { ctx: Ctx => adminSite.categoryQuick(ctx) })
@@ -107,6 +111,7 @@ public class WebApp {
         router.get("/admin/themes", { ctx: Ctx => adminSite.themesPage(ctx) })
         router.post("/admin/themes/activate", { ctx: Ctx => adminSite.themeActivate(ctx) })
         router.get("/admin/audit", { ctx: Ctx => adminSite.auditPage(ctx) })
+        router.get("/admin/audit/export", { ctx: Ctx => adminSite.auditExport(ctx) })
         router.get("/admin/tools", { ctx: Ctx => adminSite.toolsPage(ctx) })
         router.get("/admin/tools/export", { ctx: Ctx => adminSite.exportJson(ctx) })
         router.get("/admin/redirects", { ctx: Ctx => adminSite.redirectsPage(ctx) })
@@ -125,6 +130,10 @@ public class WebApp {
         router.post("/admin/profile/password", { ctx: Ctx => adminSite.passwordSave(ctx) })
         router.post("/admin/profile/token", { ctx: Ctx => adminSite.apiTokenCreate(ctx) })
         router.post("/admin/profile/token/revoke", { ctx: Ctx => adminSite.apiTokenRevoke(ctx) })
+        router.post("/admin/profile/session/revoke", { ctx: Ctx => adminSite.sessionRevoke(ctx) })
+        router.get("/admin/profile/totp", { ctx: Ctx => adminSite.totpSetupPage(ctx) })
+        router.post("/admin/profile/totp/enable", { ctx: Ctx => adminSite.totpEnable(ctx) })
+        router.post("/admin/profile/totp/disable", { ctx: Ctx => adminSite.totpDisable(ctx) })
         router.post("/admin/preview", { ctx: Ctx => adminSite.preview(ctx) })
 
         // API v1.

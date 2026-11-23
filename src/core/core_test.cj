@@ -48,8 +48,7 @@ func testPasswordPolicy(): Unit {
 }
 
 @Test
-func testBackupCipherRoundTrip(): Unit {
-    let text = "{\"format\":1,\"hello\":\"仓墨\"}"
+func testBackupCipherRoundTrip(): Unit {    let text = "{\"format\":1,\"hello\":\"仓墨\"}"
     let encrypted = encryptBackupText(text, "test-passphrase-2026")
     @Assert(encrypted.startsWith("CMB1"))
     @Expect(decryptBackupText(encrypted, "test-passphrase-2026"), text)
@@ -60,4 +59,11 @@ func testBackupCipherRoundTrip(): Unit {
         rejected = true
     }
     @Assert(rejected)
+}
+@Test
+func testTotpRfcVector(): Unit {
+    let secret = base32Encode("12345678901234567890123456789012".toArray())
+    @Expect(totpCode(secret, at: 59), "119246")
+    @Assert(verifyTotp(secret, "119246", window: 0, at: 59))
+    @Assert(!verifyTotp(secret, "000000", window: 0, at: 59))
 }

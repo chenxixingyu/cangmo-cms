@@ -1,0 +1,28 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <div class="page-intro">
+    <div><p class="eyebrow">SECURITY</p><h2>启用两步验证</h2><p class="muted">使用支持 TOTP 的验证器 App 扫描或手动录入。</p></div>
+    <div class="page-intro-actions"><a class="btn btn-ghost" href="/admin/profile">返回资料</a></div>
+  </div>
+  <section class="panel">
+    <div class="grid-form">
+      <div class="span-2">
+        <p class="muted small">在验证器中添加账户，算法选 SHA256、6 位、30 秒；或直接打开下面的链接。</p>
+        <p><code class="totp-uri">{{ uri }}</code></p>
+        <p>手动密钥：<code class="totp-secret">{{ secret }}</code></p>
+      </div>
+      <form method="post" action="/admin/profile/totp/enable" class="stack-form span-2">
+        <input type="hidden" name="_csrf" value="{{ csrf }}">
+        <label>输入验证器显示的 6 位验证码<input type="text" name="code" required autofocus inputmode="numeric" maxlength="6" autocomplete="one-time-code"></label>
+        <button type="submit" class="btn">验证并启用</button>
+      </form>
+    </div>
+  </section>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

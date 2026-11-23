@@ -25,8 +25,13 @@ public class AdminSite {
     // -----------------------------------------------------------------------
 
     public func loginPage(ctx: Ctx): HttpResponse {
-        if (ctx.loggedIn() && ctx.isStaff()) {
-            return ctx.redirect("/admin")
+        if (ctx.loggedIn()) {
+            if (ctx.session.pending2fa) {
+                return ctx.redirect("/admin/2fa")
+            }
+            if (ctx.isStaff()) {
+                return ctx.redirect("/admin")
+            }
         }
         let data = JsonObject()
         data.set("page_title", JStr("登录"))
@@ -58,7 +63,42 @@ public class AdminSite {
                 ctx.sessionDestroyed = false
             case None => ()
         }
+        if (ctx.session.pending2fa) {
+            return ctx.redirect("/admin/2fa", status: 303)
+        }
         ctx.redirect(if (next.size > 0) { next } else { "/admin" }, status: 303)
+    }
+
+    public func twoFactorPage(ctx: Ctx): HttpResponse {
+        if (!ctx.loggedIn()) {
+            return ctx.redirect("/admin/login", status: 303)
+        }
+        if (!ctx.session.pending2fa) {
+            return ctx.redirect("/admin", status: 303)
+        }
+        let data = JsonObject()
+        data.set("page_title", JStr("两步验证"))
+        data.set("error", JStr(""))
+        ctx.renderAdminPage("twofa.html", JObj(data))
+    }
+
+    public func twoFactorSubmit(ctx: Ctx): HttpResponse {
+        if (!ctx.loggedIn() || !ctx.session.pending2fa) {
+            return ctx.redirect("/admin/login", status: 303)
+        }
+        let code = ctx.form("code").trimAscii()
+        if (!services.auth.verifyUserTotp(docStr(ctx.userDoc(), "id"), code)) {
+            let data = JsonObject()
+            data.set("page_title", JStr("两步验证"))
+            data.set("error", JStr("验证码不正确，请重试"))
+            return ctx.renderAdminPage("twofa.html", JObj(data), status: 401)
+        }
+        ctx.session.pending2fa = false
+        services.auth.persist(ctx.session)
+        ctx.sessionChanged = true
+        services.audit.log(docStr(ctx.userDoc(), "id"), docStr(ctx.userDoc(), "username"), "login_2fa", "user",
+                           docStr(ctx.userDoc(), "id"), ctx.clientIp(), "TOTP verified")
+        ctx.redirect("/admin", status: 303)
     }
 
     public func logout(ctx: Ctx): HttpResponse {
@@ -458,6 +498,30 @@ public class AdminSite {
     }
 
     /** JSON payload for the revision preview dialog. */
+    public func postPreviewShare(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        try {
+            let post = match (services.posts.get(ctx.param("id"))) {
+                case Some(value) => value
+                case None => throw AppError("not_found", "内容不存在")
+            }
+            if (!services.posts.canEdit(ctx.userDoc(), post)) {
+                return quickError(403, "无权分享此内容")
+            }
+            let token = services.posts.createPreviewToken(docStr(post, "id"), docStr(ctx.userDoc(), "id"), hours: 24)
+            let data = JsonObject()
+            data.set("ok", JBool(true))
+            data.set("url", JStr(ctx.siteUrl("/preview/" + token)))
+            data.set("expires_hours", JInt(24))
+            HttpResponse().json(JObj(data))
+        } catch (e: AppError) {
+            quickError(400, e.message)
+        }
+    }
+
     public func postRevisionData(ctx: Ctx): HttpResponse {
         match (guard(ctx)) {
             case Some(response) => return response
@@ -1634,19 +1698,75 @@ public class AdminSite {
             case Some(response) => return response
             case None => ()
         }
-        let result = services.audit.list(ctx.pageNumber(), 50)
+        let actor = ctx.query("actor")
+        let action = ctx.query("action")
+        let fromDate = ctx.query("from")
+        let toDate = ctx.query("to")
+        let text = ctx.query("text")
+        let result = services.audit.search(ctx.pageNumber(), 50, actor: actor, action: action,
+                                           fromDate: fromDate, toDate: toDate, text: text)
         let rows = JsonArray()
         for (entry in result.items) {
             let item = cloneDoc(entry)
             setField(item, "date", JStr(formatDateTimeSeconds(docInt(entry, "created_at"))))
             rows.add(item)
         }
+        let query = auditQuery(actor, action, fromDate, toDate, text)
         let data = JsonObject()
         data.set("page_title", JStr("审计日志"))
         data.set("active", JStr("audit"))
         data.set("rows", JArr(rows))
-        data.set("pagination", buildPagination(result.page, result.pages, result.total, "/admin/audit", 50))
+        data.set("filter_actor", JStr(actor))
+        data.set("filter_action", JStr(action))
+        data.set("filter_from", JStr(fromDate))
+        data.set("filter_to", JStr(toDate))
+        data.set("filter_text", JStr(text))
+        data.set("export_query", JStr(query))
+        data.set("pagination", buildPagination(result.page, result.pages, result.total,
+                                               "/admin/audit" + if (query.size > 0) { "?" + query } else { "" }, 50))
         ctx.renderAdminPage("audit.html", JObj(data))
+    }
+
+    public func auditExport(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let result = services.audit.search(1, 5000, actor: ctx.query("actor"), action: ctx.query("action"),
+                                           fromDate: ctx.query("from"), toDate: ctx.query("to"), text: ctx.query("text"))
+        let sb = StringBuilder()
+        sb.append("time,action,actor,target,ip,detail\n")
+        for (entry in result.items) {
+            sb.append(csvCell(formatDateTimeSeconds(docInt(entry, "created_at"))))
+            sb.append(",")
+            sb.append(csvCell(docStr(entry, "action")))
+            sb.append(",")
+            sb.append(csvCell(docStr(entry, "actor_name")))
+            sb.append(",")
+            sb.append(csvCell(docStr(entry, "target_type") + " " + docStr(entry, "target_id")))
+            sb.append(",")
+            sb.append(csvCell(docStr(entry, "ip")))
+            sb.append(",")
+            sb.append(csvCell(docStr(entry, "detail")))
+            sb.append("\n")
+        }
+        let response = HttpResponse().bytes(sb.toString().toArray(), "text/csv; charset=utf-8")
+        response.headers.set("content-disposition", "attachment; filename=\"cangmo-audit.csv\"")
+        response
+    }
+
+    private func auditQuery(actor: String, action: String, fromDate: String, toDate: String, text: String): String {
+        let parts = ArrayList<String>()
+        if (actor.size > 0) { parts.add("actor=" + urlEncode(actor)) }
+        if (action.size > 0) { parts.add("action=" + urlEncode(action)) }
+        if (fromDate.size > 0) { parts.add("from=" + urlEncode(fromDate)) }
+        if (toDate.size > 0) { parts.add("to=" + urlEncode(toDate)) }
+        if (text.size > 0) { parts.add("text=" + urlEncode(text)) }
+        String.join(parts.toArray(), delimiter: "&")
+    }
+
+    private func csvCell(value: String): String {
+        "\"" + value.replace("\"", "\"\"") + "\""
     }
 
     // -----------------------------------------------------------------------
@@ -1849,7 +1969,82 @@ public class AdminSite {
         data.set("active", JStr(""))
         data.set("profile", ctx.userDoc())
         data.set("tokens", JArr(tokens))
+        let sessions = JsonArray()
+        for (session in services.auth.listSessions(docStr(ctx.userDoc(), "id"))) {
+            let view = cloneDoc(session)
+            let current = docStr(session, "id") == ctx.session.id
+            setField(view, "current", JBool(current))
+            setField(view, "created", JStr(formatDateTime(docInt(session, "created_at"))))
+            setField(view, "last_seen", JStr(formatDateTime(docInt(session, "last_seen_at"))))
+            setField(view, "expires", JStr(formatDate(docInt(session, "expires_at"))))
+            sessions.add(view)
+        }
+        data.set("sessions", JArr(sessions))
+        data.set("totp_enabled", JBool(services.auth.totpEnabled(docStr(ctx.userDoc(), "id"))))
         ctx.renderAdminPage("profile.html", JObj(data))
+    }
+
+    public func totpSetupPage(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let userId = docStr(ctx.userDoc(), "id")
+        if (services.auth.totpEnabled(userId)) {
+            ctx.setFlash("error", "两步验证已启用")
+            return ctx.redirect("/admin/profile", status: 303)
+        }
+        let setup = services.auth.startTotpSetup(userId)
+        let data = JsonObject()
+        data.set("page_title", JStr("启用两步验证"))
+        data.set("active", JStr(""))
+        data.set("secret", JStr(docStr(setup, "secret")))
+        data.set("uri", JStr(docStr(setup, "uri")))
+        ctx.renderAdminPage("totp.html", JObj(data))
+    }
+
+    public func totpEnable(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        try {
+            let codes = services.auth.enableTotp(docStr(ctx.userDoc(), "id"), ctx.form("code"))
+            ctx.setFlash("success", "两步验证已启用。恢复码（只显示一次）：" + String.join(codes, delimiter: "、"))
+        } catch (e: AppError) {
+            ctx.setFlash("error", e.message)
+            return ctx.redirect("/admin/profile/totp", status: 303)
+        }
+        ctx.redirect("/admin/profile", status: 303)
+    }
+
+    public func totpDisable(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        try {
+            services.auth.disableTotp(docStr(ctx.userDoc(), "id"), ctx.form("password"))
+            ctx.setFlash("success", "两步验证已关闭")
+        } catch (e: AppError) {
+            ctx.setFlash("error", e.message)
+        }
+        ctx.redirect("/admin/profile", status: 303)
+    }
+
+    public func sessionRevoke(ctx: Ctx): HttpResponse {
+        match (guard(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let id = ctx.form("id")
+        if (id == ctx.session.id) {
+            ctx.setFlash("error", "不能撤销当前会话")
+            return ctx.redirect("/admin/profile", status: 303)
+        }
+        services.auth.revokeSessionById(id, docStr(ctx.userDoc(), "id"))
+        ctx.setFlash("success", "会话已撤销")
+        ctx.redirect("/admin/profile", status: 303)
     }
 
     public func profileSave(ctx: Ctx): HttpResponse {
@@ -1971,6 +2166,9 @@ public class AdminSite {
     private func guard(ctx: Ctx): ?HttpResponse {
         if (!ctx.loggedIn()) {
             return Some(ctx.redirect("/admin/login?next=" + urlEncode(ctx.req.path), status: 303))
+        }
+        if (ctx.session.pending2fa) {
+            return Some(ctx.redirect("/admin/2fa", status: 303))
         }
         if (!ctx.isStaff()) {
             return Some(errorPage(ctx, 403, "你的账户没有后台访问权限"))

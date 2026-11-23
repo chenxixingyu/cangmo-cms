@@ -28,6 +28,7 @@ public class ApiSite {
     }
 
     public func posts(ctx: Ctx): HttpResponse {
+        requireScope(ctx, "posts.read")
         let user = authenticatedUser(ctx)
         let staffView = match (user) {
             case Some(value) => isStaff(value)
@@ -60,6 +61,7 @@ public class ApiSite {
     }
 
     public func postBySlug(ctx: Ctx): HttpResponse {
+        requireScope(ctx, "posts.read")
         let user = authenticatedUser(ctx)
         let staffView = match (user) {
             case Some(value) => isStaff(value)
@@ -127,6 +129,7 @@ public class ApiSite {
     }
 
     public func comments(ctx: Ctx): HttpResponse {
+        requireScope(ctx, "comments.read")
         let postId = ctx.query("post_id")
         if (postId.size == 0) {
             throw AppError("validation", "缺少 post_id")
@@ -158,6 +161,7 @@ public class ApiSite {
     }
 
     public func media(ctx: Ctx): HttpResponse {
+        requireScope(ctx, "media.read")
         let user = requireUser(ctx)
         let result = services.media.list(maxInt(1, ctx.req.queryInt("page", def: 1)),
                                          clamp(pageSize(ctx.req.queryInt("per_page", def: 20)), 1, 50))
@@ -183,6 +187,7 @@ public class ApiSite {
     }
 
     public func categories(ctx: Ctx): HttpResponse {
+        requireScope(ctx, "posts.read")
         let items = JsonArray()
         for (category in services.taxonomy.listCategories()) {
             items.add(category)
@@ -191,6 +196,7 @@ public class ApiSite {
     }
 
     public func tags(ctx: Ctx): HttpResponse {
+        requireScope(ctx, "posts.read")
         let items = JsonArray()
         for (tag in services.taxonomy.listTags()) {
             items.add(tag)

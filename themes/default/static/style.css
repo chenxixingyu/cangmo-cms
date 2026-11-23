@@ -464,3 +464,4 @@ mark { background: #f2df9b; color: inherit; padding: 0 2px; border-radius: 2px; 
 .brand-logo { width: 28px; height: 28px; object-fit: contain; border-radius: 6px; flex: none; }
 .hero[style] { background-size: cover; background-position: center; border-radius: var(--radius); padding: 40px 32px; color: #fff; }
 .hero[style] .hero-title, .hero[style] .hero-subtitle, .hero[style] .hero-kicker { color: #fff; }
+.preview-banner { margin: 18px 0; padding: 9px 14px; border-radius: 8px; background: var(--accent-soft); color: var(--accent-strong); font-size: .85rem; }

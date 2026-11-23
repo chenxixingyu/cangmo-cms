@@ -186,6 +186,7 @@
         {% endif %}
       </div>
       <div class="drawer-foot">
+        {% if not is_new %}<button type="button" class="btn btn-ghost" id="preview-share" data-share-url="/admin/posts/{{ post.id }}/preview-share">分享预览</button>{% endif %}
         <button type="button" class="btn btn-ghost" data-close-drawer>取消</button>
         <button type="submit" class="btn" id="drawer-save">保存</button>
       </div>
@@ -210,6 +211,18 @@
     <div class="drawer-foot">
       <button type="button" class="btn btn-ghost" id="revision-compare">对比当前</button>
       <button type="button" class="btn" id="revision-restore">恢复为草稿</button>
+    </div>
+  </dialog>
+
+  <dialog class="form-dialog" id="preview-share-dialog">
+    <div class="dialog-head"><h2>预览链接</h2><button type="button" class="link-btn" data-close-dialog>关闭</button></div>
+    <div class="dialog-form">
+      <p class="muted small">任何拿到链接的人都能在 24 小时内查看此内容，且不会被搜索引擎索引。</p>
+      <label>链接<input type="text" id="preview-share-url" readonly></label>
+      <div class="drawer-foot">
+        <button type="button" class="btn btn-ghost" id="preview-share-copy">复制链接</button>
+        <button type="button" class="btn" data-close-dialog>完成</button>
+      </div>
     </div>
   </dialog>
 

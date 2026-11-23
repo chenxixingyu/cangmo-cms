@@ -843,3 +843,7 @@ label { display: grid; gap: 5px; font-size: .82rem; color: var(--a-soft); }
 .theme-link-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
 .settings-panel .grid-form textarea { font-family: "Cascadia Code", Consolas, monospace; font-size: .78rem; }
 @media (max-width: 760px) { .theme-link-row { flex-wrap: wrap; } }
+.audit-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.audit-filter input { min-width: 120px; }
+.audit-filter input[name=text] { flex: 1 1 180px; }
+.totp-secret, .totp-uri { word-break: break-all; font-size: .78rem; }

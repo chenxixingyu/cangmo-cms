@@ -31,6 +31,7 @@ public class SessionData {
     public var lastPersistedAt: Int64 = 0
     public var ipHash: String = ""
     public var userAgent: String = ""
+    public var pending2fa: Bool = false
     public var flash: ArrayList<FlashMessage> = ArrayList<FlashMessage>()
 }
 
@@ -81,6 +82,7 @@ public class AuthService {
         session.lastPersistedAt = session.createdAt
         session.ipHash = hashIp(ip, config.secret)
         session.userAgent = truncateUtf8(userAgent, 300)
+        session.pending2fa = false
         persist(session)
         session
     }
@@ -105,6 +107,7 @@ public class AuthService {
         session.lastPersistedAt = session.lastSeenAt
         session.ipHash = docStr(doc, "ip_hash")
         session.userAgent = docStr(doc, "user_agent")
+        session.pending2fa = docBool(doc, "pending_2fa", def: false)
         match (doc.get("flash")) {
             case Some(JArr(arr)) =>
                 for (item in arr.items) {
@@ -133,6 +136,7 @@ public class AuthService {
         doc.set("last_seen_at", JInt(session.lastSeenAt))
         doc.set("ip_hash", JStr(session.ipHash))
         doc.set("user_agent", JStr(session.userAgent))
+        doc.set("pending_2fa", JBool(session.pending2fa))
         let flash = JsonArray()
         for (message in session.flash) {
             let item = JsonObject()
@@ -149,8 +153,41 @@ public class AuthService {
         store.delete(COL_SESSIONS, session.id)
     }
 
-    public func revokeUserSessions(userId: String, exceptSessionId: String): Unit {
+    public func listSessions(userId: String): Array<JsonValue> {
+        let items = ArrayList<JsonValue>()
         for (id in store.listIds(COL_SESSIONS)) {
+            match (store.get(COL_SESSIONS, id)) {
+                case Some(doc) =>
+                    if (docStr(doc, "user_id") == userId) {
+                        let view = JsonObject()
+                        view.set("id", JStr(id))
+                        view.set("created_at", JInt(docInt(doc, "created_at")))
+                        view.set("last_seen_at", JInt(docInt(doc, "last_seen_at")))
+                        view.set("expires_at", JInt(docInt(doc, "expires_at")))
+                        view.set("ip_hash", JStr(docStr(doc, "ip_hash")))
+                        view.set("user_agent", JStr(docStr(doc, "user_agent")))
+                        items.add(JObj(view))
+                    }
+                case None => ()
+            }
+        }
+        sortDocsDesc(items, "last_seen_at")
+        items.toArray()
+    }
+
+    public func revokeSessionById(id: String, userId: String): Bool {
+        match (store.get(COL_SESSIONS, id)) {
+            case Some(doc) =>
+                if (docStr(doc, "user_id") != userId) {
+                    return false
+                }
+                store.delete(COL_SESSIONS, id)
+                true
+            case None => false
+        }
+    }
+
+    public func revokeUserSessions(userId: String, exceptSessionId: String): Unit {        for (id in store.listIds(COL_SESSIONS)) {
             let doc = store.get(COL_SESSIONS, id)
             match (doc) {
                 case Some(value) =>
@@ -240,6 +277,13 @@ public class AuthService {
         }
         store.put(COL_USERS, docStr(updated, "id"), updated)
         let session = createSession(docStr(updated, "id"), ip, userAgent)
+        if (docBool(updated, "totp_enabled", def: false)) {
+            session.pending2fa = true
+            persist(session)
+            audit.log(docStr(updated, "id"), docStr(updated, "username"), "login_2fa_required", "user",
+                      docStr(updated, "id"), ip, "password ok, waiting for TOTP")
+            return LoginResult(true, "请输入动态验证码", Some(updated), Some(session))
+        }
         audit.log(docStr(updated, "id"), docStr(updated, "username"), "login", "user",
                   docStr(updated, "id"), ip, "login success")
         LoginResult(true, "登录成功", Some(updated), Some(session))
@@ -297,6 +341,107 @@ public class AuthService {
             }
         }
         count
+    }
+
+    // -----------------------------------------------------------------------
+    // TOTP
+    // -----------------------------------------------------------------------
+
+    public func totpEnabled(userId: String): Bool {
+        match (userById(userId)) {
+            case Some(user) => docBool(user, "totp_enabled", def: false)
+            case None => false
+        }
+    }
+
+    public func startTotpSetup(userId: String): JsonValue {
+        let user = match (userById(userId)) {
+            case Some(value) => value
+            case None => throw AppError("not_found", "用户不存在")
+        }
+        if (docBool(user, "totp_enabled", def: false)) {
+            throw AppError("validation", "双因素认证已启用")
+        }
+        let secret = generateTotpSecret()
+        let updated = cloneDoc(user)
+        setField(updated, "totp_pending", JStr(secret))
+        store.put(COL_USERS, userId, updated)
+        let result = JsonObject()
+        result.set("secret", JStr(secret))
+        result.set("uri", JStr(totpUri(secret, settings.str("site_title", def: "Cangmo"), docStr(user, "username"))))
+        JObj(result)
+    }
+
+    public func enableTotp(userId: String, code: String): Array<String> {
+        let user = match (userById(userId)) {
+            case Some(value) => value
+            case None => throw AppError("not_found", "用户不存在")
+        }
+        let secret = docStr(user, "totp_pending")
+        if (secret.size == 0) {
+            throw AppError("validation", "请先开始绑定")
+        }
+        if (!verifyTotp(secret, code)) {
+            throw AppError("validation", "动态验证码不正确")
+        }
+        let codes = generateRecoveryCodes()
+        let hashes = ArrayList<String>()
+        for (item in codes) {
+            hashes.add(hashRecoveryCode(item))
+        }
+        let updated = cloneDoc(user)
+        setField(updated, "totp_enabled", JBool(true))
+        setField(updated, "totp_secret", JStr(secret))
+        setField(updated, "totp_pending", JStr(""))
+        setField(updated, "totp_recovery", jsonStringList(hashes.toArray()))
+        setField(updated, "updated_at", JInt(nowSeconds()))
+        store.put(COL_USERS, userId, updated)
+        codes
+    }
+
+    public func verifyUserTotp(userId: String, code: String): Bool {
+        let user = match (userById(userId)) {
+            case Some(value) => value
+            case None => return false
+        }
+        if (!docBool(user, "totp_enabled", def: false)) {
+            return false
+        }
+        if (verifyTotp(docStr(user, "totp_secret"), code)) {
+            return true
+        }
+        let hashes = docStrings(user, "totp_recovery")
+        let normalized = hashRecoveryCode(code)
+        if (!hashes.contains(normalized)) {
+            return false
+        }
+        let remaining = ArrayList<String>()
+        for (item in hashes) {
+            if (item != normalized) {
+                remaining.add(item)
+            }
+        }
+        let updated = cloneDoc(user)
+        setField(updated, "totp_recovery", jsonStringList(remaining.toArray()))
+        store.put(COL_USERS, userId, updated)
+        true
+    }
+
+    public func disableTotp(userId: String, password: String): Unit {
+        let user = match (userById(userId)) {
+            case Some(value) => value
+            case None => throw AppError("not_found", "用户不存在")
+        }
+        if (!verifyPassword(password, docStr(user, "password_hash"))) {
+            throw AppError("validation", "密码不正确")
+        }
+        let updated = cloneDoc(user)
+        setField(updated, "totp_enabled", JBool(false))
+        setField(updated, "totp_secret", JStr(""))
+        setField(updated, "totp_pending", JStr(""))
+        setField(updated, "totp_recovery", JStr("[]"))
+        setField(updated, "updated_at", JInt(nowSeconds()))
+        store.put(COL_USERS, userId, updated)
     }
 
     // -----------------------------------------------------------------------

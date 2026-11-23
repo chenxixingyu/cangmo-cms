@@ -50,6 +50,49 @@
   </div>
 
   <section class="panel">
+    <header class="panel-head"><h2>两步验证</h2><span class="muted">TOTP · SHA256 · 30 秒</span></header>
+    {% if totp_enabled %}
+    <form method="post" action="/admin/profile/totp/disable" class="stack-form" data-confirm="确定关闭两步验证？账户将只依赖密码。">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <label>输入当前密码以关闭<input type="password" name="password" required autocomplete="current-password"></label>
+      <button type="submit" class="btn btn-ghost danger">关闭两步验证</button>
+    </form>
+    {% else %}
+    <p class="muted">绑定验证器 App 后，登录需要再输入 6 位动态码或恢复码。</p>
+    <a class="btn" href="/admin/profile/totp">启用两步验证</a>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <header class="panel-head"><h2>登录设备</h2><span class="muted">当前会话不会被自己撤销</span></header>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>设备</th><th>最近活跃</th><th>创建时间</th><th>到期</th><th></th></tr></thead>
+        <tbody>
+          {% for session in sessions %}
+          <tr>
+            <td>{% if session.current %}<span class="badge">当前</span> {% endif %}<span class="muted">{{ session.user_agent|default("未知设备") }}</span></td>
+            <td class="muted">{{ session.last_seen }}</td>
+            <td class="muted">{{ session.created }}</td>
+            <td class="muted">{{ session.expires }}</td>
+            <td class="table-actions">
+              {% if not session.current %}
+              <form method="post" action="/admin/profile/session/revoke" class="inline-form" data-confirm="确定撤销这个登录会话？">
+                <input type="hidden" name="_csrf" value="{{ csrf }}">
+                <input type="hidden" name="id" value="{{ session.id }}">
+                <button type="submit" class="link-btn danger">撤销</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+          {% if sessions.length == 0 %}<tr><td colspan="5" class="empty-row">没有活动会话。</td></tr>{% endif %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
     <header class="panel-head"><h2>API 令牌</h2>{% if is_admin %}<span class="muted">用于调用 /api/v1 接口</span>{% endif %}</header>
     {% if is_admin %}
     <form method="post" action="/admin/profile/token" class="token-create-form">
@@ -61,8 +104,11 @@
       </div>
       <div class="token-scopes">
         <label><input type="checkbox" name="scopes" value="admin" checked> 全部权限</label>
+        <label><input type="checkbox" name="scopes" value="posts.read"> 文章读取</label>
         <label><input type="checkbox" name="scopes" value="posts.write"> 文章写入</label>
+        <label><input type="checkbox" name="scopes" value="comments.read"> 评论读取</label>
         <label><input type="checkbox" name="scopes" value="comments.write"> 评论写入</label>
+        <label><input type="checkbox" name="scopes" value="media.read"> 媒体读取</label>
         <label><input type="checkbox" name="scopes" value="media.write"> 媒体上传</label>
       </div>
       <button class="btn btn-ghost" type="submit">创建令牌</button>

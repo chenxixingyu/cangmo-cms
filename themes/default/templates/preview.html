@@ -1,0 +1,16 @@
+{% include "partials/head.html" %}
+{% include "partials/header.html" %}
+<main id="main" class="wrap layout">
+  <div class="content">
+    <div class="preview-banner" role="status">预览模式 · 此页面不公开索引 · 链接 24 小时有效</div>
+    <article class="post page">
+      <header class="post-header">
+        <h1 class="post-title">{{ post.title }}</h1>
+        <p class="post-meta">{{ post.date }} · {{ post.author.name }}</p>
+        {% if post.summary %}<p class="post-lead">{{ post.summary }}</p>{% endif %}
+      </header>
+      <div class="prose">{{{ post.content_html }}}</div>
+    </article>
+  </div>
+</main>
+{% include "partials/footer.html" %}

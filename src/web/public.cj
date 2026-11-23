@@ -92,6 +92,24 @@ public class PublicSite {
         ctx.renderPage("post.html", JObj(data))
     }
 
+    public func previewPage(ctx: Ctx): HttpResponse {
+        let post = match (services.posts.previewByToken(ctx.param("token"))) {
+            case Some(value) => value
+            case None => return notFound(ctx)
+        }
+        let card = postCard(services, post)
+        setField(card, "content_html", JStr(docStr(post, "content_html")))
+        setField(card, "headings", match (post.get("headings")) { case Some(value) => value; case None => jarr() })
+        let data = JsonObject()
+        data.set("page_title", JStr(docStr(post, "title")))
+        data.set("meta_description", JStr(docStr(post, "summary")))
+        data.set("post", card)
+        let response = ctx.renderPage("preview.html", JObj(data))
+        response.headers.set("cache-control", "no-store")
+        response.headers.set("x-robots-tag", "noindex, nofollow")
+        response
+    }
+
     public func pageDetail(ctx: Ctx): HttpResponse {
         let slug = ctx.param("slug")
         let page = match (services.posts.getPublishedBySlug(slug, postType: "page")) {

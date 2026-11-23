@@ -22,6 +22,7 @@ public let COL_SETTINGS: String = "settings"
 public let COL_AUDIT: String = "audit"
 public let COL_REVISIONS: String = "revisions"
 public let COL_REDIRECTS: String = "redirects"
+public let COL_PREVIEW_TOKENS: String = "preview_tokens"
 public let COL_API_TOKENS: String = "api_tokens"
 public let COL_SUBSCRIBERS: String = "subscribers"
 public let COL_STATS: String = "stats"
@@ -401,8 +402,41 @@ public class AuditService {
     }
 
     public func list(page: Int64, pageSize: Int64): PageResult {
+        search(page, pageSize, actor: "", action: "", fromDate: "", toDate: "", text: "")
+    }
+
+    public func search(page: Int64, pageSize: Int64, actor!: String, action!: String,
+                       fromDate!: String, toDate!: String, text!: String): PageResult {
+        let actorNeedle = actor.trimAscii().toAsciiLower()
+        let actionNeedle = action.trimAscii().toAsciiLower()
+        let textNeedle = text.trimAscii().toAsciiLower()
+        let from = fromDate.trimAscii()
+        let to = toDate.trimAscii()
         let items = ArrayList<JsonValue>()
         for (doc in store.list(COL_AUDIT)) {
+            let date = formatDate(docInt(doc, "created_at"))
+            if (from.size > 0 && date < from) {
+                continue
+            }
+            if (to.size > 0 && date > to) {
+                continue
+            }
+            if (actorNeedle.size > 0) {
+                let haystack = (docStr(doc, "actor_name") + " " + docStr(doc, "actor_id")).toAsciiLower()
+                if (!haystack.contains(actorNeedle)) {
+                    continue
+                }
+            }
+            if (actionNeedle.size > 0 && !docStr(doc, "action").toAsciiLower().contains(actionNeedle)) {
+                continue
+            }
+            if (textNeedle.size > 0) {
+                let haystack = (docStr(doc, "detail") + " " + docStr(doc, "target_type") + " " +
+                                docStr(doc, "target_id") + " " + docStr(doc, "ip")).toAsciiLower()
+                if (!haystack.contains(textNeedle)) {
+                    continue
+                }
+            }
             items.add(doc)
         }
         sortDocsDesc(items, "created_at")

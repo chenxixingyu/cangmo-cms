@@ -4,6 +4,27 @@
 <div class="admin-main">
 {% include "partials/topbar.html" %}
 <main class="admin-content">
+  <div class="page-intro">
+    <div>
+      <p class="eyebrow">AUDIT</p>
+      <h2>审计日志</h2>
+      <p class="muted">按操作者、动作、日期或关键词筛选，最多导出 5000 条。</p>
+    </div>
+    <div class="page-intro-actions">
+      <a class="btn btn-ghost" href="/admin/audit/export{% if export_query %}?{{ export_query }}{% endif %}">导出 CSV</a>
+    </div>
+  </div>
+
+  <form class="list-toolbar audit-filter" method="get" action="/admin/audit">
+    <input type="text" name="actor" value="{{ filter_actor }}" placeholder="操作者">
+    <input type="text" name="action" value="{{ filter_action }}" placeholder="动作，如 login">
+    <input type="date" name="from" value="{{ filter_from }}" aria-label="开始日期">
+    <input type="date" name="to" value="{{ filter_to }}" aria-label="结束日期">
+    <input type="search" name="text" value="{{ filter_text }}" placeholder="对象/IP/详情">
+    <button class="btn btn-ghost" type="submit">筛选</button>
+    <a class="link-btn" href="/admin/audit">清除</a>
+  </form>
+
   <div class="panel">
     <div class="table-wrap">
       <table class="table">
@@ -19,7 +40,7 @@
             <td class="muted">{{ row.detail }}</td>
           </tr>
           {% endfor %}
-          {% if rows.length == 0 %}<tr><td colspan="6" class="empty-row">暂无日志。</td></tr>{% endif %}
+          {% if rows.length == 0 %}<tr><td colspan="6" class="empty-row">没有匹配的日志。</td></tr>{% endif %}
         </tbody>
       </table>
     </div>

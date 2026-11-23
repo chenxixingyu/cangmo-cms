@@ -295,6 +295,36 @@ public class PostService {
         store.put(COL_REDIRECTS, docStr(JObj(doc), "id"), JObj(doc))
     }
 
+    public func createPreviewToken(postId: String, actorId: String, hours!: Int64 = 24): String {
+        if (get(postId).isNone()) {
+            throw AppError("not_found", "内容不存在")
+        }
+        let raw = "prev_" + randomToken(bytes: 24)
+        let id = sha256Hex(raw)
+        let doc = JsonObject()
+        doc.set("id", JStr(id))
+        doc.set("post_id", JStr(postId))
+        doc.set("created_by", JStr(actorId))
+        doc.set("created_at", JInt(nowSeconds()))
+        doc.set("expires_at", JInt(nowSeconds() + hours * 3600))
+        store.put(COL_PREVIEW_TOKENS, id, JObj(doc))
+        raw
+    }
+
+    public func previewByToken(raw: String): ?JsonValue {
+        if (!raw.startsWith("prev_") || raw.size < 20 || raw.size > 200) {
+            return None
+        }
+        let doc = match (store.get(COL_PREVIEW_TOKENS, sha256Hex(raw))) {
+            case Some(value) => value
+            case None => return None
+        }
+        if (docInt(doc, "expires_at") <= nowSeconds()) {
+            return None
+        }
+        get(docStr(doc, "post_id"))
+    }
+
     public func saveRevision(post: JsonValue, actorId: String): Unit {
         let revision = JsonObject()
         revision.set("id", JStr(newId("rev")))
