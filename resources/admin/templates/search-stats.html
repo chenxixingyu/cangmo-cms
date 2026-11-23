@@ -1,0 +1,28 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <div class="page-intro">
+    <div><p class="eyebrow">SEARCH</p><h2>搜索分析</h2><p class="muted">按查询次数排序；零结果次数可帮助发现内容缺口。</p></div>
+    <div class="page-intro-actions"><a class="btn btn-ghost" href="/admin/tools">返回工具</a></div>
+  </div>
+  <div class="panel"><div class="table-wrap"><table class="table">
+    <thead><tr><th>关键词</th><th>搜索次数</th><th>零结果</th><th>最近搜索</th></tr></thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td><code>{{ row.query }}</code></td>
+        <td>{{ row.count }}</td>
+        <td class="muted">{{ row.zero_count }}</td>
+        <td class="muted">{{ row.last }}</td>
+      </tr>
+      {% endfor %}
+      {% if rows.length == 0 %}<tr><td colspan="4" class="empty-row">还没有搜索记录。</td></tr>{% endif %}
+    </tbody>
+  </table></div></div>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

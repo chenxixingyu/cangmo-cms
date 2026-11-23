@@ -124,6 +124,7 @@ public class WebApp {
         router.get("/admin/tools/export", { ctx: Ctx => adminSite.exportJson(ctx) })
         router.get("/admin/redirects", { ctx: Ctx => adminSite.redirectsPage(ctx) })
         router.get("/admin/calendar", { ctx: Ctx => adminSite.calendarPage(ctx) })
+        router.get("/admin/search-stats", { ctx: Ctx => adminSite.searchStatsPage(ctx) })
         router.post("/admin/redirects/save", { ctx: Ctx => adminSite.redirectSave(ctx) })
         router.get("/admin/import", { ctx: Ctx => adminSite.importPage(ctx) })
         router.post("/admin/import", { ctx: Ctx => adminSite.importSubmit(ctx) })

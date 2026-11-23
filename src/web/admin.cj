@@ -752,8 +752,25 @@ public class AdminSite {
         ctx.renderAdminPage("import.html", JObj(data))
     }
 
-    public func calendarPage(ctx: Ctx): HttpResponse {
-        match (guard(ctx)) {
+    public func searchStatsPage(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let rows = JsonArray()
+        for (item in services.search.searchStats()) {
+            let view = cloneDoc(item)
+            setField(view, "last", JStr(formatDateTime(docInt(item, "last_at"))))
+            rows.add(view)
+        }
+        let data = JsonObject()
+        data.set("page_title", JStr("搜索分析"))
+        data.set("active", JStr("tools"))
+        data.set("rows", JArr(rows))
+        ctx.renderAdminPage("search-stats.html", JObj(data))
+    }
+
+    public func calendarPage(ctx: Ctx): HttpResponse {        match (guard(ctx)) {
             case Some(response) => return response
             case None => ()
         }

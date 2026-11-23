@@ -886,8 +886,40 @@ public class SearchService {
                 }
                 out.add(item)
             }
-            out.toArray()
+            let result = out.toArray()
+            recordSearch(needle, result.size)
+            result
         }
+    }
+
+    private func recordSearch(query: String, count: Int64): Unit {
+        let id = "search_" + sha256Hex(query)
+        let existing = store.get(COL_SEARCH_STATS, id)
+        let doc = match (existing) {
+            case Some(value) => cloneDoc(value)
+            case None =>
+                let created = JsonObject()
+                created.set("id", JStr(id))
+                created.set("query", JStr(truncateUtf8(query, 100)))
+                created.set("count", JInt(0))
+                created.set("zero_count", JInt(0))
+                JObj(created)
+        }
+        setField(doc, "count", JInt(docInt(doc, "count") + 1))
+        if (count == 0) {
+            setField(doc, "zero_count", JInt(docInt(doc, "zero_count") + 1))
+        }
+        setField(doc, "last_at", JInt(nowSeconds()))
+        store.put(COL_SEARCH_STATS, id, doc)
+    }
+
+    public func searchStats(): Array<JsonValue> {
+        let items = ArrayList<JsonValue>()
+        for (item in store.list(COL_SEARCH_STATS)) {
+            items.add(item)
+        }
+        sortDocsDesc(items, "count")
+        items.toArray()
     }
 
     private func ensureIndex(): Unit {
