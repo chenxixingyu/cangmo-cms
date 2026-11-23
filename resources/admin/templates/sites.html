@@ -1,0 +1,29 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <div class="page-intro">
+    <div><p class="eyebrow">SITES</p><h2>站点</h2><p class="muted">v2.0 多站点基础：默认站点、域名与主题。当前所有内容归属默认站点。</p></div>
+    <div class="page-intro-actions"><a class="btn btn-ghost" href="/admin/tools">返回工具</a></div>
+  </div>
+  <div class="panel"><div class="table-wrap"><table class="table">
+    <thead><tr><th>站点</th><th>ID</th><th>域名</th><th>主题</th><th>状态</th><th>创建时间</th></tr></thead>
+    <tbody>
+      {% for site in sites %}
+      <tr>
+        <td><strong>{{ site.name }}</strong>{% if site.id == "site_default" %} <span class="badge">默认</span>{% endif %}</td>
+        <td><code>{{ site.id }}</code></td>
+        <td class="muted">{{ site.domains_text }}</td>
+        <td class="muted">{{ site.theme }}</td>
+        <td><span class="status">{{ site.status }}</span></td>
+        <td class="muted">{{ site.created }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div></div>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

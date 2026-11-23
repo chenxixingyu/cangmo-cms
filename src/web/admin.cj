@@ -862,6 +862,25 @@ public class AdminSite {
         ctx.redirect("/admin/webhooks", status: 303)
     }
 
+    public func sitesPage(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let rows = JsonArray()
+        for (site in services.sites.list()) {
+            let view = cloneDoc(site)
+            setField(view, "domains_text", JStr(String.join(docStrings(site, "domains"), delimiter: ", ")))
+            setField(view, "created", JStr(formatDateTime(docInt(site, "created_at"))))
+            rows.add(view)
+        }
+        let data = JsonObject()
+        data.set("page_title", JStr("站点"))
+        data.set("active", JStr("tools"))
+        data.set("sites", JArr(rows))
+        ctx.renderAdminPage("sites.html", JObj(data))
+    }
+
     public func calendarPage(ctx: Ctx): HttpResponse {        match (guard(ctx)) {
             case Some(response) => return response
             case None => ()

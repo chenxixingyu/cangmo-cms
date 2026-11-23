@@ -1,0 +1,91 @@
+/**
+ * Cangmo - site registry and default-site migration for multi-site v2.0.
+ */
+package cangmo.service
+
+import cangmo.core.*
+import cangmo.json.*
+import cangmo.store.*
+import std.collection.*
+
+public let DEFAULT_SITE_ID: String = "site_default"
+
+public class SiteService {
+    private let store: Store
+    private let settings: SettingsService
+    private let config: Config
+
+    public init(store: Store, settings: SettingsService, config: Config) {
+        this.store = store
+        this.settings = settings
+        this.config = config
+    }
+
+    public func ensureDefault(): Unit {
+        if (store.get(COL_SITES, DEFAULT_SITE_ID).isNone()) {
+            let doc = JsonObject()
+            doc.set("id", JStr(DEFAULT_SITE_ID))
+            doc.set("name", JStr(settings.str("site_title", def: config.siteTitle)))
+            doc.set("domains", jsonStringList([hostOf(settings.str("site_url", def: config.siteUrl))]))
+            doc.set("theme", JStr(settings.str("theme", def: config.theme)))
+            doc.set("status", JStr("active"))
+            doc.set("created_at", JInt(nowSeconds()))
+            store.put(COL_SITES, DEFAULT_SITE_ID, JObj(doc))
+        }
+        migrateSiteIds()
+    }
+
+    public func list(): Array<JsonValue> {
+        let items = ArrayList<JsonValue>()
+        for (item in store.list(COL_SITES)) {
+            items.add(item)
+        }
+        sortDocsDesc(items, "created_at")
+        items.toArray()
+    }
+
+    public func get(id: String): ?JsonValue {
+        store.get(COL_SITES, id)
+    }
+
+    public func defaultSite(): JsonValue {
+        match (store.get(COL_SITES, DEFAULT_SITE_ID)) {
+            case Some(value) => value
+            case None => JNull
+        }
+    }
+
+    private func migrateSiteIds(): Unit {
+        let collections = [
+            "posts", "comments", "media", "categories", "tags", "audit", "jobs", "webhooks",
+            "sessions", "api_tokens", "password_resets", "preview_tokens", "revisions", "redirects"
+        ]
+        for (collection in collections) {
+            for (id in store.listIds(collection)) {
+                match (store.get(collection, id)) {
+                    case Some(doc) =>
+                        if (doc.get("site_id").isNone()) {
+                            let updated = cloneDoc(doc)
+                            setField(updated, "site_id", JStr(DEFAULT_SITE_ID))
+                            store.put(collection, id, updated)
+                        }
+                    case None => ()
+                }
+            }
+        }
+    }
+
+    private func hostOf(url: String): String {
+        var value = url.trimAscii()
+        if (value.startsWith("http://")) {
+            value = value[7..value.size]
+        } else if (value.startsWith("https://")) {
+            value = value[8..value.size]
+        }
+        let slash = match (value.indexOf("/")) {
+            case Some(index) => index
+            case None => value.size
+        }
+        value[0..slash]
+    }
+}

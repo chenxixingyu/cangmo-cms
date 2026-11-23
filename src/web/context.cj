@@ -19,6 +19,7 @@ public class Services {
     public let logger: Logger
     public let store: Store
     public let settings: SettingsService
+    public let sites: SiteService
     public let audit: AuditService
     public let limiter: RateLimiter
     public let auth: AuthService
@@ -47,6 +48,7 @@ public class Services {
         this.logger = Logger(config.logsDir(), threshold: config.logLevel, alsoConsole: true)
         this.store = Store(config.dataDir)
         this.settings = SettingsService(store)
+        this.sites = SiteService(store, settings, config)
         this.audit = AuditService(store)
         this.limiter = RateLimiter()
         this.auth = AuthService(store, config, settings, audit, limiter)
@@ -67,6 +69,7 @@ public class Services {
         let envToken = getVariable("CANGMO_SETUP_TOKEN") ?? ""
         this.setupToken = if (envToken.size >= 8) { envToken } else { randomToken(bytes: 18) }
         settings.ensureDefaults(config)
+        sites.ensureDefault()
         taxonomy.ensureDefaultCategory(settings)
         this.templates = TemplateEngine(themeTemplatesDir(), devMode: config.devMode)
         for (warning in store.warnings()) {
