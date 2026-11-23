@@ -9,6 +9,7 @@
       <a href="/admin/posts?type={{ post_type }}&status=all" class="{% if status == "all" %}active{% endif %}">全部 <span>{{ counts.all }}</span></a>
       <a href="/admin/posts?type={{ post_type }}&status=published" class="{% if status == "published" %}active{% endif %}">已发布 <span>{{ counts.published }}</span></a>
       <a href="/admin/posts?type={{ post_type }}&status=draft" class="{% if status == "draft" %}active{% endif %}">草稿 <span>{{ counts.draft }}</span></a>
+    <a href="/admin/posts?type={{ post_type }}&status=review" class="{% if status == "review" %}active{% endif %}">待审核 <span>{{ counts.review }}</span></a>
       <a href="/admin/posts?type={{ post_type }}&status=scheduled" class="{% if status == "scheduled" %}active{% endif %}">定时 <span>{{ counts.scheduled }}</span></a>
       <a href="/admin/posts?type={{ post_type }}&status=trash" class="{% if status == "trash" %}active{% endif %}">回收站 <span>{{ counts.trash }}</span></a>
     </div>
@@ -81,6 +82,20 @@
                     <button type="submit" class="link-btn">复制为草稿</button>
                   </form>
                   {% endif %}
+                  {% if row.status == "review" %}
+                  <form method="post" action="/admin/posts/{{ row.id }}/action" class="inline-form">
+                    <input type="hidden" name="_csrf" value="{{ csrf }}">
+                    <input type="hidden" name="return_to" value="/admin/posts?type={{ post_type }}&status={{ status }}">
+                    <input type="hidden" name="action" value="approve">
+                    <button type="submit" class="link-btn">通过审核</button>
+                  </form>
+                  <form method="post" action="/admin/posts/{{ row.id }}/action" class="inline-form">
+                    <input type="hidden" name="_csrf" value="{{ csrf }}">
+                    <input type="hidden" name="return_to" value="/admin/posts?type={{ post_type }}&status={{ status }}">
+                    <input type="hidden" name="action" value="reject">
+                    <button type="submit" class="link-btn">退回草稿</button>
+                  </form>
+                  {% endif %}
                   {% if row.status != "trash" %}
                   <form method="post" action="/admin/posts/{{ row.id }}/action" class="inline-form">
                     <input type="hidden" name="_csrf" value="{{ csrf }}">
@@ -136,6 +151,7 @@
           <label>状态
             <select name="status">
               <option value="draft">草稿</option>
+          <option value="review">待审核</option>
               <option value="published">已发布</option>
               <option value="scheduled">定时发布</option>
             </select>

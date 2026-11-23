@@ -91,7 +91,7 @@ public class PostService {
         if (input.content.size > 1024 * 1024) {
             throw AppError("validation", "正文超过 1MB 限制")
         }
-        let allowedStatus = [STATUS_DRAFT, STATUS_PUBLISHED, STATUS_SCHEDULED]
+        let allowedStatus = [STATUS_DRAFT, STATUS_PUBLISHED, STATUS_SCHEDULED, STATUS_REVIEW]
         if (!allowedStatus.contains(input.status)) {
             throw AppError("validation", "无效的发布状态")
         }
@@ -248,7 +248,25 @@ public class PostService {
         return role == ROLE_ADMIN || role == ROLE_EDITOR || role == ROLE_AUTHOR || role == ROLE_CONTRIBUTOR
     }
 
-    private func canPublish(actor: JsonValue): Bool {
+    public func reject(id: String, actor: JsonValue, ip: String): Unit {
+        let post = match (get(id)) {
+            case Some(value) => value
+            case None => throw AppError("not_found", "内容不存在")
+        }
+        if (!canPublish(actor)) {
+            throw AppError("forbidden", "只有编辑或管理员可以退回内容")
+        }
+        if (docStr(post, "status") != STATUS_REVIEW) {
+            throw AppError("validation", "只有待审核内容可以退回")
+        }
+        let updated = cloneDoc(post)
+        setField(updated, "status", JStr(STATUS_DRAFT))
+        setField(updated, "updated_at", JInt(nowSeconds()))
+        store.put(COL_POSTS, id, updated)
+        audit.log(docStr(actor, "id"), docStr(actor, "username"), "post_rejected", "post", id, ip, docStr(post, "title"))
+    }
+
+    public func canPublish(actor: JsonValue): Bool {
         let role = docStr(actor, "role")
         role == ROLE_ADMIN || role == ROLE_EDITOR || role == ROLE_AUTHOR
     }
@@ -266,7 +284,7 @@ public class PostService {
             return true
         }
         if (role == ROLE_CONTRIBUTOR) {
-            return docStr(post, "status") == STATUS_DRAFT
+            return docStr(post, "status") == STATUS_DRAFT || docStr(post, "status") == STATUS_REVIEW
         }
         false
     }

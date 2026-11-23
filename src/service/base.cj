@@ -30,6 +30,7 @@ public let COL_STATS: String = "stats"
 
 public let STATUS_DRAFT: String = "draft"
 public let STATUS_PUBLISHED: String = "published"
+public let STATUS_REVIEW: String = "review"
 public let STATUS_SCHEDULED: String = "scheduled"
 public let STATUS_TRASH: String = "trash"
 

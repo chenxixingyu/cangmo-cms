@@ -16,7 +16,7 @@
       <div class="editor-head-left">
         <a class="back-link" href="/admin/posts?type={{ post.type }}">← 返回列表</a>
         <span class="editor-state">{% if is_new %}新建{% else %}编辑{% endif %}{% if post.type == "page" %}页面{% else %}文章{% endif %}</span>
-        {% if not is_new %}<span class="status status-{{ post.status }}">{% if post.status == "published" %}已发布{% elif post.status == "scheduled" %}定时{% elif post.status == "trash" %}回收站{% else %}草稿{% endif %}</span>{% endif %}
+        {% if not is_new %}<span class="status status-{{ post.status }}">{% if post.status == "published" %}已发布{% elif post.status == "scheduled" %}定时{% elif post.status == "review" %}待审核{% elif post.status == "trash" %}回收站{% else %}草稿{% endif %}</span>{% endif %}
       </div>
       <div class="editor-head-actions">
         {% if not is_new %}<a class="btn btn-ghost" href="/{% if post.type == 'page' %}pages{% else %}posts{% endif %}/{{ post.slug }}" target="_blank" rel="noopener">查看</a>{% endif %}
@@ -68,6 +68,7 @@
           <label>发布状态
             <select name="status" id="post-status">
               <option value="draft"{% if post.status == "draft" %} selected{% endif %}>草稿</option>
+        <option value="review"{% if post.status == "review" %} selected{% endif %}>待审核</option>
               <option value="published"{% if post.status == "published" %} selected{% endif %}>已发布</option>
               <option value="scheduled"{% if post.status == "scheduled" %} selected{% endif %}>定时发布</option>
             </select>

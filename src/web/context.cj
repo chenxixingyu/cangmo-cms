@@ -519,7 +519,7 @@ public func adminPostRow(services: Services, post: JsonValue): JsonValue {
     row.set("type", JStr(docStr(post, "type")))
     let postStatus = docStr(post, "status")
     row.set("status", JStr(postStatus))
-    row.set("status_text", JStr(if (postStatus == "published") { "已发布" } else if (postStatus == "draft") { "草稿" } else if (postStatus == "scheduled") { "定时" } else if (postStatus == "trash") { "回收站" } else { postStatus }))
+    row.set("status_text", JStr(if (postStatus == "published") { "已发布" } else if (postStatus == "draft") { "草稿" } else if (postStatus == "scheduled") { "定时" } else if (postStatus == "review") { "待审核" } else if (postStatus == "trash") { "回收站" } else { postStatus }))
     row.set("pinned", JBool(docBool(post, "pinned")))
     row.set("views", JInt(docInt(post, "views")))
     row.set("date", JStr(formatDate(docInt(post, "published_at"))))

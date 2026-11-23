@@ -398,6 +398,12 @@ public class AdminSite {
             if (action == "publish") {
                 services.posts.publish(id, ctx.userDoc(), ctx.clientIp())
                 ctx.setFlash("success", "内容已发布")
+            } else if (action == "approve") {
+                services.posts.publish(id, ctx.userDoc(), ctx.clientIp())
+                ctx.setFlash("success", "内容已通过审核并发布")
+            } else if (action == "reject") {
+                services.posts.reject(id, ctx.userDoc(), ctx.clientIp())
+                ctx.setFlash("success", "内容已退回草稿")
             } else if (action == "trash") {
                 services.posts.moveToTrash(id, ctx.userDoc(), ctx.clientIp())
                 ctx.setFlash("success", "内容已移至回收站")
@@ -887,7 +893,7 @@ public class AdminSite {
     }
 
     private func normalizeStatus(value: String): String {
-        if (value == STATUS_PUBLISHED || value == STATUS_SCHEDULED || value == STATUS_DRAFT) {
+        if (value == STATUS_PUBLISHED || value == STATUS_SCHEDULED || value == STATUS_DRAFT || value == STATUS_REVIEW) {
             return value
         }
         STATUS_DRAFT
@@ -899,6 +905,7 @@ public class AdminSite {
         var published: Int64 = 0
         var draft: Int64 = 0
         var scheduled: Int64 = 0
+        var review: Int64 = 0
         var trash: Int64 = 0
         for (post in services.store.list(COL_POSTS)) {
             if (docStr(post, "type") != postType) {
@@ -915,6 +922,8 @@ public class AdminSite {
                 draft += 1
             } else if (status == STATUS_SCHEDULED) {
                 scheduled += 1
+            } else if (status == STATUS_REVIEW) {
+                review += 1
             } else if (status == STATUS_TRASH) {
                 trash += 1
             }
@@ -923,6 +932,7 @@ public class AdminSite {
         counts.set("published", JInt(published))
         counts.set("draft", JInt(draft))
         counts.set("scheduled", JInt(scheduled))
+        counts.set("review", JInt(review))
         counts.set("trash", JInt(trash))
         JObj(counts)
     }
