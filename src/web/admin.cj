@@ -401,14 +401,14 @@ public class AdminSite {
             if (action == "publish") {
                 services.posts.publish(id, ctx.userDoc(), ctx.clientIp())
                 match (services.posts.get(id)) {
-                    case Some(post) => services.events.publish("post.published", postCard(services, post))
+                    case Some(post) => services.events.publish("post.published", postCard(services, post), siteId: ctx.siteId)
                     case None => ()
                 }
                 ctx.setFlash("success", "内容已发布")
             } else if (action == "approve") {
                 services.posts.publish(id, ctx.userDoc(), ctx.clientIp())
                 match (services.posts.get(id)) {
-                    case Some(post) => services.events.publish("post.published", postCard(services, post))
+                    case Some(post) => services.events.publish("post.published", postCard(services, post), siteId: ctx.siteId)
                     case None => ()
                 }
                 ctx.setFlash("success", "内容已通过审核并发布")
@@ -904,6 +904,62 @@ public class AdminSite {
             ctx.setFlash("error", e.message)
         }
         ctx.redirect("/admin/sites", status: 303)
+    }
+
+    public func pluginsPage(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let rows = JsonArray()
+        for (item in services.plugins.list()) {
+            let view = cloneDoc(item)
+            setField(view, "events_text", JStr(String.join(docStrings(item, "events"), delimiter: ", ")))
+            setField(view, "caps_text", JStr(String.join(docStrings(item, "capabilities"), delimiter: ", ")))
+            setField(view, "last", JStr(if (docInt(item, "last_at") > 0) { formatDateTime(docInt(item, "last_at")) } else { "从未" }))
+            rows.add(view)
+        }
+        let data = JsonObject()
+        data.set("page_title", JStr("插件"))
+        data.set("active", JStr("tools"))
+        data.set("rows", JArr(rows))
+        ctx.renderAdminPage("plugins.html", JObj(data))
+    }
+
+    public func pluginSave(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        try {
+            let action = ctx.form("action")
+            if (action == "delete") {
+                services.plugins.delete(ctx.form("id"), ctx.userDoc(), ctx.clientIp())
+                ctx.setFlash("success", "插件已删除")
+            } else if (action == "toggle") {
+                services.plugins.setActive(ctx.form("id"), ctx.form("active") == "1")
+                ctx.setFlash("success", "插件状态已更新")
+            } else if (action == "test") {
+                let payload = jsonObjectOf([("event", jstr("test")), ("time", jint(nowSeconds()))])
+                services.plugins.dispatch("test", payload, ctx.siteId)
+                ctx.setFlash("success", "测试事件已投递")
+            } else {
+                let events = ArrayList<String>()
+                for (event in ctx.req.formValues("events")) {
+                    events.add(event)
+                }
+                let capabilities = ArrayList<String>()
+                for (capability in ctx.req.formValues("capabilities")) {
+                    capabilities.add(capability)
+                }
+                services.plugins.create(ctx.form("name"), ctx.form("endpoint"), events.toArray(),
+                                        capabilities.toArray(), ctx.form("secret"), ctx.userDoc(), ctx.clientIp())
+                ctx.setFlash("success", "插件已注册")
+            }
+        } catch (e: AppError) {
+            ctx.setFlash("error", e.message)
+        }
+        ctx.redirect("/admin/plugins", status: 303)
     }
 
     public func sitesPage(ctx: Ctx): HttpResponse {

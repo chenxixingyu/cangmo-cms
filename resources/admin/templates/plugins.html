@@ -1,0 +1,55 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <div class="page-intro"><div><p class="eyebrow">PLUGINS</p><h2>Sidecar 插件</h2><p class="muted">插件是订阅事件的独立 HTTP 进程；主程序只发送签名事件，不加载插件代码。</p></div><div class="page-intro-actions"><a class="btn btn-ghost" href="/admin/tools">返回工具</a></div></div>
+  <section class="panel">
+    <header class="panel-head"><h2>注册插件</h2><span class="muted">端点需实现 POST JSON</span></header>
+    <form method="post" action="/admin/plugins/save" class="grid-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <input type="hidden" name="action" value="create">
+      <label>名称<input type="text" name="name" required maxlength="80"></label>
+      <label>端点<input type="url" name="endpoint" required maxlength="500" placeholder="http://127.0.0.1:9000/events"></label>
+      <label>签名密钥（可空）<input type="text" name="secret" maxlength="200"></label>
+      <div class="span-2">
+        <span class="muted small">订阅事件</span>
+        <label class="check-row"><input type="checkbox" name="events" value="post.published" checked> 文章发布</label>
+        <label class="check-row"><input type="checkbox" name="events" value="comment.created" checked> 新评论</label>
+      </div>
+      <div class="span-2">
+        <span class="muted small">能力声明</span>
+        <label class="check-row"><input type="checkbox" name="capabilities" value="posts.read" checked> posts.read</label>
+        <label class="check-row"><input type="checkbox" name="capabilities" value="comments.read"> comments.read</label>
+        <label class="check-row"><input type="checkbox" name="capabilities" value="media.read"> media.read</label>
+        <label class="check-row"><input type="checkbox" name="capabilities" value="http.outbound"> http.outbound</label>
+      </div>
+      <div class="span-2"><button class="btn" type="submit">注册插件</button></div>
+    </form>
+  </section>
+  <div class="panel"><div class="table-wrap"><table class="table">
+    <thead><tr><th>插件</th><th>端点</th><th>事件</th><th>能力</th><th>状态</th><th>最近投递</th><th>操作</th></tr></thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td><strong>{{ row.name }}</strong><div class="muted small"><code>{{ row.id }}</code></div></td>
+        <td><code>{{ row.endpoint }}</code></td>
+        <td class="muted small">{{ row.events_text }}</td>
+        <td class="muted small">{{ row.caps_text }}</td>
+        <td><span class="status">{% if row.active %}启用{% else %}停用{% endif %}</span></td>
+        <td class="muted small">{{ row.last }} / {{ row.last_status }}</td>
+        <td class="table-actions">
+          <form method="post" action="/admin/plugins/save" class="inline-form"><input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="action" value="test"><input type="hidden" name="id" value="{{ row.id }}"><button class="link-btn" type="submit">测试</button></form>
+          <form method="post" action="/admin/plugins/save" class="inline-form"><input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="{{ row.id }}"><input type="hidden" name="active" value="{% if row.active %}0{% else %}1{% endif %}"><button class="link-btn" type="submit">{% if row.active %}停用{% else %}启用{% endif %}</button></form>
+          <form method="post" action="/admin/plugins/save" class="inline-form" data-confirm="确定删除这个插件？"><input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ row.id }}"><button class="link-btn danger" type="submit">删除</button></form>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if rows.length == 0 %}<tr><td colspan="7" class="empty-row">还没有注册插件。</td></tr>{% endif %}
+    </tbody>
+  </table></div></div>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

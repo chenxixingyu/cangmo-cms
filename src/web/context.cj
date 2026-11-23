@@ -34,6 +34,7 @@ public class Services {
     public let redirects: RedirectService
     public let webhooks: WebhookService
     public let http: HttpClient
+    public let plugins: PluginService
     public let events: EventBus
     public var templates: TemplateEngine
     public var themeEngines: HashMap<String, TemplateEngine> = HashMap<String, TemplateEngine>()
@@ -64,7 +65,8 @@ public class Services {
         this.redirects = RedirectService(store, audit)
         this.http = HttpClient()
         this.webhooks = WebhookService(store, audit, http)
-        this.events = EventBus(webhooks)
+        this.plugins = PluginService(store, audit, http)
+        this.events = EventBus(webhooks, plugins)
         this.templates = TemplateEngine(config.themesDir + "/" + config.theme + "/templates", devMode: config.devMode)
         this.adminTemplates = TemplateEngine(config.adminTemplatesDir(), devMode: config.devMode)
         let envToken = getVariable("CANGMO_SETUP_TOKEN") ?? ""

@@ -312,7 +312,7 @@ public class PublicSite {
             event.set("post_id", JStr(docStr(post, "id")))
             event.set("author", JStr(ctx.form("name")))
             event.set("content", JStr(ctx.form("content")))
-            services.events.publish("comment.created", JObj(event))
+            services.events.publish("comment.created", JObj(event), siteId: ctx.siteId)
             if (moderation) {
                 ctx.setFlash("success", "评论已提交，审核通过后会显示")
             } else {
