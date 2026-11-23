@@ -306,6 +306,12 @@ public class PublicSite {
                                                      ctx.req.header("user-agent"))
             let moderation = services.settings.bool("comment_moderation", def: true)
             services.mail.notifyComment(post, commentId, ctx.form("name"), ctx.form("content"), moderation)
+            let event = JsonObject()
+            event.set("id", JStr(commentId))
+            event.set("post_id", JStr(docStr(post, "id")))
+            event.set("author", JStr(ctx.form("name")))
+            event.set("content", JStr(ctx.form("content")))
+            services.webhooks.dispatch("comment.created", JObj(event))
             if (moderation) {
                 ctx.setFlash("success", "评论已提交，审核通过后会显示")
             } else {

@@ -1,0 +1,47 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <div class="page-intro"><div><p class="eyebrow">WEBHOOK</p><h2>Webhook</h2><p class="muted">通过 curl 投递 HTTP/HTTPS 事件；签名为 HMAC-SHA256。</p></div><div class="page-intro-actions"><a class="btn btn-ghost" href="/admin/tools">返回工具</a></div></div>
+  <section class="panel">
+    <header class="panel-head"><h2>新建 Webhook</h2></header>
+    <form method="post" action="/admin/webhooks/save" class="grid-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <input type="hidden" name="action" value="create">
+      <label class="span-2">URL<input type="url" name="url" required maxlength="500" placeholder="https://example.com/hook"></label>
+      <label>密钥（可空）<input type="text" name="secret" maxlength="200"></label>
+      <label class="check-row"><input type="checkbox" name="events" value="post.published" checked> 文章发布</label>
+      <label class="check-row"><input type="checkbox" name="events" value="comment.created" checked> 新评论</label>
+      <div class="span-2"><button class="btn" type="submit">创建</button></div>
+    </form>
+  </section>
+  <div class="panel"><div class="table-wrap"><table class="table">
+    <thead><tr><th>URL</th><th>事件</th><th>最近投递</th><th>状态</th><th>操作</th></tr></thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td><code>{{ row.url }}</code></td>
+        <td class="muted">{{ row.events_text }}</td>
+        <td class="muted">{{ row.last }}</td>
+        <td class="muted">{{ row.last_status }}</td>
+        <td class="table-actions">
+          <form method="post" action="/admin/webhooks/save" class="inline-form">
+            <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="action" value="test"><input type="hidden" name="id" value="{{ row.id }}">
+            <button class="link-btn" type="submit">测试</button>
+          </form>
+          <form method="post" action="/admin/webhooks/save" class="inline-form" data-confirm="确定删除这个 Webhook？">
+            <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ row.id }}">
+            <button class="link-btn danger" type="submit">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if rows.length == 0 %}<tr><td colspan="5" class="empty-row">还没有 Webhook。</td></tr>{% endif %}
+    </tbody>
+  </table></div></div>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

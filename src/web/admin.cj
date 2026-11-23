@@ -771,6 +771,54 @@ public class AdminSite {
         ctx.renderAdminPage("search-stats.html", JObj(data))
     }
 
+    public func webhooksPage(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let rows = JsonArray()
+        for (item in services.webhooks.list()) {
+            let view = cloneDoc(item)
+            setField(view, "last", JStr(if (docInt(item, "last_at") > 0) { formatDateTime(docInt(item, "last_at")) } else { "从未" }))
+            setField(view, "events_text", JStr(String.join(docStrings(item, "events"), delimiter: ", ")))
+            rows.add(view)
+        }
+        let data = JsonObject()
+        data.set("page_title", JStr("Webhook"))
+        data.set("active", JStr("tools"))
+        data.set("rows", JArr(rows))
+        ctx.renderAdminPage("webhooks.html", JObj(data))
+    }
+
+    public func webhookSave(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        try {
+            let action = ctx.form("action")
+            if (action == "delete") {
+                services.webhooks.delete(ctx.form("id"), ctx.userDoc(), ctx.clientIp())
+                ctx.setFlash("success", "Webhook 已删除")
+            } else if (action == "test") {
+                let payload = jsonObjectOf([("event", jstr("test")), ("time", jint(nowSeconds()))])
+                services.webhooks.dispatch("test", payload)
+                ctx.setFlash("success", "测试事件已投递（结果见最近状态）")
+            } else {
+                let events = ArrayList<String>()
+                for (event in ctx.req.formValues("events")) {
+                    events.add(event)
+                }
+                services.webhooks.create(ctx.form("url"), events.toArray(), ctx.form("secret"),
+                                         ctx.userDoc(), ctx.clientIp())
+                ctx.setFlash("success", "Webhook 已创建")
+            }
+        } catch (e: AppError) {
+            ctx.setFlash("error", e.message)
+        }
+        ctx.redirect("/admin/webhooks", status: 303)
+    }
+
     public func calendarPage(ctx: Ctx): HttpResponse {        match (guard(ctx)) {
             case Some(response) => return response
             case None => ()
