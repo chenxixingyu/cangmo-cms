@@ -8,6 +8,19 @@
     <div><p class="eyebrow">SITES</p><h2>站点</h2><p class="muted">v2.0 多站点基础：默认站点、域名与主题。当前所有内容归属默认站点。</p></div>
     <div class="page-intro-actions"><a class="btn btn-ghost" href="/admin/tools">返回工具</a></div>
   </div>
+  <section class="panel">
+    <header class="panel-head"><h2>当前站点设置</h2><span class="muted">仅覆盖当前选中站点</span></header>
+    <form method="post" action="/admin/sites/settings" class="grid-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <label>标题<input type="text" name="title" maxlength="120" value="{{ site_settings.title }}"></label>
+      <label>副标题<input type="text" name="subtitle" maxlength="200" value="{{ site_settings.subtitle }}"></label>
+      <label class="span-2">描述<textarea name="description" rows="2" maxlength="500">{{ site_settings.description }}</textarea></label>
+      <label class="span-2">关键词<input type="text" name="keywords" maxlength="300" value="{{ site_settings.keywords }}"></label>
+      <label>页脚文本<input type="text" name="footer_text" maxlength="500" value="{{ site_settings.footer_text }}"></label>
+      <label>版权<input type="text" name="footer_copyright" maxlength="300" value="{{ site_settings.footer_copyright }}"></label>
+      <div class="span-2"><button class="btn" type="submit">保存站点设置</button></div>
+    </form>
+  </section>
   <div class="panel">
     <header class="panel-head"><h2>新建站点</h2><span class="muted">内容按站点隔离，域名用于 Host 解析</span></header>
     <form method="post" action="/admin/sites/create" class="grid-form">

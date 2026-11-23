@@ -885,6 +885,27 @@ public class AdminSite {
         response
     }
 
+    public func siteSettingsSave(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        try {
+            let values = JsonObject()
+            values.set("title", JStr(truncateUtf8(ctx.form("title").trimAscii(), 120)))
+            values.set("subtitle", JStr(truncateUtf8(ctx.form("subtitle").trimAscii(), 200)))
+            values.set("description", JStr(truncateUtf8(ctx.form("description").trimAscii(), 500)))
+            values.set("keywords", JStr(truncateUtf8(ctx.form("keywords").trimAscii(), 300)))
+            values.set("footer_text", JStr(truncateUtf8(ctx.form("footer_text").trimAscii(), 500)))
+            values.set("footer_copyright", JStr(truncateUtf8(ctx.form("footer_copyright").trimAscii(), 300)))
+            services.sites.updateSettings(ctx.siteId, values)
+            ctx.setFlash("success", "站点设置已保存")
+        } catch (e: AppError) {
+            ctx.setFlash("error", e.message)
+        }
+        ctx.redirect("/admin/sites", status: 303)
+    }
+
     public func sitesPage(ctx: Ctx): HttpResponse {
         match (requireAdmin(ctx)) {
             case Some(response) => return response

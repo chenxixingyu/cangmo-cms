@@ -127,6 +127,7 @@ public class WebApp {
         router.get("/admin/redirects", { ctx: Ctx => adminSite.redirectsPage(ctx) })
         router.get("/admin/calendar", { ctx: Ctx => adminSite.calendarPage(ctx) })
         router.get("/admin/sites", { ctx: Ctx => adminSite.sitesPage(ctx) })
+        router.post("/admin/sites/settings", { ctx: Ctx => adminSite.siteSettingsSave(ctx) })
         router.post("/admin/site/switch", { ctx: Ctx => adminSite.siteSwitch(ctx) })
         router.post("/admin/sites/create", { ctx: Ctx => adminSite.siteCreate(ctx) })
         router.get("/admin/search-stats", { ctx: Ctx => adminSite.searchStatsPage(ctx) })

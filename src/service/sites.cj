@@ -67,6 +67,36 @@ public class SiteService {
         }
     }
 
+    public func setting(siteId: String, key: String, def: String): String {
+        match (store.get(COL_SITES, siteId)) {
+            case Some(site) =>
+                match (getObject(site, "settings")) {
+                    case Some(settingsObject) =>
+                        let value = getString(JObj(settingsObject), key)
+                        if (value.size > 0) { value } else { def }
+                    case None => def
+                }
+            case None => def
+        }
+    }
+
+    public func updateSettings(siteId: String, values: JsonObject): Unit {
+        let site = match (store.get(COL_SITES, siteId)) {
+            case Some(value) => value
+            case None => throw AppError("not_found", "站点不存在")
+        }
+        let updated = cloneDoc(site)
+        let current = match (getObject(site, "settings")) {
+            case Some(value) => value
+            case None => JsonObject()
+        }
+        for ((key, value) in values.fields) {
+            current.set(key, value)
+        }
+        setField(updated, "settings", JObj(current))
+        store.put(COL_SITES, siteId, updated)
+    }
+
     public func defaultSite(): JsonValue {
         match (store.get(COL_SITES, DEFAULT_SITE_ID)) {
             case Some(value) => value
