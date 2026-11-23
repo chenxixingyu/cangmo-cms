@@ -1,0 +1,43 @@
+{% include "partials/head.html" %}
+<div class="admin-shell">
+{% include "partials/sidebar.html" %}
+<div class="admin-main">
+{% include "partials/topbar.html" %}
+<main class="admin-content">
+  <div class="page-intro"><div><p class="eyebrow">MEMBERS</p><h2>会员</h2><p class="muted">手工开通会员；支付由外部 Provider 完成，系统只保存权益。</p></div><div class="page-intro-actions"><a class="btn btn-ghost" href="/admin/tools">返回工具</a></div></div>
+  <section class="panel">
+    <header class="panel-head"><h2>会员计划</h2></header>
+    <form method="post" action="/admin/members/action" class="grid-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <input type="hidden" name="action" value="plan">
+      <label>名称<input type="text" name="name" required maxlength="80"></label>
+      <label>价格（分）<input type="number" name="price_cents" min="0" value="0" required></label>
+      <label>周期<select name="interval"><option value="month">月</option><option value="year">年</option></select></label>
+      <div class="span-2"><button class="btn" type="submit">创建计划</button></div>
+    </form>
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>计划</th><th>价格</th><th>周期</th></tr></thead>
+      <tbody>{% for plan in plans %}<tr><td>{{ plan.name }}</td><td>{{ plan.price_cents }} 分</td><td>{{ plan.interval }}</td></tr>{% endfor %}
+      {% if plans.length == 0 %}<tr><td colspan="3" class="empty-row">还没有计划。</td></tr>{% endif %}</tbody>
+    </table></div>
+  </section>
+  <section class="panel">
+    <header class="panel-head"><h2>开通会员</h2></header>
+    <form method="post" action="/admin/members/action" class="grid-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <input type="hidden" name="action" value="grant">
+      <label>用户邮箱<input type="email" name="email" required maxlength="200"></label>
+      <label>计划<select name="plan_id">{% for plan in plans %}<option value="{{ plan.id }}">{{ plan.name }}</option>{% endfor %}</select></label>
+      <label>天数<input type="number" name="days" min="1" value="30" required></label>
+      <div class="span-2"><button class="btn" type="submit">开通</button></div>
+    </form>
+  </section>
+  <div class="panel"><header class="panel-head"><h2>会员列表</h2></header><div class="table-wrap"><table class="table">
+    <thead><tr><th>邮箱</th><th>状态</th><th>到期</th><th>操作</th></tr></thead>
+    <tbody>{% for item in members %}<tr><td>{{ item.email }}</td><td><span class="status">{{ item.status }}</span></td><td class="muted small">{{ item.expires }}</td><td>{% if item.status == "active" %}<form method="post" action="/admin/members/action" class="inline-form"><input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="action" value="revoke"><input type="hidden" name="id" value="{{ item.id }}"><button class="link-btn danger" type="submit">撤销</button></form>{% endif %}</td></tr>{% endfor %}
+    {% if members.length == 0 %}<tr><td colspan="4" class="empty-row">还没有会员。</td></tr>{% endif %}</tbody>
+  </table></div></div>
+</main>
+</div>
+</div>
+{% include "partials/foot.html" %}

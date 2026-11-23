@@ -18,6 +18,7 @@ public class PostInput {
     public var content: String = ""
     public var postType: String = "post"
     public var siteId: String = ""
+    public var access: String = "public"
     public var status: String = STATUS_DRAFT
     public var categoryId: String = ""
     public var tagNames: Array<String> = Array<String>(0, repeat: "")
@@ -133,6 +134,9 @@ public class PostService {
             summary = makeExcerpt(rendered.html, maxRunes: 160)
         }
         summary = truncateUtf8(summary, 500)
+        if (input.access == "members" && input.summary.trimAscii().size == 0) {
+            summary = "会员专享内容"
+        }
         var categoryId = input.categoryId.trimAscii()
         if (!isPage && categoryId.size == 0) {
             categoryId = ensureDefaultCategory()
@@ -182,6 +186,7 @@ public class PostService {
         setField(postDoc, "content_html", JStr(rendered.html))
         setField(postDoc, "headings", headingsJson(rendered.headings))
         setField(postDoc, "status", JStr(status))
+        setField(postDoc, "access", JStr(if (input.access == "members") { "members" } else { "public" }))
         setField(postDoc, "site_id", JStr(postSiteId))
         setField(postDoc, "author_id", JStr(if (id.size > 0) { docStr(postDoc, "author_id") } else { actorId }))
         setField(postDoc, "category_id", JStr(categoryId))

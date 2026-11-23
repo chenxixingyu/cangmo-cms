@@ -302,6 +302,7 @@ public class ApiSite {
         input.postType = if (getString(body, "type") == "page") { "page" } else { "post" }
         input.status = getString(body, "status", def: STATUS_DRAFT)
         input.siteId = siteId
+        input.access = getString(body, "access", def: "public")
         input.categoryId = getString(body, "category_id")
         input.tagNames = getStrings(body, "tags")
         input.cover = getString(body, "cover")

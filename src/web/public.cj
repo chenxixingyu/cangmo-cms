@@ -62,8 +62,16 @@ public class PublicSite {
         }
         services.stats.recordView(docStr(post, "id"))
         let card = postCard(services, post)
-        setField(card, "content_html", JStr(docStr(post, "content_html")))
-        setField(card, "headings", match (post.get("headings")) { case Some(value) => value; case None => jarr() })
+        let memberActive = services.membership.isActive(docStr(ctx.userDoc(), "id"), ctx.siteId)
+        let paywalled = docStr(post, "access") == "members" && !memberActive
+        setField(card, "paywalled", JBool(paywalled))
+        if (paywalled) {
+            setField(card, "content_html", JStr("<div class=\"paywall\"><h2>会员内容</h2><p>本文仅对会员开放。请登录会员账号后阅读。</p><p><a class=\"btn\" href=\"/admin/login\">登录</a></p></div>"))
+            setField(card, "headings", JArr(JsonArray()))
+        } else {
+            setField(card, "content_html", JStr(docStr(post, "content_html")))
+            setField(card, "headings", match (post.get("headings")) { case Some(value) => value; case None => jarr() })
+        }
         setField(card, "allow_comments", JBool(docBool(post, "allow_comments", def: true)))
         setField(card, "seo_title", JStr(docStr(post, "seo_title")))
         setField(card, "seo_description", JStr(docStr(post, "seo_description")))

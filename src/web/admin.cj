@@ -360,6 +360,7 @@ public class AdminSite {
         input.postType = postType
         input.status = normalizeStatus(ctx.form("status"))
         input.siteId = ctx.siteId
+        input.access = ctx.form("access")
         input.categoryId = ctx.form("category_id")
         input.tagNames = splitTags(ctx.form("tags"))
         input.cover = ctx.form("cover")
@@ -575,6 +576,7 @@ public class AdminSite {
         input.content = ctx.form("content")
         input.status = normalizeStatus(ctx.form("status"))
         input.siteId = ctx.siteId
+        input.access = ctx.form("access")
         let categoryForm = ctx.form("category_id")
         input.categoryId = if (categoryForm.size > 0) { categoryForm } else { docStr(post, "category_id") }
         let tagForm = ctx.form("tags")
@@ -1137,6 +1139,57 @@ public class AdminSite {
             ctx.setFlash("error", e.message)
         }
         ctx.redirect("/admin/newsletter", status: 303)
+    }
+
+    public func membersPage(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let plans = JsonArray()
+        for (plan in services.membership.plans(ctx.siteId)) {
+            plans.add(plan)
+        }
+        let members = JsonArray()
+        for (item in services.membership.members(ctx.siteId)) {
+            let view = cloneDoc(item)
+            setField(view, "expires", JStr(formatDateTime(docInt(item, "expires_at"))))
+            members.add(view)
+        }
+        let data = JsonObject()
+        data.set("page_title", JStr("会员"))
+        data.set("active", JStr("tools"))
+        data.set("plans", JArr(plans))
+        data.set("members", JArr(members))
+        ctx.renderAdminPage("members.html", JObj(data))
+    }
+
+    public func memberAction(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        try {
+            let action = ctx.form("action")
+            if (action == "grant") {
+                services.membership.grant(ctx.form("email"), ctx.form("plan_id"),
+                                          parseIntOr(ctx.form("days"), 30), ctx.siteId,
+                                          ctx.userDoc(), ctx.clientIp())
+                ctx.setFlash("success", "会员已开通")
+            } else if (action == "revoke") {
+                services.membership.revoke(ctx.form("id"), ctx.userDoc(), ctx.clientIp())
+                ctx.setFlash("success", "会员已撤销")
+            } else {
+                services.membership.createPlan(ctx.form("name"), parseIntOr(ctx.form("price_cents"), 0),
+                                                ctx.form("interval"), ctx.siteId, ctx.userDoc(), ctx.clientIp())
+                ctx.setFlash("success", "会员计划已创建")
+            }
+        } catch (e: AppError) {
+            ctx.setFlash("error", e.message)
+        } catch (e: Exception) {
+            ctx.setFlash("error", "操作失败：${e.message}")
+        }
+        ctx.redirect("/admin/members", status: 303)
     }
 
     public func sitesPage(ctx: Ctx): HttpResponse {

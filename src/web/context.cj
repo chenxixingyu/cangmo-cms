@@ -37,6 +37,7 @@ public class Services {
     public let plugins: PluginService
     public let oauth: OAuthProviderService
     public let newsletter: NewsletterService
+    public let membership: MembershipService
     public let events: EventBus
     public var templates: TemplateEngine
     public var themeEngines: HashMap<String, TemplateEngine> = HashMap<String, TemplateEngine>()
@@ -70,6 +71,7 @@ public class Services {
         this.plugins = PluginService(store, audit, http)
         this.oauth = OAuthProviderService(store, audit, http)
         this.newsletter = NewsletterService(store, config, settings, mail, audit)
+        this.membership = MembershipService(store, audit)
         this.events = EventBus(webhooks, plugins)
         this.templates = TemplateEngine(config.themesDir + "/" + config.theme + "/templates", devMode: config.devMode)
         this.adminTemplates = TemplateEngine(config.adminTemplatesDir(), devMode: config.devMode)

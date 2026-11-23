@@ -137,6 +137,8 @@ public class WebApp {
         router.get("/admin/plugins", { ctx: Ctx => adminSite.pluginsPage(ctx) })
         router.get("/admin/oauth", { ctx: Ctx => adminSite.oauthPage(ctx) })
         router.get("/admin/newsletter", { ctx: Ctx => adminSite.newsletterPage(ctx) })
+        router.get("/admin/members", { ctx: Ctx => adminSite.membersPage(ctx) })
+        router.post("/admin/members/action", { ctx: Ctx => adminSite.memberAction(ctx) })
         router.post("/admin/newsletter/action", { ctx: Ctx => adminSite.newsletterAction(ctx) })
         router.post("/admin/oauth/save", { ctx: Ctx => adminSite.oauthProviderSave(ctx) })
         router.get("/auth/oauth/:id/start", { ctx: Ctx => adminSite.oauthStart(ctx) })
