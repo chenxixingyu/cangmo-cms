@@ -1,5 +1,15 @@
 # 仓墨测试与验收（v1.6.0）
 
+## v2.0.0 生态基础版
+
+- 单元：26 / 26
+- v1.x 基线：236 / 236
+- v2 定向：41 / 41
+- 合计：**303**，详见 [v200-targeted.md](reports/v200-targeted.md)
+- **不包含 ActivityPub**；未做 v2 管理页浏览器级审计。
+
+---
+
 > 本地环境：Windows 11 x64 · 仓颉 1.2.1 (cjnative) · Node.js 22.2.0 · Microsoft Edge  
 > 测试对象：v1.6.0。所有集成测试均在**全新数据目录**上执行，原始输出保存在 `docs/reports/`。  
 > Linux：GitHub Actions `ubuntu-latest` 已通过 `cjpm build` + `cjpm test`（run 45223833805）。
