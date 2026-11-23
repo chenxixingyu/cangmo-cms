@@ -8,6 +8,15 @@
     <div><p class="eyebrow">SITES</p><h2>站点</h2><p class="muted">v2.0 多站点基础：默认站点、域名与主题。当前所有内容归属默认站点。</p></div>
     <div class="page-intro-actions"><a class="btn btn-ghost" href="/admin/tools">返回工具</a></div>
   </div>
+  <div class="panel">
+    <header class="panel-head"><h2>新建站点</h2><span class="muted">内容按站点隔离，域名用于 Host 解析</span></header>
+    <form method="post" action="/admin/sites/create" class="grid-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <label>站点名称<input type="text" name="name" required maxlength="100"></label>
+      <label>域名<input type="text" name="domain" required maxlength="200" placeholder="blog.example.com"></label>
+      <div class="span-2"><button class="btn" type="submit">创建站点</button></div>
+    </form>
+  </div>
   <div class="panel"><div class="table-wrap"><table class="table">
     <thead><tr><th>站点</th><th>ID</th><th>域名</th><th>主题</th><th>状态</th><th>创建时间</th></tr></thead>
     <tbody>

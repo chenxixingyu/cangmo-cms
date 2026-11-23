@@ -244,6 +244,7 @@ public class AdminSite {
         let page = ctx.pageNumber()
         let query = allPostsQuery(ctx)
         query.postType = postType
+        query.siteId = ctx.siteId
         if (status != "all") {
             query.status = status
             if (status == "trash") {
@@ -346,6 +347,7 @@ public class AdminSite {
         input.content = ctx.form("content")
         input.postType = postType
         input.status = normalizeStatus(ctx.form("status"))
+        input.siteId = ctx.siteId
         input.categoryId = ctx.form("category_id")
         input.tagNames = splitTags(ctx.form("tags"))
         input.cover = ctx.form("cover")
@@ -560,6 +562,7 @@ public class AdminSite {
         input.summary = ctx.form("summary")
         input.content = ctx.form("content")
         input.status = normalizeStatus(ctx.form("status"))
+        input.siteId = ctx.siteId
         let categoryForm = ctx.form("category_id")
         input.categoryId = if (categoryForm.size > 0) { categoryForm } else { docStr(post, "category_id") }
         let tagForm = ctx.form("tags")
@@ -879,6 +882,20 @@ public class AdminSite {
         data.set("active", JStr("tools"))
         data.set("sites", JArr(rows))
         ctx.renderAdminPage("sites.html", JObj(data))
+    }
+
+    public func siteCreate(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        try {
+            services.sites.create(ctx.form("name"), ctx.form("domain"))
+            ctx.setFlash("success", "站点已创建")
+        } catch (e: AppError) {
+            ctx.setFlash("error", e.message)
+        }
+        ctx.redirect("/admin/sites", status: 303)
     }
 
     public func calendarPage(ctx: Ctx): HttpResponse {        match (guard(ctx)) {

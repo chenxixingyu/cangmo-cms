@@ -55,6 +55,53 @@ public class SiteService {
         }
     }
 
+    public func create(name: String, domain: String): String {
+        let title = name.trimAscii()
+        let host = domain.trimAscii().toAsciiLower()
+        if (title.size == 0 || title.size > 100) {
+            throw AppError("validation", "站点名称长度无效")
+        }
+        if (host.size == 0 || host.size > 200 || host.contains("/") || host.contains(" ")) {
+            throw AppError("validation", "域名格式无效")
+        }
+        for (site in store.list(COL_SITES)) {
+            for (existing in docStrings(site, "domains")) {
+                if (existing.toAsciiLower() == host) {
+                    throw AppError("conflict", "域名已被其他站点使用")
+                }
+            }
+        }
+        let id = newId("site")
+        let doc = JsonObject()
+        doc.set("id", JStr(id))
+        doc.set("name", JStr(title))
+        doc.set("domains", jsonStringList([host]))
+        doc.set("theme", JStr(settings.str("theme", def: config.theme)))
+        doc.set("status", JStr("active"))
+        doc.set("created_at", JInt(nowSeconds()))
+        store.put(COL_SITES, id, JObj(doc))
+        id
+    }
+
+    public func resolveHost(host: String): String {        var name = host.trimAscii().toAsciiLower()
+        let colon = match (name.indexOf(":")) {
+            case Some(index) => index
+            case None => name.size
+        }
+        name = name[0..colon]
+        for (site in store.list(COL_SITES)) {
+            if (docStr(site, "status") != "active") {
+                continue
+            }
+            for (domain in docStrings(site, "domains")) {
+                if (domain.toAsciiLower() == name) {
+                    return docStr(site, "id")
+                }
+            }
+        }
+        DEFAULT_SITE_ID
+    }
+
     private func migrateSiteIds(): Unit {
         let collections = [
             "posts", "comments", "media", "categories", "tags", "audit", "jobs", "webhooks",

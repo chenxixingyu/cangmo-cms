@@ -25,6 +25,7 @@ public class PublicSite {
         let query = PostQuery()
         query.status = STATUS_PUBLISHED
         query.postType = "post"
+        query.siteId = ctx.siteId
         let result = services.posts.list(query, page, pageSize)
         let cards = ArrayList<JsonValue>()
         let featured = ArrayList<JsonValue>()
@@ -55,7 +56,7 @@ public class PublicSite {
 
     public func postDetail(ctx: Ctx): HttpResponse {
         let slug = ctx.param("slug")
-        let post = match (services.posts.getPublishedBySlug(slug, postType: "post")) {
+        let post = match (services.posts.getPublishedBySlug(slug, postType: "post", siteId: ctx.siteId)) {
             case Some(value) => value
             case None => return notFound(ctx)
         }
@@ -74,7 +75,7 @@ public class PublicSite {
                 related.add(postCard(services, item))
             }
         }
-        let (prevPost, nextPost) = neighborPosts(post)
+        let (prevPost, nextPost) = neighborPosts(post, ctx.siteId)
         let data = JsonObject()
         data.set("page_title", JStr(docStr(post, "seo_title", def: docStr(post, "title"))))
         data.set("meta_description", JStr(docStr(post, "seo_description", def: docStr(post, "summary"))))
@@ -113,7 +114,7 @@ public class PublicSite {
 
     public func pageDetail(ctx: Ctx): HttpResponse {
         let slug = ctx.param("slug")
-        let page = match (services.posts.getPublishedBySlug(slug, postType: "page")) {
+        let page = match (services.posts.getPublishedBySlug(slug, postType: "page", siteId: ctx.siteId)) {
             case Some(value) => value
             case None => return notFound(ctx)
         }
@@ -140,7 +141,7 @@ public class PublicSite {
     /** Legacy/short page URLs such as /about redirect to the canonical /pages/about. */
     public func pageShortcut(ctx: Ctx): HttpResponse {
         let slug = ctx.param("slug")
-        match (services.posts.getPublishedBySlug(slug, postType: "page")) {
+        match (services.posts.getPublishedBySlug(slug, postType: "page", siteId: ctx.siteId)) {
             case Some(_) => ctx.redirect("/pages/" + slug, status: 301)
             case None => notFound(ctx)
         }
@@ -203,7 +204,7 @@ public class PublicSite {
     public func archivePage(ctx: Ctx): HttpResponse {
         let year = ctx.param("year")
         let month = ctx.param("month")
-        let all = services.posts.publishedPosts()
+        let all = services.posts.publishedPosts(siteId: ctx.siteId)
         let selected = ArrayList<JsonValue>()
         let prefix = if (year.size > 0 && month.size > 0) {
             year + "-" + month
@@ -327,7 +328,7 @@ public class PublicSite {
     }
 
     public func feed(ctx: Ctx): HttpResponse {
-        let posts = services.posts.publishedPosts()
+        let posts = services.posts.publishedPosts(siteId: ctx.siteId)
         let items = ArrayList<JsonValue>()
         var count: Int64 = 0
         for (post in posts) {
@@ -361,10 +362,10 @@ public class PublicSite {
             entries.add(JObj(item))
         }
         add("/", nowSeconds())
-        for (post in services.posts.publishedPosts()) {
+        for (post in services.posts.publishedPosts(siteId: ctx.siteId)) {
             add(postUrl(post), docInt(post, "updated_at"))
         }
-        for (page in services.posts.publishedPages()) {
+        for (page in services.posts.publishedPages(siteId: ctx.siteId)) {
             add(postUrl(page), docInt(page, "updated_at"))
         }
         for (category in services.taxonomy.listCategories()) {
@@ -551,8 +552,8 @@ public class PublicSite {
         views.toArray()
     }
 
-    private func neighborPosts(post: JsonValue): (JsonValue, JsonValue) {
-        let all = services.posts.publishedPosts()
+    private func neighborPosts(post: JsonValue, siteId: String): (JsonValue, JsonValue) {
+        let all = services.posts.publishedPosts(siteId: siteId)
         var previous: JsonValue = JNull
         var next: JsonValue = JNull
         var found = false

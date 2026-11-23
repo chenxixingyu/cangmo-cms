@@ -99,6 +99,7 @@ public class Ctx {
     public let services: Services
     public var session: SessionData
     public var user: ?JsonValue
+    public let siteId: String
     public var params: HashMap<String, String> = HashMap<String, String>()
     public var newSession: Bool = false
     public var sessionChanged: Bool = false
@@ -110,6 +111,7 @@ public class Ctx {
         this.session = session
         this.user = user
         this.newSession = newSession
+        this.siteId = services.sites.resolveHost(req.header("host"))
     }
 
     public func loggedIn(): Bool {

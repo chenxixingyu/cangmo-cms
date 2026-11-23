@@ -147,7 +147,7 @@ public class ApiSite {
         requireScope(ctx, "posts.write")
         let user = requireUser(ctx)
         let body = jsonBody(ctx)
-        let input = postInputFrom(body)
+        let input = postInputFrom(body, ctx.siteId)
         let id = services.posts.save(input, user, "", ctx.clientIp())
         let post = services.posts.get(id)
         let data = match (post) {
@@ -169,7 +169,7 @@ public class ApiSite {
             throw AppError("forbidden", "无权编辑此内容")
         }
         let body = jsonBody(ctx)
-        let input = postInputFrom(body)
+        let input = postInputFrom(body, ctx.siteId)
         services.posts.save(input, user, id, ctx.clientIp())
         let updated = match (services.posts.get(id)) {
             case Some(value) => value
@@ -293,7 +293,7 @@ public class ApiSite {
         view
     }
 
-    private func postInputFrom(body: JsonValue): PostInput {
+    private func postInputFrom(body: JsonValue, siteId: String): PostInput {
         let input = PostInput()
         input.title = getString(body, "title")
         input.slug = getString(body, "slug")
@@ -301,6 +301,7 @@ public class ApiSite {
         input.content = getString(body, "content")
         input.postType = if (getString(body, "type") == "page") { "page" } else { "post" }
         input.status = getString(body, "status", def: STATUS_DRAFT)
+        input.siteId = siteId
         input.categoryId = getString(body, "category_id")
         input.tagNames = getStrings(body, "tags")
         input.cover = getString(body, "cover")

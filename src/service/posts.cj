@@ -17,6 +17,7 @@ public class PostInput {
     public var summary: String = ""
     public var content: String = ""
     public var postType: String = "post"
+    public var siteId: String = ""
     public var status: String = STATUS_DRAFT
     public var categoryId: String = ""
     public var tagNames: Array<String> = Array<String>(0, repeat: "")
@@ -39,6 +40,7 @@ public class PostQuery {
     public var search: String = ""
     public var includeTrash: Bool = false
     public var sort: String = "newest"
+    public var siteId: String = ""
 }
 
 public class PostService {
@@ -64,8 +66,11 @@ public class PostService {
         store.get(COL_POSTS, id)
     }
 
-    public func getPublishedBySlug(slug: String, postType!: String = "post"): ?JsonValue {
+    public func getPublishedBySlug(slug: String, postType!: String = "post", siteId!: String = ""): ?JsonValue {
         for (post in store.list(COL_POSTS)) {
+            if (siteId.size > 0 && docStr(post, "site_id") != siteId) {
+                continue
+            }
             if (docStr(post, "slug") == slug && docStr(post, "type") == postType &&
                 docStr(post, "status") == STATUS_PUBLISHED) {
                 return Some(post)
@@ -168,6 +173,13 @@ public class PostService {
         setField(postDoc, "content_html", JStr(rendered.html))
         setField(postDoc, "headings", headingsJson(rendered.headings))
         setField(postDoc, "status", JStr(status))
+        let postSiteId = if (input.siteId.size > 0) {
+            input.siteId
+        } else {
+            let existingSite = docStr(postDoc, "site_id")
+            if (existingSite.size > 0) { existingSite } else { DEFAULT_SITE_ID }
+        }
+        setField(postDoc, "site_id", JStr(postSiteId))
         setField(postDoc, "author_id", JStr(if (id.size > 0) { docStr(postDoc, "author_id") } else { actorId }))
         setField(postDoc, "category_id", JStr(categoryId))
         setField(postDoc, "tag_ids", jsonStringList(tagIds))
@@ -614,6 +626,9 @@ public class PostService {
         let items = ArrayList<JsonValue>()
         let needle = query.search.trimAscii().toAsciiLower()
         for (post in store.list(COL_POSTS)) {
+            if (query.siteId.size > 0 && docStr(post, "site_id", def: DEFAULT_SITE_ID) != query.siteId) {
+                continue
+            }
             if (query.postType != "any" && docStr(post, "type") != query.postType) {
                 continue
             }
@@ -662,7 +677,7 @@ public class PostService {
         pageResult(out, total, safePage, pageSize)
     }
 
-    public func publishedPosts(): Array<JsonValue> {
+    public func publishedPosts(siteId!: String = ""): Array<JsonValue> {
         let items = ArrayList<JsonValue>()
         for (post in store.list(COL_POSTS)) {
             if (docStr(post, "type") == "post" && docStr(post, "status") == STATUS_PUBLISHED) {
@@ -673,7 +688,7 @@ public class PostService {
         items.toArray()
     }
 
-    public func publishedPages(): Array<JsonValue> {
+    public func publishedPages(siteId!: String = ""): Array<JsonValue> {
         let items = ArrayList<JsonValue>()
         for (post in store.list(COL_POSTS)) {
             if (docStr(post, "type") == "page" && docStr(post, "status") == STATUS_PUBLISHED) {
