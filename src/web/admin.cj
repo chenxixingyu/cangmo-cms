@@ -11,6 +11,7 @@ import cangmo.service.*
 import cangmo.store.*
 import std.collection.*
 import std.fs.*
+import std.sort.*
 import std.time.*
 
 public class AdminSite {
@@ -1818,6 +1819,16 @@ public class AdminSite {
         data.set("active_theme", JStr(activeTheme))
         data.set("themes", JArr(themes))
         data.set("theme_options", themeOptionsView(activeTheme))
+        var hasBackup = false
+        let backupRoot = services.config.themesDir + "/.backup"
+        if (isDirectory(backupRoot)) {
+            for (entry in listDir(backupRoot)) {
+                if (entry.startsWith(activeTheme + "-")) {
+                    hasBackup = true
+                }
+            }
+        }
+        data.set("has_theme_backup", JBool(hasBackup))
         ctx.renderAdminPage("themes.html", JObj(data))
     }
 
@@ -1887,6 +1898,124 @@ public class AdminSite {
         services.audit.log(docStr(ctx.userDoc(), "id"), docStr(ctx.userDoc(), "username"),
                            "theme_options_saved", "theme", theme, ctx.clientIp(), "")
         ctx.setFlash("success", "主题选项已保存")
+        ctx.redirect("/admin/themes", status: 303)
+    }
+
+    public func themeInstall(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        try {
+            ctx.req.parseForm()
+            if (ctx.req.files.size == 0) {
+                throw AppError("validation", "请选择主题包")
+            }
+            let file = ctx.req.files[0]
+            if (file.data.size == 0 || file.data.size > 2 * 1024 * 1024) {
+                throw AppError("validation", "主题包需小于 2MB")
+            }
+            let pkg = parseJson(String.fromUtf8(file.data))
+            let name = docStr(pkg, "name").trimAscii()
+            if (!isSafeName(name) || name.startsWith(".")) {
+                throw AppError("validation", "主题名称无效")
+            }
+            let target = services.config.themesDir + "/" + name
+            let backupRoot = services.config.themesDir + "/.backup"
+            if (isDirectory(target)) {
+                ensureDir(backupRoot)
+                rename(target, to: backupRoot + "/" + name + "-" + formatTime(nowSeconds(), "yyyyMMdd-HHmmss"), overwrite: true)
+            }
+            ensureDir(target + "/templates")
+            ensureDir(target + "/static")
+            let manifest = match (pkg.get("manifest")) {
+                case Some(value) => value
+                case None => throw AppError("validation", "主题包缺少 manifest")
+            }
+            writeTextAtomic(target + "/theme.json", toJson(manifest, pretty: true))
+            installThemeFiles(pkg, "templates", target + "/templates")
+            installThemeFiles(pkg, "static", target + "/static")
+            if (ctx.form("activate") == "on") {
+                services.settings.setString("theme", name)
+                services.reloadTheme()
+            }
+            ctx.setFlash("success", "主题 ${name} 已安装")
+        } catch (e: AppError) {
+            ctx.setFlash("error", e.message)
+        } catch (e: Exception) {
+            services.logger.error("theme", e.message)
+            ctx.setFlash("error", "主题安装失败：${e.message}")
+        }
+        ctx.redirect("/admin/themes", status: 303)
+    }
+
+    private func installThemeFiles(pkg: JsonValue, key: String, targetDir: String): Unit {
+        let section = match (pkg.get(key)) {
+            case Some(JObj(value)) => value
+            case _ => return
+        }
+        for (path in section.fields.keys().toArray()) {
+            if (!safeThemePath(path)) {
+                throw AppError("validation", "主题包含非法路径：${path}")
+            }
+            let value = match (section.fields.get(path)) {
+                case Some(JStr(text)) => text
+                case _ => throw AppError("validation", "主题文件必须是文本：${path}")
+            }
+            let full = targetDir + "/" + path
+            let slash = match (path.lastIndexOf("/")) {
+                case Some(value) => value
+                case None => -1
+            }
+            if (slash > 0) {
+                ensureDir(targetDir + "/" + path[0..slash])
+            }
+            writeTextAtomic(full, value)
+        }
+    }
+
+    private func safeThemePath(path: String): Bool {
+        if (path.size == 0 || path.size > 200 || path.contains("..") || path.contains("\\") ||
+            path.startsWith("/")) {
+            return false
+        }
+        path.endsWith(".html") || path.endsWith(".css") || path.endsWith(".js") ||
+            path.endsWith(".svg") || path.endsWith(".json") || path.endsWith(".xml") ||
+            path.endsWith(".txt") || path.endsWith(".woff2")
+    }
+
+    public func themeRollback(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        let name = ctx.form("name").trimAscii()
+        if (!isSafeName(name)) {
+            ctx.setFlash("error", "主题名称无效")
+            return ctx.redirect("/admin/themes", status: 303)
+        }
+        let backupRoot = services.config.themesDir + "/.backup"
+        let backups = ArrayList<String>()
+        if (isDirectory(backupRoot)) {
+            for (entry in listDir(backupRoot)) {
+                if (entry.startsWith(name + "-")) {
+                    backups.add(entry)
+                }
+            }
+        }
+        sort<String>(backups, descending: true)
+        if (backups.size == 0) {
+            ctx.setFlash("error", "没有可回滚的备份")
+            return ctx.redirect("/admin/themes", status: 303)
+        }
+        let backup = backupRoot + "/" + backups[0]
+        let target = services.config.themesDir + "/" + name
+        if (isDirectory(target)) {
+            remove(target, recursive: true)
+        }
+        rename(backup, to: target, overwrite: true)
+        services.reloadTheme()
+        ctx.setFlash("success", "主题 ${name} 已回滚")
         ctx.redirect("/admin/themes", status: 303)
     }
 

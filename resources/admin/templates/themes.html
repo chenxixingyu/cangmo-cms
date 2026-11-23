@@ -34,6 +34,23 @@
   </section>
   {% endif %}
 
+  <section class="panel">
+    <header class="panel-head"><h2>安装主题包</h2><span class="muted">JSON 主题包，最大 2MB</span></header>
+    <form method="post" action="/admin/themes/install" enctype="multipart/form-data" class="grid-form theme-install-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <label>主题包<input type="file" name="package" accept=".json,application/json" required></label>
+      <label class="check-row"><input type="checkbox" name="activate" value="on"> 安装后立即启用</label>
+      <div class="span-2"><button class="btn" type="submit">安装主题</button>
+      {% if has_theme_backup %}</div></form>
+      <form method="post" action="/admin/themes/rollback" class="inline-form" data-confirm="确定回滚当前主题？">
+        <input type="hidden" name="_csrf" value="{{ csrf }}">
+        <input type="hidden" name="name" value="{{ active_theme }}">
+        <button type="submit" class="link-btn">回滚当前主题</button>
+      </form>
+      {% else %}</div></form>{% endif %}
+    <p class="muted small">主题包格式：<code>{"name":"mytheme","manifest":{...},"templates":{"home.html":"..."},"static":{"style.css":"..."}}</code>；只支持文本资源。</p>
+  </section>
+
   <div class="theme-grid">
     {% for theme in themes %}
     <article class="theme-card {% if theme.active %}active{% endif %}">

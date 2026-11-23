@@ -116,6 +116,8 @@ public class WebApp {
         router.get("/admin/themes", { ctx: Ctx => adminSite.themesPage(ctx) })
         router.post("/admin/themes/activate", { ctx: Ctx => adminSite.themeActivate(ctx) })
         router.post("/admin/themes/options", { ctx: Ctx => adminSite.themeOptionsSave(ctx) })
+        router.post("/admin/themes/install", { ctx: Ctx => adminSite.themeInstall(ctx) })
+        router.post("/admin/themes/rollback", { ctx: Ctx => adminSite.themeRollback(ctx) })
         router.get("/admin/audit", { ctx: Ctx => adminSite.auditPage(ctx) })
         router.get("/admin/audit/export", { ctx: Ctx => adminSite.auditExport(ctx) })
         router.get("/admin/tools", { ctx: Ctx => adminSite.toolsPage(ctx) })
