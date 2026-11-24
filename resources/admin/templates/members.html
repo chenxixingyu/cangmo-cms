@@ -6,6 +6,17 @@
 <main class="admin-content">
   <div class="page-intro"><div><p class="eyebrow">MEMBERS</p><h2>会员</h2><p class="muted">手工开通会员；支付由外部 Provider 完成，系统只保存权益。</p></div><div class="page-intro-actions"><a class="btn btn-ghost" href="/admin/tools">返回工具</a></div></div>
   <section class="panel">
+    <header class="panel-head"><h2>Stripe</h2><span class="muted">Checkout + webhook；密钥留空不修改</span></header>
+    <form method="post" action="/admin/members/action" class="grid-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <input type="hidden" name="action" value="stripe">
+      <label>Secret Key<input type="password" name="stripe_secret_key" maxlength="300" placeholder="{% if stripe_configured %}已配置{% else %}未配置{% endif %}"></label>
+      <label>Webhook Secret<input type="password" name="stripe_webhook_secret" maxlength="300"></label>
+      <label class="span-2">API Base<input type="url" name="stripe_api_base" maxlength="300" value="https://api.stripe.com"></label>
+      <div class="span-2"><button class="btn" type="submit">保存 Stripe 配置</button></div>
+    </form>
+  </section>
+  <section class="panel">
     <header class="panel-head"><h2>会员计划</h2></header>
     <form method="post" action="/admin/members/action" class="grid-form">
       <input type="hidden" name="_csrf" value="{{ csrf }}">

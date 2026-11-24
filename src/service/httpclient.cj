@@ -38,6 +38,10 @@ public class HttpClient {
     }
 
     public func postFormText(url: String, form: HashMap<String, String>): ?String {
+        postFormText(url, form, HashMap<String, String>())
+    }
+
+    public func postFormText(url: String, form: HashMap<String, String>, headers: HashMap<String, String>): ?String {
         let args = ArrayList<String>()
         args.add("-sS")
         args.add("-L")
@@ -47,6 +51,12 @@ public class HttpClient {
         args.add("POST")
         args.add("-H")
         args.add("content-type: application/x-www-form-urlencoded")
+        for ((name, value) in headers) {
+            if (name.size > 0 && value.size > 0 && !name.contains("\n") && !value.contains("\n")) {
+                args.add("-H")
+                args.add(name + ": " + value)
+            }
+        }
         for ((name, value) in form) {
             args.add("--data-urlencode")
             args.add(name + "=" + value)

@@ -11,12 +11,126 @@ import std.collection.*
 public class MembershipService {
     private let store: Store
     private let audit: AuditService
+    private let http: HttpClient
+    private let config: Config
+    private let settings: SettingsService
 
-    public init(store: Store, audit: AuditService) {
+    public init(store: Store, audit: AuditService, http: HttpClient, config: Config, settings: SettingsService) {
         this.store = store
         this.audit = audit
+        this.http = http
+        this.config = config
+        this.settings = settings
     }
 
+    public func createCheckout(planId: String, user: JsonValue, siteId: String, baseUrl: String): String {
+        let secret = settings.str("stripe_secret_key", def: "")
+        if (secret.size == 0) {
+            throw AppError("validation", "Stripe 未配置")
+        }
+        let plan = match (store.get(COL_MEMBERSHIP_PLANS, planId)) {
+            case Some(value) => value
+            case None => throw AppError("validation", "会员计划不存在")
+        }
+        if (docStr(plan, "site_id", def: DEFAULT_SITE_ID) != siteId) {
+            throw AppError("validation", "计划不属于当前站点")
+        }
+        let email = docStr(user, "email")
+        if (email.size == 0) {
+            throw AppError("validation", "当前账户没有邮箱")
+        }
+        let form = HashMap<String, String>()
+        form["mode"] = "payment"
+        form["success_url"] = baseUrl + "/membership?paid=1"
+        form["cancel_url"] = baseUrl + "/membership?canceled=1"
+        form["customer_email"] = email
+        form["client_reference_id"] = docStr(user, "id")
+        form["line_items[0][quantity]"] = "1"
+        form["line_items[0][price_data][currency]"] = settings.str("stripe_currency", def: "cny")
+        form["line_items[0][price_data][unit_amount]"] = docInt(plan, "price_cents").toString()
+        form["line_items[0][price_data][product_data][name]"] = docStr(plan, "name")
+        form["metadata[plan_id]"] = planId
+        form["metadata[site_id]"] = siteId
+        form["metadata[email]"] = email
+        form["metadata[days]"] = "30"
+        let headers = HashMap<String, String>()
+        headers["authorization"] = "Bearer " + secret
+        let endpoint = settings.str("stripe_api_base", def: "https://api.stripe.com") + "/v1/checkout/sessions"
+        let response = match (http.postFormText(endpoint, form, headers)) {
+            case Some(value) => value
+            case None => throw AppError("validation", "Stripe 创建会话失败")
+        }
+        let parsed = try { parseJson(response) } catch (e: Exception) {
+            throw AppError("validation", "Stripe 返回无效 JSON")
+        }
+        let url = docStr(parsed, "url")
+        if (!url.startsWith("http")) {
+            throw AppError("validation", "Stripe 未返回 checkout URL")
+        }
+        url
+    }
+
+    public func stripeWebhook(rawBody: String, signature: String): Bool {
+        let secret = settings.str("stripe_webhook_secret", def: "")
+        if (secret.size == 0) {
+            return false
+        }
+        var timestamp = ""
+        var signatures = ArrayList<String>()
+        for (part in signature.split(",")) {
+            let trimmed = part.trimAscii()
+            if (trimmed.startsWith("t=")) {
+                timestamp = trimmed[2..trimmed.size]
+            } else if (trimmed.startsWith("v1=")) {
+                signatures.add(trimmed[3..trimmed.size])
+            }
+        }
+        if (timestamp.size == 0 || signatures.size == 0) {
+            return false
+        }
+        let expected = hmacSha256Hex(secret, timestamp + "." + rawBody)
+        var valid = false
+        for (candidate in signatures) {
+            if (secureEqualsText(candidate, expected)) {
+                valid = true
+            }
+        }
+        if (!valid) {
+            return false
+        }
+        let event = try { parseJson(rawBody) } catch (e: Exception) {
+            return false
+        }
+        if (docStr(event, "type") != "checkout.session.completed") {
+            return true
+        }
+        let session = match (getObject(event, "data")) {
+            case Some(value) => match (getObject(JObj(value), "object")) {
+                case Some(object) => object
+                case None => return false
+            }
+            case None => return false
+        }
+        let metadata = match (getObject(JObj(session), "metadata")) {
+            case Some(value) => value
+            case None => return false
+        }
+        let email = getString(JObj(metadata), "email")
+        let planId = getString(JObj(metadata), "plan_id")
+        let siteId = getString(JObj(metadata), "site_id")
+        if (email.size == 0 || planId.size == 0 || siteId.size == 0) {
+            return false
+        }
+        try {
+            let actor = JsonObject()
+            actor.set("id", JStr("stripe"))
+            actor.set("username", JStr("stripe"))
+            grant(email, planId, 30, siteId, JObj(actor), "stripe")
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
     public func plans(siteId: String): Array<JsonValue> {
         let items = ArrayList<JsonValue>()
         for (plan in store.list(COL_MEMBERSHIP_PLANS)) {

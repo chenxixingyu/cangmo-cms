@@ -1,0 +1,26 @@
+{% include "partials/head.html" %}
+<main class="site-main">
+  <article class="prose">
+    <h1>会员</h1>
+    <p>开通会员后可阅读会员专享内容。</p>
+    {% if membership_message.length > 0 %}<div class="notice">{{ membership_message }}</div>{% endif %}
+    {% if member_active %}<div class="notice">当前账户已是有效会员。</div>{% endif %}
+    {% if plans.length == 0 %}<p>暂未开放会员计划。</p>{% endif %}
+    {% for plan in plans %}
+    <section class="membership-plan">
+      <h2>{{ plan.name }}</h2>
+      <p>{{ plan.price_cents }} 分 / {{ plan.interval }}</p>
+      {% if logged_in %}
+      <form method="post" action="/membership/checkout">
+        <input type="hidden" name="_csrf" value="{{ csrf }}">
+        <input type="hidden" name="plan_id" value="{{ plan.id }}">
+        <button class="btn" type="submit">使用 Stripe 开通</button>
+      </form>
+      {% else %}
+      <p><a class="btn" href="/admin/login?next=/membership">登录后开通</a></p>
+      {% endif %}
+    </section>
+    {% endfor %}
+  </article>
+</main>
+{% include "partials/footer.html" %}

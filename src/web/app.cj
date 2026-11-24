@@ -53,6 +53,9 @@ public class WebApp {
         router.get("/feed.xml", { ctx: Ctx => publicSite.feed(ctx) })
         router.get("/rss.xml", { ctx: Ctx => publicSite.feed(ctx) })
         router.get("/sitemap.xml", { ctx: Ctx => publicSite.sitemap(ctx) })
+        router.get("/membership", { ctx: Ctx => publicSite.membershipPage(ctx) })
+        router.post("/membership/checkout", { ctx: Ctx => publicSite.membershipCheckout(ctx) })
+        router.post("/webhooks/stripe", { ctx: Ctx => publicSite.stripeWebhook(ctx) })
         router.get("/newsletter", { ctx: Ctx => publicSite.newsletterPage(ctx) })
         router.post("/newsletter/subscribe", { ctx: Ctx => publicSite.newsletterSubscribe(ctx) })
         router.get("/newsletter/confirm", { ctx: Ctx => publicSite.newsletterConfirm(ctx) })
@@ -231,7 +234,7 @@ public class WebApp {
         let ctx = Ctx(req, services, session, user, newSession)
         if (!tokenAuth) {
             let unsafeMethod = req.method == "POST" || req.method == "PUT" || req.method == "PATCH" || req.method == "DELETE"
-            let skipCsrf = isApi && token.size == 0
+            let skipCsrf = (isApi && token.size == 0) || req.path == "/webhooks/stripe"
             if (unsafeMethod && !skipCsrf) {
                 var supplied = req.header("x-csrf-token").trimAscii()
                 try {

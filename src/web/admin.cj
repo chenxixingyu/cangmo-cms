@@ -1193,7 +1193,15 @@ public class AdminSite {
         }
         try {
             let action = ctx.form("action")
-            if (action == "grant") {
+            if (action == "stripe") {
+                let secret = ctx.form("stripe_secret_key").trimAscii()
+                let webhook = ctx.form("stripe_webhook_secret").trimAscii()
+                if (secret.size > 0) { services.settings.setString("stripe_secret_key", truncateUtf8(secret, 300)) }
+                if (webhook.size > 0) { services.settings.setString("stripe_webhook_secret", truncateUtf8(webhook, 300)) }
+                let base = ctx.form("stripe_api_base").trimAscii()
+                if (base.size > 0) { services.settings.setString("stripe_api_base", truncateUtf8(base, 300)) }
+                ctx.setFlash("success", "Stripe 配置已保存")
+            } else if (action == "grant") {
                 services.membership.grant(ctx.form("email"), ctx.form("plan_id"),
                                           parseIntOr(ctx.form("days"), 30), ctx.siteId,
                                           ctx.userDoc(), ctx.clientIp())

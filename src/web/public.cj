@@ -155,6 +155,47 @@ public class PublicSite {
         }
     }
 
+    public func membershipPage(ctx: Ctx): HttpResponse {
+        let plans = JsonArray()
+        for (plan in services.membership.plans(ctx.siteId)) {
+            let item = cloneDoc(plan)
+            setField(item, "price_text", JStr(if (docInt(plan, "interval") == 0) { "" } else { "" }))
+            plans.add(item)
+        }
+        let data = JsonObject()
+        data.set("page_title", JStr("会员"))
+        data.set("plans", JArr(plans))
+        data.set("logged_in", JBool(ctx.loggedIn()))
+        data.set("member_active", JBool(services.membership.isActive(docStr(ctx.userDoc(), "id"), ctx.siteId)))
+        data.set("membership_message", JStr(if (ctx.query("paid") == "1") { "支付完成，会员将在回调后生效。" } else if (ctx.query("canceled") == "1") { "已取消支付。" } else { "" }))
+        ctx.html(ctx.render("membership.html", JObj(data)))
+    }
+
+    public func membershipCheckout(ctx: Ctx): HttpResponse {
+        if (!ctx.loggedIn()) {
+            return ctx.redirect("/admin/login?next=/membership", status: 303)
+        }
+        try {
+            let base = services.settings.str("site_url", def: services.config.siteUrl)
+            let url = services.membership.createCheckout(ctx.form("plan_id"), ctx.userDoc(), ctx.siteId, base)
+            ctx.redirect(url, status: 303)
+        } catch (e: AppError) {
+            let data = JsonObject()
+            data.set("page_title", JStr("会员"))
+            data.set("plans", JArr(JsonArray()))
+            data.set("logged_in", JBool(ctx.loggedIn()))
+            data.set("member_active", JBool(false))
+            data.set("membership_message", JStr(e.message))
+            ctx.html(ctx.render("membership.html", JObj(data)))
+        }
+    }
+
+    public func stripeWebhook(ctx: Ctx): HttpResponse {
+        let raw = String.fromUtf8(ctx.req.body)
+        let ok = services.membership.stripeWebhook(raw, ctx.req.header("stripe-signature"))
+        HttpResponse().text(if (ok) { "ok" } else { "invalid signature" }, status: if (ok) { 200 } else { 400 })
+    }
+
     public func newsletterPage(ctx: Ctx): HttpResponse {
         let data = JsonObject()
         data.set("page_title", JStr("Newsletter"))

@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.0.2 — 2026-11-25
+
+- 新增 Stripe Checkout 会员开通。
+- 新增 `/webhooks/stripe`：HMAC 签名 + 300 秒容差，自动开通会员。
+- 验证：26 单元 + 236 基线 + 45 定向 = 307 项。
+
 ## v2.0.1 — 2026-11-25
 
 - 新增 HTTP 邮件 Provider 投递（后台发件箱配置 URL/发件人/API Key）。
