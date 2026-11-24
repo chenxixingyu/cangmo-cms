@@ -129,6 +129,7 @@ public class WebApp {
         router.get("/admin/audit/export", { ctx: Ctx => adminSite.auditExport(ctx) })
         router.get("/admin/tools", { ctx: Ctx => adminSite.toolsPage(ctx) })
         router.get("/admin/mail", { ctx: Ctx => adminSite.mailPage(ctx) })
+        router.post("/admin/mail/deliver", { ctx: Ctx => adminSite.mailDeliver(ctx) })
         router.get("/admin/mail/view", { ctx: Ctx => adminSite.mailView(ctx) })
         router.get("/admin/tools/export", { ctx: Ctx => adminSite.exportJson(ctx) })
         router.get("/admin/redirects", { ctx: Ctx => adminSite.redirectsPage(ctx) })

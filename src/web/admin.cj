@@ -154,6 +154,28 @@ public class AdminSite {
         ctx.renderAdminPage("mail.html", JObj(data))
     }
 
+    public func mailDeliver(ctx: Ctx): HttpResponse {
+        match (requireAdmin(ctx)) {
+            case Some(response) => return response
+            case None => ()
+        }
+        try {
+            services.settings.setString("mail_provider_url", truncateUtf8(ctx.form("provider_url").trimAscii(), 500))
+            services.settings.setString("mail_from", truncateUtf8(ctx.form("mail_from").trimAscii(), 200))
+            let key = ctx.form("provider_key").trimAscii()
+            if (key.size > 0) {
+                services.settings.setString("mail_provider_key", truncateUtf8(key, 500))
+            }
+            let sent = services.mail.deliverPending()
+            ctx.setFlash("success", "已投递 ${sent} 封邮件")
+        } catch (e: AppError) {
+            ctx.setFlash("error", e.message)
+        } catch (e: Exception) {
+            ctx.setFlash("error", "邮件投递失败：${e.message}")
+        }
+        ctx.redirect("/admin/mail", status: 303)
+    }
+
     public func mailView(ctx: Ctx): HttpResponse {
         match (requireAdmin(ctx)) {
             case Some(response) => return response

@@ -5,9 +5,19 @@
 {% include "partials/topbar.html" %}
 <main class="admin-content">
   <div class="page-intro">
-    <div><p class="eyebrow">MAIL</p><h2>发件箱</h2><p class="muted">邮件以 .eml 文件排队，可由 sendmail 或外部 worker 转发。目录：<code>{{ outbox }}</code></p></div>
+    <div><p class="eyebrow">MAIL</p><h2>发件箱</h2><p class="muted">邮件以 .eml 文件排队；可配置 HTTP 邮件 Provider 立即投递。目录：<code>{{ outbox }}</code></p></div>
     <div class="page-intro-actions"><a class="btn btn-ghost" href="/admin/tools">返回工具</a></div>
   </div>
+  <section class="panel">
+    <header class="panel-head"><h2>Provider</h2><span class="muted">POST JSON：from/to/subject/text</span></header>
+    <form method="post" action="/admin/mail/deliver" class="grid-form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <label class="span-2">Provider URL<input type="url" name="provider_url" maxlength="500" value="{{ provider_url }}" placeholder="https://api.resend.com/emails"></label>
+      <label>发件人<input type="text" name="mail_from" maxlength="200" value="{{ mail_from }}" placeholder="Cangmo &lt;noreply@example.com&gt;"></label>
+      <label>API Key<input type="password" name="provider_key" maxlength="500" placeholder="{% if has_provider_key %}已配置，留空不修改{% else %}未配置{% endif %}"></label>
+      <div class="span-2"><button class="btn" type="submit">保存并投递待发邮件</button></div>
+    </form>
+  </section>
   <div class="panel"><div class="table-wrap"><table class="table">
     <thead><tr><th>时间</th><th>收件人</th><th>主题</th><th>大小</th><th></th></tr></thead>
     <tbody>

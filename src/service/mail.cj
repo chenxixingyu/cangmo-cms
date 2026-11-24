@@ -14,11 +14,13 @@ public class MailService {
     private let config: Config
     private let auth: AuthService
     private let settings: SettingsService
+    private let http: HttpClient
 
     public init(config: Config, auth: AuthService, settings: SettingsService) {
         this.config = config
         this.auth = auth
         this.settings = settings
+        this.http = HttpClient(tempDir: config.dataDir + "/tmp")
     }
 
     public func outboxDir(): String {
@@ -92,6 +94,68 @@ public class MailService {
         let excerpt = makeExcerpt(content, maxRunes: 160)
         for (to in auth.adminEmails()) {
             send(to, "仓墨新评论（${state}）", "文章：${docStr(post, "title")}\n评论者：${author}\n\n${excerpt}\n\n${link}#comments")
+        }
+    }
+
+    public func deliverPending(): Int64 {
+        let endpoint = settings.str("mail_provider_url", def: "")
+        let key = settings.str("mail_provider_key", def: "")
+        let from = settings.str("mail_from", def: "")
+        if (endpoint.size == 0 || key.size == 0 || from.size == 0) {
+            throw AppError("validation", "请先配置邮件 Provider、密钥与发件人")
+        }
+        let dir = outboxDir()
+        ensureDir(dir)
+        var delivered: Int64 = 0
+        for (name in listDir(dir)) {
+            if (!name.endsWith(".eml")) {
+                continue
+            }
+            let path = dir + "/" + name
+            let text = try { readTextFile(path) } catch (e: Exception) { "" }
+            if (text.contains("X-Cangmo-Status: sent")) {
+                continue
+            }
+            let to = headerValue(text, "To:")
+            let subject = headerValue(text, "Subject:")
+            let body = bodyOf(text)
+            if (to.size == 0) {
+                markStatus(path, text, "failed")
+                continue
+            }
+            let payload = JsonObject()
+            payload.set("from", JStr(from))
+            payload.set("to", JStr(to))
+            payload.set("subject", JStr(subject))
+            payload.set("text", JStr(body))
+            let headers = HashMap<String, String>()
+            headers["authorization"] = "Bearer " + key
+            let code = http.postJson(endpoint, toJson(JObj(payload), pretty: false), headers)
+            markStatus(path, text, if (code == 0) { "sent" } else { "failed" })
+            if (code == 0) {
+                delivered += 1
+            }
+        }
+        delivered
+    }
+
+    private func markStatus(path: String, text: String, status: String): Unit {
+        var updated = text
+        if (text.contains("X-Cangmo-Status: queued")) {
+            updated = text.replace("X-Cangmo-Status: queued", "X-Cangmo-Status: " + status)
+        } else if (text.contains("X-Cangmo-Status: failed")) {
+            updated = text.replace("X-Cangmo-Status: failed", "X-Cangmo-Status: " + status)
+        } else if (!text.contains("X-Cangmo-Status: " + status)) {
+            updated = "X-Cangmo-Status: ${status}\n" + text
+        }
+        writeTextAtomic(path, updated)
+    }
+
+    private func bodyOf(text: String): String {
+        let marker = text.indexOf("\n\n")
+        match (marker) {
+            case Some(index) => text[index + 2..text.size].trimAscii()
+            case None => text
         }
     }
 
