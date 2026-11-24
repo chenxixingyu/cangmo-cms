@@ -40,7 +40,7 @@ public class MembershipService {
             throw AppError("validation", "当前账户没有邮箱")
         }
         let form = HashMap<String, String>()
-        form["mode"] = "payment"
+        form["mode"] = "subscription"
         form["success_url"] = baseUrl + "/membership?paid=1"
         form["cancel_url"] = baseUrl + "/membership?canceled=1"
         form["customer_email"] = email
@@ -88,6 +88,10 @@ public class MembershipService {
         if (timestamp.size == 0 || signatures.size == 0) {
             return false
         }
+        let stamp = parseIntOr(timestamp, 0)
+        if (stamp <= 0 || nowSeconds() - stamp > 300 || stamp - nowSeconds() > 300) {
+            return false
+        }
         let expected = hmacSha256Hex(secret, timestamp + "." + rawBody)
         var valid = false
         for (candidate in signatures) {
@@ -101,9 +105,6 @@ public class MembershipService {
         let event = try { parseJson(rawBody) } catch (e: Exception) {
             return false
         }
-        if (docStr(event, "type") != "checkout.session.completed") {
-            return true
-        }
         let session = match (getObject(event, "data")) {
             case Some(value) => match (getObject(JObj(value), "object")) {
                 case Some(object) => object
@@ -111,24 +112,75 @@ public class MembershipService {
             }
             case None => return false
         }
-        let metadata = match (getObject(JObj(session), "metadata")) {
-            case Some(value) => value
-            case None => return false
-        }
-        let email = getString(JObj(metadata), "email")
-        let planId = getString(JObj(metadata), "plan_id")
-        let siteId = getString(JObj(metadata), "site_id")
-        if (email.size == 0 || planId.size == 0 || siteId.size == 0) {
-            return false
-        }
-        try {
-            let actor = JsonObject()
-            actor.set("id", JStr("stripe"))
-            actor.set("username", JStr("stripe"))
-            grant(email, planId, 30, siteId, JObj(actor), "stripe")
+        let eventType = docStr(event, "type")
+        if (eventType == "checkout.session.completed") {
+            let metadata = match (getObject(JObj(session), "metadata")) {
+                case Some(value) => value
+                case None => return false
+            }
+            let email = getString(JObj(metadata), "email")
+            let planId = getString(JObj(metadata), "plan_id")
+            let siteId = getString(JObj(metadata), "site_id")
+            if (email.size == 0 || planId.size == 0 || siteId.size == 0) {
+                return false
+            }
+            let days = parseIntOr(getString(JObj(metadata), "days"), 30)
+            let subscriptionId = docStr(JObj(session), "subscription")
+            let customerId = docStr(JObj(session), "customer")
+            try {
+                let actor = JsonObject()
+                actor.set("id", JStr("stripe"))
+                actor.set("username", JStr("stripe"))
+                grant(email, planId, days, siteId, JObj(actor), "stripe",
+                      subscriptionId: subscriptionId, customerId: customerId)
+                true
+            } catch (e: Exception) {
+                false
+            }
+        } else if (eventType == "invoice.paid") {
+            let subscriptionId = docStr(JObj(session), "subscription")
+            if (subscriptionId.size == 0) {
+                return true
+            }
+            renewBySubscription(subscriptionId, 30)
             true
-        } catch (e: Exception) {
-            false
+        } else if (eventType == "customer.subscription.deleted") {
+            let subscriptionId = docStr(JObj(session), "id")
+            if (subscriptionId.size == 0) {
+                return true
+            }
+            revokeBySubscription(subscriptionId)
+            true
+        } else {
+            true
+        }
+    }
+
+    private func renewBySubscription(subscriptionId: String, days: Int64): Unit {
+        for (item in store.list(COL_MEMBERSHIPS)) {
+            if (docStr(item, "stripe_subscription_id") == subscriptionId) {
+                let updated = cloneDoc(item)
+                var span = days
+                match (store.get(COL_MEMBERSHIP_PLANS, docStr(item, "plan_id"))) {
+                    case Some(plan) =>
+                        if (docStr(plan, "interval") == "year") { span = 365 }
+                    case None => ()
+                }
+                let base = if (docInt(item, "expires_at") > nowSeconds()) { docInt(item, "expires_at") } else { nowSeconds() }
+                setField(updated, "expires_at", JInt(base + span * 86400))
+                setField(updated, "status", JStr("active"))
+                store.put(COL_MEMBERSHIPS, docStr(item, "id"), updated)
+            }
+        }
+    }
+
+    private func revokeBySubscription(subscriptionId: String): Unit {
+        for (item in store.list(COL_MEMBERSHIPS)) {
+            if (docStr(item, "stripe_subscription_id") == subscriptionId) {
+                let updated = cloneDoc(item)
+                setField(updated, "status", JStr("revoked"))
+                store.put(COL_MEMBERSHIPS, docStr(item, "id"), updated)
+            }
         }
     }
     public func plans(siteId: String): Array<JsonValue> {
@@ -167,7 +219,7 @@ public class MembershipService {
     }
 
     public func grant(email: String, planId: String, days: Int64, siteId: String,
-                      actor: JsonValue, ip: String): String {
+                      actor: JsonValue, ip: String, subscriptionId!: String = "", customerId!: String = ""): String {
         let address = email.trimAscii().toAsciiLower()
         let user = match (findUserByEmail(address)) {
             case Some(value) => value
@@ -189,6 +241,8 @@ public class MembershipService {
         doc.set("email", JStr(address))
         doc.set("plan_id", JStr(planId))
         doc.set("status", JStr("active"))
+        doc.set("stripe_subscription_id", JStr(subscriptionId))
+        doc.set("stripe_customer_id", JStr(customerId))
         doc.set("created_at", JInt(nowSeconds()))
         doc.set("expires_at", JInt(nowSeconds() + span * 86400))
         store.put(COL_MEMBERSHIPS, id, JObj(doc))

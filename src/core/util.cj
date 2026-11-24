@@ -15,7 +15,7 @@ import std.random.*
 
 public let APP_NAME: String = "Cangmo"
 public let APP_NAME_CN: String = "仓墨"
-public let APP_VERSION: String = "2.0.2"
+public let APP_VERSION: String = "2.0.3"
 public let APP_CODENAME: String = "Qingyu"
 
 // ---------------------------------------------------------------------------

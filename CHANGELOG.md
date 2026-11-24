@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.0.3 — 2026-11-25
+
+- Stripe Checkout 升级为订阅模式。
+- 处理 checkout.session.completed / invoice.paid / customer.subscription.deleted。
+- 会员记录保存 stripe_subscription_id / stripe_customer_id。
+- 验证：26 单元 + 236 基线 + 47 定向 = 309 项。
+
 ## v2.0.2 — 2026-11-25
 
 - 新增 Stripe Checkout 会员开通。
