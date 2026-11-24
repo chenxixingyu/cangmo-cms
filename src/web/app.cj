@@ -54,6 +54,7 @@ public class WebApp {
         router.get("/rss.xml", { ctx: Ctx => publicSite.feed(ctx) })
         router.get("/sitemap.xml", { ctx: Ctx => publicSite.sitemap(ctx) })
         router.get("/membership", { ctx: Ctx => publicSite.membershipPage(ctx) })
+        router.post("/membership/portal", { ctx: Ctx => publicSite.membershipPortal(ctx) })
         router.post("/membership/checkout", { ctx: Ctx => publicSite.membershipCheckout(ctx) })
         router.post("/webhooks/stripe", { ctx: Ctx => publicSite.stripeWebhook(ctx) })
         router.get("/newsletter", { ctx: Ctx => publicSite.newsletterPage(ctx) })

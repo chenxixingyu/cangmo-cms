@@ -183,6 +183,54 @@ public class MembershipService {
             }
         }
     }
+    public func canManage(userId: String, siteId: String): Bool {
+        for (item in store.list(COL_MEMBERSHIPS)) {
+            if (docStr(item, "user_id") == userId &&
+                docStr(item, "site_id", def: DEFAULT_SITE_ID) == siteId &&
+                docStr(item, "status") == "active" &&
+                docStr(item, "stripe_customer_id").size > 0) {
+                return true
+            }
+        }
+        false
+    }
+
+    public func createPortal(userId: String, siteId: String, baseUrl: String): String {
+        let secret = settings.str("stripe_secret_key", def: "")
+        if (secret.size == 0) {
+            throw AppError("validation", "Stripe 未配置")
+        }
+        var customerId = ""
+        for (item in store.list(COL_MEMBERSHIPS)) {
+            if (docStr(item, "user_id") == userId &&
+                docStr(item, "site_id", def: DEFAULT_SITE_ID) == siteId &&
+                docStr(item, "status") == "active") {
+                customerId = docStr(item, "stripe_customer_id")
+            }
+        }
+        if (customerId.size == 0) {
+            throw AppError("validation", "当前账户没有可管理的 Stripe 订阅")
+        }
+        let form = HashMap<String, String>()
+        form["customer"] = customerId
+        form["return_url"] = baseUrl + "/membership"
+        let headers = HashMap<String, String>()
+        headers["authorization"] = "Bearer " + secret
+        let endpoint = settings.str("stripe_api_base", def: "https://api.stripe.com") + "/v1/billing_portal/sessions"
+        let response = match (http.postFormText(endpoint, form, headers)) {
+            case Some(value) => value
+            case None => throw AppError("validation", "Stripe 创建 Portal 会话失败")
+        }
+        let parsed = try { parseJson(response) } catch (e: Exception) {
+            throw AppError("validation", "Stripe 返回无效 JSON")
+        }
+        let url = docStr(parsed, "url")
+        if (!url.startsWith("http")) {
+            throw AppError("validation", "Stripe 未返回 Portal URL")
+        }
+        url
+    }
+
     public func plans(siteId: String): Array<JsonValue> {
         let items = ArrayList<JsonValue>()
         for (plan in store.list(COL_MEMBERSHIP_PLANS)) {

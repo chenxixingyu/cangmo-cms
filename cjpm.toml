@@ -3,7 +3,7 @@
   name = "cangmo"
   organization = ""
   description = "Cangmo - a modern, secure blog/CMS engine written natively in Cangjie"
-  version = "2.0.3"
+  version = "2.0.4"
   target-dir = ""
   script-dir = ""
   output-type = "executable"

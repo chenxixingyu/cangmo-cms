@@ -167,6 +167,7 @@ public class PublicSite {
         data.set("plans", JArr(plans))
         data.set("logged_in", JBool(ctx.loggedIn()))
         data.set("member_active", JBool(services.membership.isActive(docStr(ctx.userDoc(), "id"), ctx.siteId)))
+        data.set("has_portal", JBool(services.membership.canManage(docStr(ctx.userDoc(), "id"), ctx.siteId)))
         data.set("membership_message", JStr(if (ctx.query("paid") == "1") { "支付完成，会员将在回调后生效。" } else if (ctx.query("canceled") == "1") { "已取消支付。" } else { "" }))
         ctx.html(ctx.render("membership.html", JObj(data)))
     }
@@ -185,6 +186,26 @@ public class PublicSite {
             data.set("plans", JArr(JsonArray()))
             data.set("logged_in", JBool(ctx.loggedIn()))
             data.set("member_active", JBool(false))
+            data.set("membership_message", JStr(e.message))
+            ctx.html(ctx.render("membership.html", JObj(data)))
+        }
+    }
+
+    public func membershipPortal(ctx: Ctx): HttpResponse {
+        if (!ctx.loggedIn()) {
+            return ctx.redirect("/admin/login?next=/membership", status: 303)
+        }
+        try {
+            let base = services.settings.str("site_url", def: services.config.siteUrl)
+            let url = services.membership.createPortal(docStr(ctx.userDoc(), "id"), ctx.siteId, base)
+            ctx.redirect(url, status: 303)
+        } catch (e: AppError) {
+            let data = JsonObject()
+            data.set("page_title", JStr("会员"))
+            data.set("plans", JArr(JsonArray()))
+            data.set("logged_in", JBool(ctx.loggedIn()))
+            data.set("member_active", JBool(false))
+            data.set("has_portal", JBool(false))
             data.set("membership_message", JStr(e.message))
             ctx.html(ctx.render("membership.html", JObj(data)))
         }

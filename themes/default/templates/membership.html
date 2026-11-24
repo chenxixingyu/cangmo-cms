@@ -5,6 +5,12 @@
     <p>开通会员后可阅读会员专享内容。</p>
     {% if membership_message.length > 0 %}<div class="notice">{{ membership_message }}</div>{% endif %}
     {% if member_active %}<div class="notice">当前账户已是有效会员。</div>{% endif %}
+    {% if has_portal %}
+    <form method="post" action="/membership/portal">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <button class="btn btn-ghost" type="submit">管理订阅 / 发票</button>
+    </form>
+    {% endif %}
     {% if plans.length == 0 %}<p>暂未开放会员计划。</p>{% endif %}
     {% for plan in plans %}
     <section class="membership-plan">
