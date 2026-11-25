@@ -1,0 +1,15 @@
+ok: admin page renders: /admin/sites
+ok: admin page renders: /admin/plugins
+ok: admin page renders: /admin/members
+ok: admin page renders: /admin/newsletter
+ok: admin page renders: /admin/oauth
+ok: admin page renders: /admin/themes/market
+ok: second site created
+ok: admin scoped to second site
+ok: membership plan created
+ok: membership granted
+ok: anonymous paywall
+ok: member reads full post
+ok: newsletter subscribe queued
+ok: plugin retry job queued
+v2.0 regression complete

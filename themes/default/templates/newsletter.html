@@ -3,7 +3,7 @@
   <article class="prose">
     <h1>Newsletter</h1>
     <p>订阅后，新文章与邮件活动会发送到你的邮箱。需要先确认订阅。</p>
-    {% if newsletter_message.length > 0 %}<div class="notice">{{ newsletter_message }}</div>{% endif %}
+    {% if newsletter_message %}<div class="notice">{{ newsletter_message }}</div>{% endif %}
     <form method="post" action="/newsletter/subscribe" class="newsletter-form">
       <input type="hidden" name="_csrf" value="{{ csrf }}">
       <label>邮箱<input type="email" name="email" required maxlength="200" autocomplete="email"></label>
